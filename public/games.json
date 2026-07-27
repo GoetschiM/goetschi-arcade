@@ -1,0 +1,15 @@
+{
+  "games": [
+    {
+      "slug": "silmoor",
+      "title": "Silmoor",
+      "subtitle": "Tiefen von Silmoor",
+      "description": "Ein hohles Wesen erwacht in den überwucherten Tiefen. Schlag dich mit dem Nagel durch die Kavernen, finde die Bänke, und stell dich dem Hüter des Grundes.",
+      "cover": "games/silmoor/icons/icon-512.png",
+      "accent": "#5ec9ba",
+      "tags": ["Action", "Platformer", "Solo"],
+      "controls": "Tastatur & Touch",
+      "added": "2026-07-27"
+    }
+  ]
+}

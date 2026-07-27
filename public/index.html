@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Goetschi Arcade</title>
+<meta name="theme-color" content="#070d12">
+<meta name="description" content="Die Spielesammlung von Goetschi Labs.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  :root{
+    --bg:#070d12;
+    --bg2:#0b141b;
+    --card:#101c24;
+    --line:rgba(140,210,205,.14);
+    --line-hi:rgba(140,210,205,.34);
+    --text:#dcece9;
+    --muted:#7e9a99;
+    --accent:#5ec9ba;
+    --serif:'Georgia','Times New Roman',serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    min-height:100dvh;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    line-height:1.55;
+    background-image:
+      radial-gradient(ellipse 80% 55% at 50% -10%,rgba(94,201,186,.16),transparent 70%),
+      radial-gradient(ellipse 60% 50% at 92% 8%,rgba(70,130,190,.10),transparent 70%);
+    background-attachment:fixed;
+  }
+
+  .shell{max-width:1180px;margin:0 auto;padding:clamp(28px,6vw,72px) clamp(16px,4vw,32px) 80px}
+
+  /* ---------- Kopf ---------- */
+  header{margin-bottom:clamp(28px,5vw,52px)}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);
+    border:1px solid var(--line);border-radius:99px;padding:5px 13px 5px 10px;
+    background:rgba(16,28,36,.6);backdrop-filter:blur(6px);
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 10px var(--accent);animation:pulse 2.8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{
+    font-family:var(--serif);font-weight:400;
+    font-size:clamp(38px,8vw,68px);line-height:1.04;letter-spacing:.02em;
+    margin:18px 0 12px;color:#f0faf7;
+    text-shadow:0 0 44px rgba(94,201,186,.28);
+  }
+  h1 .thin{color:var(--accent);opacity:.92}
+  .lede{color:var(--muted);font-size:clamp(14px,2.2vw,16.5px);max-width:56ch}
+
+  /* ---------- Werkzeugleiste ---------- */
+  .tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:26px}
+  .search{
+    flex:1 1 240px;max-width:340px;display:flex;align-items:center;gap:9px;
+    background:rgba(16,28,36,.7);border:1px solid var(--line);border-radius:10px;
+    padding:9px 13px;transition:border-color .2s,box-shadow .2s;
+  }
+  .search:focus-within{border-color:var(--line-hi);box-shadow:0 0 0 3px rgba(94,201,186,.10)}
+  .search svg{flex:none;opacity:.5}
+  .search input{
+    flex:1;background:none;border:none;outline:none;color:var(--text);
+    font:inherit;font-size:14.5px;min-width:0;
+  }
+  .search input::placeholder{color:var(--muted);opacity:.75}
+  .count{font-size:12.5px;color:var(--muted);letter-spacing:.06em}
+
+  /* ---------- Raster ---------- */
+  .grid{
+    display:grid;gap:clamp(14px,2.4vw,22px);margin-top:26px;
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,262px),1fr));
+  }
+
+  .card{
+    position:relative;display:flex;flex-direction:column;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;text-decoration:none;color:inherit;isolation:isolate;
+    transition:transform .22s cubic-bezier(.2,.7,.3,1),border-color .22s,box-shadow .22s;
+  }
+  .card::after{
+    content:'';position:absolute;inset:0;border-radius:14px;pointer-events:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .card:hover,.card:focus-visible{
+    transform:translateY(-4px);border-color:var(--line-hi);outline:none;
+    box-shadow:0 18px 40px -18px rgba(0,0,0,.9),0 0 0 1px color-mix(in srgb,var(--ac) 35%,transparent),
+      0 0 34px -10px color-mix(in srgb,var(--ac) 55%,transparent);
+  }
+  .thumb{
+    position:relative;aspect-ratio:16/10;overflow:hidden;flex:none;
+    background:linear-gradient(150deg,color-mix(in srgb,var(--ac) 26%,#0c1620),#0a1219);
+  }
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform .5s cubic-bezier(.2,.7,.3,1)}
+  .card:hover .thumb img{transform:scale(1.06)}
+  .thumb .fallback{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-size:54px;color:color-mix(in srgb,var(--ac) 70%,#fff);
+    opacity:.55;letter-spacing:.06em;
+  }
+  .thumb .veil{position:absolute;inset:0;
+    background:linear-gradient(to top,rgba(16,28,36,.96) 2%,rgba(16,28,36,.15) 46%,transparent 78%)}
+  .play{
+    position:absolute;right:12px;bottom:12px;z-index:2;
+    display:flex;align-items:center;gap:7px;
+    background:color-mix(in srgb,var(--ac) 88%,#000);color:#04181a;
+    font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    padding:7px 13px;border-radius:99px;
+    opacity:0;transform:translateY(6px);transition:opacity .22s,transform .22s;
+    box-shadow:0 6px 18px -6px color-mix(in srgb,var(--ac) 80%,transparent);
+  }
+  .card:hover .play,.card:focus-visible .play{opacity:1;transform:translateY(0)}
+
+  .body{padding:15px 16px 17px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .title-row{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .t{font-family:var(--serif);font-size:21px;font-weight:400;letter-spacing:.02em;color:#f0faf7}
+  .st{font-size:12px;color:var(--muted);font-style:italic}
+  .desc{font-size:13.5px;color:var(--muted);
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:9px}
+  .tag{
+    font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    border:1px solid var(--line);border-radius:5px;padding:3px 8px;
+  }
+  .tag.acc{color:color-mix(in srgb,var(--ac) 78%,#fff);
+    border-color:color-mix(in srgb,var(--ac) 34%,transparent)}
+
+  /* ---------- Platzhalter ---------- */
+  .soon{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+    min-height:230px;border:1px dashed var(--line);border-radius:14px;
+    color:var(--muted);text-align:center;padding:26px;
+  }
+  .soon .plus{font-size:26px;opacity:.4;font-family:var(--serif)}
+  .soon .txt{font-size:13px;max-width:22ch;line-height:1.5}
+
+  .state{padding:60px 20px;text-align:center;color:var(--muted);font-size:14.5px}
+  .state code{background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px;
+    font-size:12.5px;color:var(--text)}
+
+  footer{
+    margin-top:64px;padding-top:22px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    font-size:12px;color:var(--muted);letter-spacing:.05em;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <span class="eyebrow"><span class="dot"></span>Goetschi Labs</span>
+    <h1>Goetschi <span class="thin">Arcade</span></h1>
+    <p class="lede">Die hauseigene Spielesammlung. Direkt im Browser spielbar &mdash;
+       am Rechner mit Tastatur, am Handy mit Touch&#8209;Tasten.</p>
+
+    <div class="tools" id="tools" hidden>
+      <label class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Spiel suchen …" autocomplete="off" spellcheck="false">
+      </label>
+      <span class="count" id="count"></span>
+    </div>
+  </header>
+
+  <main>
+    <div class="state" id="state">Lade Spiele …</div>
+    <div class="grid" id="grid" hidden></div>
+  </main>
+
+  <footer>
+    <span>Goetschi Arcade</span>
+    <span id="foot"></span>
+  </footer>
+</div>
+
+<script>
+const grid  = document.getElementById('grid');
+const state = document.getElementById('state');
+const tools = document.getElementById('tools');
+const countEl = document.getElementById('count');
+const foot  = document.getElementById('foot');
+let games = [];
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function card(g){
+  const accent = /^#[0-9a-f]{3,8}$/i.test(g.accent || '') ? g.accent : '#5ec9ba';
+  const href   = 'games/' + encodeURIComponent(g.slug) + '/';
+  const tags   = (g.tags || []).slice(0, 4);
+  const thumb  = g.cover
+    ? `<img src="${esc(g.cover)}" alt="" loading="lazy" decoding="async"
+            onerror="this.remove()">`
+    : '';
+  return `
+  <a class="card" href="${esc(href)}" style="--ac:${esc(accent)}">
+    <div class="thumb">
+      <span class="fallback">${esc((g.title || '?').charAt(0))}</span>
+      ${thumb}
+      <span class="veil"></span>
+      <span class="play">Spielen &#9656;</span>
+    </div>
+    <div class="body">
+      <div class="title-row">
+        <span class="t">${esc(g.title)}</span>
+        ${g.subtitle ? `<span class="st">${esc(g.subtitle)}</span>` : ''}
+      </div>
+      ${g.description ? `<p class="desc">${esc(g.description)}</p>` : ''}
+      <div class="tags">
+        ${tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+        ${g.controls ? `<span class="tag acc">${esc(g.controls)}</span>` : ''}
+      </div>
+    </div>
+  </a>`;
+}
+
+function render(list){
+  grid.innerHTML = list.map(card).join('') + `
+    <div class="soon">
+      <span class="plus">+</span>
+      <span class="txt">Hier erscheint das nächste Spiel, sobald es im Repo liegt.</span>
+    </div>`;
+  countEl.textContent = list.length === games.length
+    ? `${games.length} ${games.length === 1 ? 'Spiel' : 'Spiele'}`
+    : `${list.length} von ${games.length}`;
+}
+
+function filter(){
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  if (!q) return render(games);
+  render(games.filter(g => [g.title, g.subtitle, g.description, ...(g.tags || [])]
+    .join(' ').toLowerCase().includes(q)));
+}
+
+fetch('games.json', {cache: 'no-store'})
+  .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+  .then(data => {
+    games = (data.games || []).filter(g => g && g.slug && g.title);
+    if (!games.length){
+      state.innerHTML = 'Noch keine Spiele eingetragen &mdash; trag eines in <code>games.json</code> ein.';
+      return;
+    }
+    state.hidden = true;
+    grid.hidden  = false;
+    if (games.length > 3){
+      tools.hidden = false;
+      document.getElementById('q').addEventListener('input', filter);
+    }
+    render(games);
+    foot.textContent = games.length + (games.length === 1 ? ' Spiel' : ' Spiele');
+  })
+  .catch(err => {
+    state.innerHTML = 'Spiele-Liste konnte nicht geladen werden (<code>' +
+      esc(err.message) + '</code>).';
+  });
+</script>
+</body>
+</html>
