@@ -3,6 +3,10 @@
 Ein statischer Spiele-Hub: eine Startseite mit Kacheln, dahinter die einzelnen
 Browserspiele. Läuft als nginx-Container in Coolify (CT118).
 
+**Live im LAN:** <http://10.0.60.139:8099/> · alternativ <http://arcade.10.0.60.139.sslip.io/>
+(gleiche App über den Coolify-Traefik).
+Coolify-Projekt **Arcade**, Anwendung **arcade** (`dc5fp7ny50bjtfv45lar3v0n`).
+
 ```
 public/
   index.html      Hub — liest games.json und baut daraus die Kacheln
@@ -37,14 +41,19 @@ public/
 `controls` sind optional — ohne Cover zeigt die Kachel einen Farbverlauf mit dem
 Anfangsbuchstaben.
 
-3. Committen und pushen:
+3. Ausrollen — entweder mit dem mitgelieferten Skript:
 
-```bash
-git add -A && git commit -m "Spiel XY ergänzt" && git push
+```powershell
+.\deploy.ps1 "Spiel XY ergänzt"      # committet, pusht und baut in Coolify neu
 ```
 
-Coolify baut das Image neu und deployt automatisch (Auto-Deploy per Webhook).
-Falls der Webhook mal nicht greift: in Coolify auf der App **Redeploy** klicken.
+oder von Hand: `git add -A && git commit -m "…" && git push`, danach in Coolify
+(**Arcade → arcade**) auf **Redeploy** klicken.
+
+> Kein automatischer Push-Deploy: Coolify läuft nur im LAN (10.0.60.139), GitHub
+> könnte einen Webhook von aussen also gar nicht erreichen. Deshalb der manuelle
+> Anstoss. Für `deploy.ps1` braucht es einen Coolify-API-Token in `$env:COOLIFY_TOKEN`
+> oder in der Datei `.coolify-token` (steht in `.gitignore`).
 
 ## Was der Server zusätzlich macht
 
