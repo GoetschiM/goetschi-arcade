@@ -75,6 +75,44 @@ for automatic redeploy, a Coolify API token (`COOLIFY_TOKEN`).
   can't reach it. A push alone does not go live — always follow up with a
   redeploy.
 
+### No `COOLIFY_TOKEN`? Deploy straight through Docker instead
+
+No Coolify token has ever been found stored anywhere (Notion included) as of
+2026-08-30. You don't need one — Coolify is just orchestrating plain Docker
+underneath, and you can do exactly what its "Redeploy" button does by hand
+once you have root on CT118:
+
+1. **Get to CT118.** SSH to the Proxmox host `pve01` (`10.0.60.10`) as root —
+   password auth only, no key installed; ask Michel or check his Notion
+   "Credentials & Zugänge" page for the current password if you don't have
+   it. From pve01: `pct exec 118 -- bash -c '...'` runs commands inside the
+   CT118 container non-interactively (no separate SSH hop into CT118 needed).
+2. **Build the new image.** Inside CT118:
+   ```bash
+   git clone --depth 1 https://github.com/GoetschiM/goetschi-arcade.git /tmp/arcade-build
+   cd /tmp/arcade-build
+   git rev-parse HEAD   # full 40-char SHA — this becomes the image tag
+   docker build -t dc5fp7ny50bjtfv45lar3v0n:<full-commit-sha> .
+   ```
+3. **Point the running app at the new image.** The app's compose file lives
+   at `/data/coolify/applications/dc5fp7ny50bjtfv45lar3v0n/docker-compose.yaml`
+   (container name `dc5fp7ny50bjtfv45lar3v0n-184955118641`). Back it up, then
+   edit the `image:` line to the tag you just built:
+   ```bash
+   cd /data/coolify/applications/dc5fp7ny50bjtfv45lar3v0n
+   cp docker-compose.yaml docker-compose.yaml.bak-$(date +%s)
+   sed -i "s|image: '.*'|image: 'dc5fp7ny50bjtfv45lar3v0n:<full-commit-sha>'|" docker-compose.yaml
+   docker compose up -d
+   ```
+4. **Clean up and verify:** `rm -rf /tmp/arcade-build`, then from anywhere
+   with LAN access: `curl http://10.0.60.139:8099/games.json` should show
+   the new game, and `curl -o /dev/null -w '%{http_code}' http://10.0.60.139:8099/games/<slug>/`
+   should return 200.
+
+This has been used successfully for three deploys in a row (2048, Void Dash,
+Neon Swarm) — treat it as the primary path, not a fallback, until someone
+actually finds/generates a working `COOLIFY_TOKEN`.
+
 ## Things the server does for you
 
 - `nginx.conf` injects a small "← Arcade" back-button into every page under
