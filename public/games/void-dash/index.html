@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Goetschi Labs Arcade — Void Dash</title>
+<meta name="theme-color" content="#05060d" />
+<style>
+  :root { --ink: #eef1fb; --ink-dim: #9aa4c2; --accent: #6ae0ff; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; background: #05060d; color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overscroll-behavior: none; touch-action: none; user-select: none; overflow: hidden;
+  }
+  #stage {
+    position: relative; width: 100%; height: 100%; min-height: 100dvh;
+  }
+  canvas { display: block; width: 100%; height: 100%; background: #05060d; }
+  .hud {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); right: 16px;
+    text-align: right; pointer-events: none; z-index: 5;
+  }
+  .hud .score { font-size: 32px; font-weight: 800; line-height: 1; text-shadow: 0 0 12px rgba(106,224,255,.5); }
+  .hud .best { font-size: 12px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
+  .overlay {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; text-align: center; padding: 24px; background: rgba(5,6,13,.72); backdrop-filter: blur(3px);
+    z-index: 10;
+  }
+  .overlay h1 { margin: 0; font-size: 30px; letter-spacing: .04em; }
+  .overlay h1 span { color: var(--accent); }
+  .overlay p { margin: 0; color: var(--ink-dim); font-size: 14px; max-width: 320px; line-height: 1.5; }
+  .overlay .stat { font-size: 40px; font-weight: 800; text-shadow: 0 0 16px rgba(106,224,255,.5); }
+  .overlay .best-line { font-size: 13px; color: var(--ink-dim); }
+  .overlay .new-best { color: #ffd76a; font-weight: 700; }
+  button.play {
+    margin-top: 6px; background: var(--accent); color: #05060d; border: none; border-radius: 999px;
+    padding: 14px 30px; font-weight: 800; font-size: 15px; letter-spacing: .03em; cursor: pointer;
+  }
+  button.play:active { transform: scale(.96); }
+  .hint { position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); left: 0; right: 0;
+    text-align: center; color: var(--ink-dim); font-size: 12px; z-index: 5; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div class="hud">
+    <div class="score" id="score">0</div>
+    <div class="best" id="best">Best 0</div>
+  </div>
+  <div class="overlay" id="startOverlay">
+    <h1>Void <span>Dash</span></h1>
+    <p>Tippen oder Klicken, um deinen Kurs zu heben. Weiche den Asteroidenfeldern aus, so lange du kannst — jede Lücke bringt einen Punkt.</p>
+    <button class="play" id="startBtn">Start</button>
+  </div>
+  <div class="overlay" id="overOverlay" style="display:none">
+    <h1>Zerschellt</h1>
+    <div class="stat" id="finalScore">0</div>
+    <div class="best-line" id="bestLine">Best 0</div>
+    <button class="play" id="retryBtn">Nochmal</button>
+  </div>
+  <div class="hint" id="hint">Tippen = Antrieb nach oben</div>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  var GRAVITY = 1400, FLAP_VELOCITY = -420, MAX_FALL_SPEED = 900;
+  var BASE_SPEED = 210, MAX_SPEED = 420, RAMP_PER_POINT = 6;
+  var GAP_SIZE_START = 190, GAP_SIZE_MIN = 130, GAP_SHRINK_PER_POINT = 1.4;
+  var OBSTACLE_WIDTH = 62, OBSTACLE_SPACING = 300;
+  var PLAYER_RADIUS = 13;
+  var BEST_KEY = "voiddash_best_v1";
+
+  function updatePlayer(player, dt, flapped) {
+    var vy = player.vy + GRAVITY * dt;
+    if (flapped) vy = FLAP_VELOCITY;
+    if (vy > MAX_FALL_SPEED) vy = MAX_FALL_SPEED;
+    var y = player.y + vy * dt;
+    return { y: y, vy: vy };
+  }
+  function generateGap(canvasHeight, gapSize, rand, margin) {
+    margin = margin == null ? 40 : margin;
+    var minGapY = margin, maxGapY = canvasHeight - margin - gapSize;
+    var gapY = minGapY + rand * Math.max(0, maxGapY - minGapY);
+    return { gapY: gapY, gapSize: gapSize };
+  }
+  function collidesWithObstacle(player, obstacle) {
+    var withinX = player.x + player.radius > obstacle.x && player.x - player.radius < obstacle.x + obstacle.width;
+    if (!withinX) return false;
+    var hitsTop = player.y - player.radius < obstacle.gapY;
+    var hitsBottom = player.y + player.radius > obstacle.gapY + obstacle.gapSize;
+    return hitsTop || hitsBottom;
+  }
+  function collidesWithBounds(player, canvasHeight) {
+    return player.y - player.radius < 0 || player.y + player.radius > canvasHeight;
+  }
+  function speedForScore(score) { return Math.min(BASE_SPEED + score * RAMP_PER_POINT, MAX_SPEED); }
+  function gapForScore(score) { return Math.max(GAP_SIZE_MIN, GAP_SIZE_START - score * GAP_SHRINK_PER_POINT); }
+
+  var canvas = document.getElementById("c");
+  var ctx = canvas.getContext("2d");
+  var scoreEl = document.getElementById("score");
+  var bestEl = document.getElementById("best");
+  var startOverlay = document.getElementById("startOverlay");
+  var overOverlay = document.getElementById("overOverlay");
+  var finalScoreEl = document.getElementById("finalScore");
+  var bestLineEl = document.getElementById("bestLine");
+  var hintEl = document.getElementById("hint");
+
+  var W = 0, H = 0, DPR = Math.max(1, window.devicePixelRatio || 1);
+  function resize() {
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+
+  var best = 0;
+  try { best = parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0; } catch (e) {}
+  bestEl.textContent = "Best " + best;
+
+  var state = "start"; // start | playing | over
+  var player, obstacles, score, elapsed, stars, particles, nextObstacleX;
+
+  function makeStars() {
+    var arr = [];
+    for (var i = 0; i < 70; i++) {
+      arr.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.6 + 0.3, s: Math.random() * 30 + 10 });
+    }
+    return arr;
+  }
+
+  function reset() {
+    player = { x: Math.max(70, W * 0.22), y: H / 2, vy: 0 };
+    obstacles = [];
+    particles = [];
+    score = 0;
+    elapsed = 0;
+    stars = makeStars();
+    nextObstacleX = W + 80;
+    scoreEl.textContent = "0";
+  }
+
+  function spawnObstacleIfNeeded() {
+    while (nextObstacleX < W + 400) {
+      var gapSize = gapForScore(score);
+      var g = generateGap(H, gapSize, Math.random(), 36);
+      obstacles.push({ x: nextObstacleX, width: OBSTACLE_WIDTH, gapY: g.gapY, gapSize: g.gapSize, passed: false });
+      nextObstacleX += OBSTACLE_SPACING;
+    }
+  }
+
+  function flap() {
+    if (state === "start") { startGame(); return; }
+    if (state === "over") { return; }
+    player.flapNow = true;
+  }
+
+  function startGame() {
+    reset();
+    state = "playing";
+    startOverlay.style.display = "none";
+    overOverlay.style.display = "none";
+    hintEl.style.display = "block";
+    spawnObstacleIfNeeded();
+  }
+
+  function endGame() {
+    state = "over";
+    hintEl.style.display = "none";
+    if (score > best) {
+      best = score;
+      try { localStorage.setItem(BEST_KEY, String(best)); } catch (e) {}
+    }
+    finalScoreEl.textContent = String(score);
+    bestLineEl.innerHTML = score >= best && score > 0
+      ? '<span class="new-best">Neuer Bestwert!</span>'
+      : ("Best " + best);
+    bestEl.textContent = "Best " + best;
+    overOverlay.style.display = "flex";
+  }
+
+  var lastT = null;
+  function loop(t) {
+    if (lastT == null) lastT = t;
+    var dt = Math.min(0.033, (t - lastT) / 1000);
+    lastT = t;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // starfield
+    ctx.fillStyle = "#05060d";
+    ctx.fillRect(0, 0, W, H);
+    for (var i = 0; i < stars.length; i++) {
+      var st = stars[i];
+      if (state === "playing") st.x -= st.s * dt;
+      if (st.x < 0) st.x = W;
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = "#9aa4c2";
+      ctx.beginPath();
+      ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    if (state === "playing") {
+      elapsed += dt;
+      var speed = speedForScore(score);
+
+      var flapped = !!player.flapNow;
+      player.flapNow = false;
+      var res = updatePlayer(player, dt, flapped);
+      player.y = res.y; player.vy = res.vy;
+
+      if (flapped) {
+        for (var p = 0; p < 6; p++) {
+          particles.push({ x: player.x - PLAYER_RADIUS, y: player.y + (Math.random() - 0.5) * 10,
+            vx: -(Math.random() * 80 + 60), vy: (Math.random() - 0.5) * 80, life: 0.5 });
+        }
+      }
+
+      for (var o = 0; o < obstacles.length; o++) {
+        obstacles[o].x -= speed * dt;
+        if (!obstacles[o].passed && obstacles[o].x + obstacles[o].width < player.x) {
+          obstacles[o].passed = true;
+          score += 1;
+          scoreEl.textContent = String(score);
+        }
+      }
+      obstacles = obstacles.filter(function (o) { return o.x + o.width > -20; });
+      nextObstacleX -= speed * dt;
+      spawnObstacleIfNeeded();
+
+      var collided = collidesWithBounds(player, H);
+      for (var c = 0; c < obstacles.length && !collided; c++) {
+        if (collidesWithObstacle({ x: player.x, y: player.y, radius: PLAYER_RADIUS }, obstacles[c])) collided = true;
+      }
+      if (collided) endGame();
+    }
+
+    // obstacles (asteroid columns)
+    ctx.fillStyle = "#1c2440";
+    ctx.strokeStyle = "#3a4a7a";
+    ctx.lineWidth = 2;
+    for (var k = 0; k < obstacles.length; k++) {
+      var ob = obstacles[k];
+      roundRect(ob.x, -4, ob.width, ob.gapY + 4, 10);
+      roundRect(ob.x, ob.gapY + ob.gapSize, ob.width, H - (ob.gapY + ob.gapSize) + 4, 10);
+    }
+
+    // particles
+    for (var pi = particles.length - 1; pi >= 0; pi--) {
+      var pt = particles[pi];
+      pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.life -= dt;
+      if (pt.life <= 0) { particles.splice(pi, 1); continue; }
+      ctx.globalAlpha = Math.max(0, pt.life / 0.5);
+      ctx.fillStyle = "#6ae0ff";
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // player ship
+    if (player) {
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      var ang = Math.max(-0.5, Math.min(0.9, (player.vy || 0) / 700));
+      ctx.rotate(ang);
+      var grad = ctx.createRadialGradient(0, 0, 1, 0, 0, PLAYER_RADIUS * 2.2);
+      grad.addColorStop(0, "#eafcff");
+      grad.addColorStop(1, "#6ae0ff");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(0, 0, PLAYER_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#05060d";
+      ctx.beginPath();
+      ctx.arc(3, -2, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  function roundRect(x, y, w, h, r) {
+    if (w <= 0 || h <= 0) return;
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  document.getElementById("startBtn").addEventListener("click", function (e) { e.stopPropagation(); startGame(); });
+  document.getElementById("retryBtn").addEventListener("click", function (e) { e.stopPropagation(); startGame(); });
+  window.addEventListener("pointerdown", function (e) {
+    if (state === "over" && e.target && e.target.id === "retryBtn") return;
+    if (state === "start" && e.target && e.target.id === "startBtn") return;
+    flap();
+  });
+  window.addEventListener("keydown", function (e) {
+    if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); flap(); }
+  });
+
+  resize();
+  reset();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

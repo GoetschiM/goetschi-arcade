@@ -20,6 +20,16 @@
       "tags": ["Puzzle", "Solo"],
       "controls": "Touch & Pfeiltasten",
       "added": "2026-08-30"
+    },
+    {
+      "slug": "void-dash",
+      "title": "Void Dash",
+      "subtitle": "Durchs Asteroidenfeld",
+      "description": "Tippen, um deinen Kurs zu heben, und den Asteroidenfeldern ausweichen — so lange wie möglich durchhalten. Wird mit jedem Punkt schneller und enger.",
+      "accent": "#6ae0ff",
+      "tags": ["Action", "Arcade", "Solo"],
+      "controls": "Tippen / Klicken / Leertaste",
+      "added": "2026-08-30"
     }
   ]
 }
