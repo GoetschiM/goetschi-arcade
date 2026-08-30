@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Neon Swarm">
+  <defs>
+    <radialGradient id="bg"><stop stop-color="#241238"/><stop offset="1" stop-color="#05030a"/></radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <pattern id="grid" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0H0V54" fill="none" stroke="#5ef6ff" stroke-opacity=".08"/></pattern>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/><rect width="800" height="500" fill="url(#grid)"/>
+  <g fill="#09050f" stroke="#ff4fd8" stroke-width="7" filter="url(#glow)">
+    <path d="m152 108 24 15 27-8 8 29 25 17-21 22 1 30-30-2-23 20-18-24-29-8 10-28-13-27 28-11z"/>
+    <path d="m651 90 20 19 28-2 3 28 23 16-16 23 7 27-27 8-13 25-25-13-28 7-9-27-24-14 13-25-10-27 27-11z"/>
+    <path d="m676 326 18 15 24-4 5 24 21 12-12 21 7 23-23 8-10 22-22-10-22 8-9-22-21-10 10-22-9-21 23-7z"/>
+    <path d="m128 337 17 13 21-5 6 21 19 10-10 19 7 20-20 8-8 20-20-8-19 8-9-19-19-8 8-19-10-18 20-9z"/>
+  </g>
+  <g transform="translate(400 250)" filter="url(#glow)">
+    <path d="M88 0-55-62-28 0-55 62Z" fill="#ff4fd8"/>
+    <rect x="-56" y="-13" width="48" height="26" rx="8" fill="#5ef6ff"/>
+    <circle r="118" fill="none" stroke="#5ef6ff" stroke-opacity=".22" stroke-width="3" stroke-dasharray="12 16"/>
+  </g>
+  <text x="400" y="452" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-weight="900" font-size="51" letter-spacing="9">NEON SWARM</text>
+</svg>

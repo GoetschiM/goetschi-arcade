@@ -30,6 +30,17 @@
       "tags": ["Action", "Arcade", "Solo"],
       "controls": "Tippen / Klicken / Leertaste",
       "added": "2026-08-30"
+    },
+    {
+      "slug": "neon-swarm",
+      "title": "Neon Swarm",
+      "subtitle": "Überlebe den Ansturm",
+      "description": "Steuere deinen Gleiter durch den Schwarm, sammle Energie und baue dir mit jedem Level einen stärkeren Build. Wie lange hältst du durch?",
+      "cover": "games/neon-swarm/cover.svg",
+      "accent": "#ff4fd8",
+      "tags": ["Survival", "Action", "Upgrades", "Solo"],
+      "controls": "Touch / WASD / Pfeiltasten",
+      "added": "2026-08-30"
     }
   ]
 }
