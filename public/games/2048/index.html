@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Goetschi Labs Arcade — 2048</title>
+<meta name="theme-color" content="#0f1420" />
+<style>
+  :root {
+    --bg: #0f1420;
+    --panel: #171d2e;
+    --panel-2: #1f2740;
+    --grid-gap: 10px;
+    --radius: 10px;
+    --ink: #eef1fb;
+    --ink-dim: #9aa4c2;
+    --accent: #6a8dff;
+    --tile-2: #26314f;
+    --tile-4: #2c3a5e;
+    --tile-8: #3d5aa8;
+    --tile-16: #4a6bc4;
+    --tile-32: #5b6ff0;
+    --tile-64: #7658e0;
+    --tile-128: #9a4fd6;
+    --tile-256: #c94fc9;
+    --tile-512: #e0508f;
+    --tile-1024: #e8703f;
+    --tile-2048: #f0b429;
+    --tile-super: #ffd76a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overscroll-behavior: none;
+    touch-action: none;
+    user-select: none;
+  }
+  #app {
+    min-height: 100%;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  }
+  .wrap {
+    width: 100%;
+    max-width: 480px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 10px;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: 0.3px;
+  }
+  h1 span { color: var(--ink-dim); font-weight: 400; font-size: 13px; display: block; margin-top: 2px; }
+  .scores {
+    display: flex;
+    gap: 8px;
+  }
+  .score-box {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    text-align: center;
+    min-width: 66px;
+  }
+  .score-box .label {
+    font-size: 10px;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .score-box .value {
+    font-size: 18px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .hint { color: var(--ink-dim); font-size: 13px; }
+  button {
+    background: var(--accent);
+    color: #0b1020;
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button:active { transform: scale(0.97); }
+  .board-shell {
+    position: relative;
+    background: var(--panel);
+    border-radius: 16px;
+    padding: var(--grid-gap);
+    aspect-ratio: 1 / 1;
+    width: 100%;
+  }
+  .grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: var(--grid-gap);
+    width: 100%;
+    height: 100%;
+  }
+  .cell-bg {
+    background: var(--panel-2);
+    border-radius: var(--radius);
+  }
+  .tiles {
+    position: absolute;
+    inset: var(--grid-gap);
+  }
+  .tile {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    font-weight: 800;
+    color: #fff;
+    background: var(--tile-2);
+    transition: top 100ms ease, left 100ms ease, transform 80ms ease;
+    will-change: top, left, transform;
+  }
+  .tile.spawn { animation: pop 140ms ease; }
+  .tile.merged { animation: merge 140ms ease; }
+  @keyframes pop { from { transform: scale(0.4); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
+  @keyframes merge { 0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  .tile[data-v="2"] { background: var(--tile-2); }
+  .tile[data-v="4"] { background: var(--tile-4); }
+  .tile[data-v="8"] { background: var(--tile-8); }
+  .tile[data-v="16"] { background: var(--tile-16); }
+  .tile[data-v="32"] { background: var(--tile-32); }
+  .tile[data-v="64"] { background: var(--tile-64); }
+  .tile[data-v="128"] { background: var(--tile-128); font-size: 0.85em; }
+  .tile[data-v="256"] { background: var(--tile-256); font-size: 0.85em; }
+  .tile[data-v="512"] { background: var(--tile-512); font-size: 0.85em; }
+  .tile[data-v="1024"] { background: var(--tile-1024); font-size: 0.72em; }
+  .tile[data-v="2048"] { background: var(--tile-2048); color: #241a00; font-size: 0.72em; }
+  .tile[data-v="4096"], .tile[data-v="8192"] { background: var(--tile-super); color: #241a00; font-size: 0.72em; }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 20, 32, 0.86);
+    border-radius: 16px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .overlay h2 { margin: 0; font-size: 24px; }
+  .overlay p { margin: 0; color: var(--ink-dim); font-size: 14px; }
+  .overlay .row { display: flex; gap: 10px; }
+  .btn-secondary { background: var(--panel-2); color: var(--ink); }
+  footer {
+    margin-top: 14px;
+    color: var(--ink-dim);
+    font-size: 12px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="wrap">
+    <header>
+      <h1>2048<span>Goetschi Labs Arcade</span></h1>
+      <div class="scores">
+        <div class="score-box"><div class="label">Score</div><div class="value" id="score">0</div></div>
+        <div class="score-box"><div class="label">Best</div><div class="value" id="best">0</div></div>
+      </div>
+    </header>
+    <div class="toolbar">
+      <span class="hint">Wischen oder Pfeiltasten</span>
+      <button id="newGame">Neu</button>
+    </div>
+    <div class="board-shell">
+      <div class="grid" id="grid">
+        <div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div>
+        <div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div>
+        <div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div>
+        <div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div>
+        <div class="tiles" id="tiles"></div>
+      </div>
+      <div class="overlay" id="overlay">
+        <h2 id="overlayTitle">Game Over</h2>
+        <p id="overlaySub">Dein Spielstand wurde gespeichert.</p>
+        <div class="row">
+          <button id="overlayNew">Neues Spiel</button>
+          <button class="btn-secondary" id="overlayContinue" style="display:none">Weiterspielen</button>
+        </div>
+      </div>
+    </div>
+    <footer>Dein Fortschritt wird automatisch gespeichert — jederzeit kurz reinschauen und weiterspielen.</footer>
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  var SIZE = 4;
+  var STORAGE_KEY = "gla2048_state_v1";
+  var BEST_KEY = "gla2048_best_v1";
+
+  function emptyBoard(size) {
+    var b = [];
+    for (var r = 0; r < size; r++) { b.push(new Array(size).fill(0)); }
+    return b;
+  }
+  function cloneBoard(b) { return b.map(function (row) { return row.slice(); }); }
+  function boardsEqual(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function getEmptyCells(b) {
+    var cells = [];
+    for (var r = 0; r < b.length; r++) for (var c = 0; c < b[r].length; c++) if (b[r][c] === 0) cells.push([r, c]);
+    return cells;
+  }
+  function addRandomTile(b) {
+    var empty = getEmptyCells(b);
+    if (!empty.length) return null;
+    var pick = empty[Math.floor(Math.random() * empty.length)];
+    var v = Math.random() < 0.9 ? 2 : 4;
+    b[pick[0]][pick[1]] = v;
+    return { r: pick[0], c: pick[1], v: v };
+  }
+  function slideRowLeft(row) {
+    var original = row.slice();
+    var filtered = row.filter(function (v) { return v !== 0; });
+    var result = [];
+    var gained = 0;
+    for (var i = 0; i < filtered.length; i++) {
+      if (filtered[i] !== 0 && filtered[i] === filtered[i + 1]) {
+        var merged = filtered[i] * 2;
+        result.push(merged);
+        gained += merged;
+        i++;
+      } else {
+        result.push(filtered[i]);
+      }
+    }
+    while (result.length < row.length) result.push(0);
+    var moved = !boardsEqual([original], [result]);
+    return { row: result, gained: gained, moved: moved };
+  }
+  function rotateBoardCW(b) {
+    var n = b.length;
+    var res = emptyBoard(n);
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) res[c][n - 1 - r] = b[r][c];
+    return res;
+  }
+  function move(board, direction) {
+    var rotations = { left: 0, up: 3, right: 2, down: 1 }[direction];
+    var working = cloneBoard(board);
+    for (var i = 0; i < rotations; i++) working = rotateBoardCW(working);
+    var moved = false, gained = 0;
+    var resultRows = working.map(function (row) {
+      var res = slideRowLeft(row);
+      gained += res.gained;
+      moved = moved || res.moved;
+      return res.row;
+    });
+    var result = resultRows;
+    var remaining = (4 - rotations) % 4;
+    for (var j = 0; j < remaining; j++) result = rotateBoardCW(result);
+    return { board: result, moved: moved, gained: gained };
+  }
+  function canMove(b) {
+    if (getEmptyCells(b).length > 0) return true;
+    var n = b.length;
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) {
+      var v = b[r][c];
+      if (c + 1 < n && b[r][c + 1] === v) return true;
+      if (r + 1 < n && b[r + 1][c] === v) return true;
+    }
+    return false;
+  }
+  function hasWon(b, target) { return b.some(function (row) { return row.some(function (v) { return v >= target; }); }); }
+
+  var state = {
+    board: emptyBoard(SIZE),
+    score: 0,
+    best: 0,
+    won: false,
+    wonAcknowledged: false,
+    over: false,
+  };
+
+  var gridEl = document.getElementById("grid");
+  var tilesEl = document.getElementById("tiles");
+  var scoreEl = document.getElementById("score");
+  var bestEl = document.getElementById("best");
+  var overlayEl = document.getElementById("overlay");
+  var overlayTitle = document.getElementById("overlayTitle");
+  var overlaySub = document.getElementById("overlaySub");
+  var overlayContinue = document.getElementById("overlayContinue");
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        board: state.board, score: state.score, won: state.won,
+        wonAcknowledged: state.wonAcknowledged, over: state.over,
+      }));
+      localStorage.setItem(BEST_KEY, String(state.best));
+    } catch (e) { /* storage unavailable, ignore */ }
+  }
+  function load() {
+    try {
+      var best = parseInt(localStorage.getItem(BEST_KEY) || "0", 10);
+      state.best = isNaN(best) ? 0 : best;
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && parsed.board && parsed.board.length === SIZE) {
+          state.board = parsed.board;
+          state.score = parsed.score || 0;
+          state.won = !!parsed.won;
+          state.wonAcknowledged = !!parsed.wonAcknowledged;
+          state.over = !!parsed.over;
+          return true;
+        }
+      }
+    } catch (e) { /* corrupt or unavailable storage */ }
+    return false;
+  }
+
+  function newGame() {
+    state.board = emptyBoard(SIZE);
+    state.score = 0;
+    state.won = false;
+    state.wonAcknowledged = false;
+    state.over = false;
+    addRandomTile(state.board);
+    addRandomTile(state.board);
+    overlayEl.classList.remove("show");
+    save();
+    render(true);
+  }
+
+  function cellRect() {
+    var shell = gridEl.getBoundingClientRect();
+    var gap = 10;
+    var cell = (shell.width - gap * (SIZE + 1)) / SIZE;
+    return { cell: cell, gap: gap };
+  }
+
+  function render(fresh) {
+    scoreEl.textContent = state.score;
+    bestEl.textContent = state.best;
+    tilesEl.innerHTML = "";
+    var geo = cellRect();
+    for (var r = 0; r < SIZE; r++) {
+      for (var c = 0; c < SIZE; c++) {
+        var v = state.board[r][c];
+        if (!v) continue;
+        var el = document.createElement("div");
+        el.className = "tile" + (fresh ? " spawn" : "");
+        el.setAttribute("data-v", v > 8192 ? "8192" : v);
+        el.style.width = geo.cell + "px";
+        el.style.height = geo.cell + "px";
+        el.style.left = (c * (geo.cell + geo.gap)) + "px";
+        el.style.top = (r * (geo.cell + geo.gap)) + "px";
+        el.style.fontSize = Math.max(16, geo.cell * 0.42) + "px";
+        el.textContent = v;
+        tilesEl.appendChild(el);
+      }
+    }
+    if (state.won && !state.wonAcknowledged) {
+      overlayTitle.textContent = "Geschafft! 🎉";
+      overlaySub.textContent = "Du hast 2048 erreicht. Weiterspielen für einen höheren Score?";
+      overlayContinue.style.display = "inline-block";
+      overlayEl.classList.add("show");
+    } else if (state.over) {
+      overlayTitle.textContent = "Game Over";
+      overlaySub.textContent = "Score: " + state.score + (state.score >= state.best ? " — neuer Bestwert!" : "");
+      overlayContinue.style.display = "none";
+      overlayEl.classList.add("show");
+    } else {
+      overlayEl.classList.remove("show");
+    }
+  }
+
+  function doMove(direction) {
+    if (state.over) return;
+    if (state.won && !state.wonAcknowledged) return;
+    var result = move(state.board, direction);
+    if (!result.moved) return;
+    state.board = result.board;
+    state.score += result.gained;
+    if (state.score > state.best) state.best = state.score;
+    addRandomTile(state.board);
+    if (!state.won && hasWon(state.board, 2048)) state.won = true;
+    if (!canMove(state.board)) state.over = true;
+    save();
+    render(false);
+  }
+
+  document.getElementById("newGame").addEventListener("click", newGame);
+  document.getElementById("overlayNew").addEventListener("click", newGame);
+  overlayContinue.addEventListener("click", function () {
+    state.wonAcknowledged = true;
+    overlayEl.classList.remove("show");
+    save();
+  });
+
+  window.addEventListener("keydown", function (e) {
+    var map = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
+    if (map[e.key]) { e.preventDefault(); doMove(map[e.key]); }
+  });
+
+  var touchStartX = null, touchStartY = null;
+  gridEl.addEventListener("touchstart", function (e) {
+    var t = e.changedTouches[0];
+    touchStartX = t.clientX; touchStartY = t.clientY;
+  }, { passive: true });
+  gridEl.addEventListener("touchend", function (e) {
+    if (touchStartX === null) return;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - touchStartX;
+    var dy = t.clientY - touchStartY;
+    var absX = Math.abs(dx), absY = Math.abs(dy);
+    var THRESHOLD = 24;
+    if (Math.max(absX, absY) < THRESHOLD) { touchStartX = null; return; }
+    if (absX > absY) doMove(dx > 0 ? "right" : "left");
+    else doMove(dy > 0 ? "down" : "up");
+    touchStartX = null;
+  }, { passive: true });
+
+  window.addEventListener("resize", function () { render(false); });
+
+  if (!load() || getEmptyCells(state.board).length === SIZE * SIZE) {
+    newGame();
+  } else {
+    render(true);
+  }
+})();
+</script>
+</body>
+</html>

@@ -10,6 +10,16 @@
       "tags": ["Action", "Platformer", "Solo"],
       "controls": "Tastatur & Touch",
       "added": "2026-07-27"
+    },
+    {
+      "slug": "2048",
+      "title": "2048",
+      "subtitle": "Kacheln verschmelzen",
+      "description": "Klassisches 2048 — wische die Kacheln zusammen bis die 2048 fällt. Speichert automatisch, perfekt für kurze Pausen.",
+      "accent": "#6a8dff",
+      "tags": ["Puzzle", "Solo"],
+      "controls": "Touch & Pfeiltasten",
+      "added": "2026-08-30"
     }
   ]
 }
