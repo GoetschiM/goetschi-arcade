@@ -40,7 +40,7 @@ button{border:0;color:#100617;font:inherit;font-weight:850;cursor:pointer}.mainb
 (()=>{'use strict';
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');let W,H,DPR;
 const $=id=>document.getElementById(id), ui={hud:$('hud'),time:$('time'),wave:$('wave'),kills:$('kills'),level:$('level'),hp:$('hp'),xp:$('xp'),start:$('start'),upgrade:$('upgrade'),over:$('over'),choices:$('choices'),result:$('result'),best:$('best'),overBest:$('overBest'),toast:$('toast'),controls:$('controls')};
-let state='menu',last=0,elapsed=0,kills=0,level=1,xp=0,xpNeed=7,spawnClock=0,shotClock=0,flash=0,shake=0,player,enemies,shots,gems,fx,keys={},pointer=null,best=+(localStorage.getItem('neonSwarmBest')||0);
+let state='menu',last=0,elapsed=0,kills=0,level=1,xp=0,xpNeed=7,spawnClock=0,shotClock=0,flash=0,shake=0,player,enemies=[],shots=[],gems=[],fx=[],keys={},pointer=null,best=+(localStorage.getItem('neonSwarmBest')||0);
 const upgrades=[
  {id:'rapid',icon:'⚡',name:'Overclock',desc:'20% schneller feuern',apply:()=>player.fireRate*=.8},
  {id:'power',icon:'✦',name:'Plasma-Kern',desc:'+1 Projektilschaden',apply:()=>player.damage++},
