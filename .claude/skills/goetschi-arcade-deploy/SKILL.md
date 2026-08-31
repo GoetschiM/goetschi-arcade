@@ -96,14 +96,25 @@ once you have root on CT118:
    ```
 3. **Point the running app at the new image.** The app's compose file lives
    at `/data/coolify/applications/dc5fp7ny50bjtfv45lar3v0n/docker-compose.yaml`
-   (container name `dc5fp7ny50bjtfv45lar3v0n-184955118641`). Back it up, then
-   edit the `image:` line to the tag you just built:
+   (container name `dc5fp7ny50bjtfv45lar3v0n-184955118641`). The `image:` line
+   in that file has **no quotes** around the value
+   (`image: dc5fp7ny50bjtfv45lar3v0n:<sha>`) — back it up, then edit it to the
+   tag you just built:
    ```bash
    cd /data/coolify/applications/dc5fp7ny50bjtfv45lar3v0n
    cp docker-compose.yaml docker-compose.yaml.bak-$(date +%s)
-   sed -i "s|image: '.*'|image: 'dc5fp7ny50bjtfv45lar3v0n:<full-commit-sha>'|" docker-compose.yaml
+   sed -i "s#image: .*#image: dc5fp7ny50bjtfv45lar3v0n:<full-commit-sha>#" docker-compose.yaml
    docker compose up -d
    ```
+   **Substitute `<full-commit-sha>` with the literal string, not a shell
+   variable.** Running this through a nested `ssh ... "pct exec 118 -- bash -c
+   '...'"` command means a `$SHA` variable can silently expand to empty
+   inside the innermost quoting layer, which produces `image:
+   dc5fp7ny50bjtfv45lar3v0n:` (no tag) and makes `docker compose up -d` fail
+   with a YAML parse error. Run `git rev-parse HEAD` first, read the SHA back,
+   then paste it as a literal into the `sed` command. If a bad `sed` does
+   corrupt the file, restore from the `.bak-<timestamp>` you just made before
+   retrying.
 4. **Clean up and verify:** `rm -rf /tmp/arcade-build`, then from anywhere
    with LAN access: `curl http://10.0.60.139:8099/games.json` should show
    the new game, and `curl -o /dev/null -w '%{http_code}' http://10.0.60.139:8099/games/<slug>/`
