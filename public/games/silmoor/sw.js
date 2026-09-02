@@ -1,5 +1,5 @@
 // Silmoor service worker — caches the game for offline play.
-const CACHE = 'silmoor-v1';
+const CACHE = 'silmoor-v2';
 const ASSETS = [
   './', './index.html', './game.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png'

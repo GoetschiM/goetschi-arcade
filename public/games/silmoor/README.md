@@ -25,12 +25,18 @@ Dann im Browser `http://localhost:8777/index.html` aufrufen.
 
 | Aktion | Tastatur | Touch |
 |---|---|---|
-| Gehen | ◀ ▶ / A D | ◀ ▶ |
+| Bewegen / zielen / klettern | Pfeile / W A S D | analoger Bewegungsstick |
 | Springen | Leertaste | SPRUNG |
 | Nagel-Schlag | J / X | NAGEL |
-| Klettern / Zielen | ▲ ▼ / W S | ▲ ▼ |
-| Pogo | ▼ + Nagel in der Luft (auf Gegner/Dornen) | ▼ + NAGEL |
+| Pogo | ▼ + Nagel in der Luft (auf Gegner/Dornen) | Stick nach unten + NAGEL |
 | Level neu | R | — |
+
+## Runenblock-Rätsel
+
+Die schweren leuchtenden Blöcke lassen sich von der Seite schieben. Treffen sie
+auf ein Dornenfeld, drücken sie es dauerhaft in den Boden. Schiebe den Block
+anschließend auf das leuchtende Bodensiegel, damit das zugehörige Tor offen
+bleibt.
 
 ## Eigene gemalte Grafik einsetzen
 

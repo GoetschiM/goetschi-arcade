@@ -21,24 +21,40 @@
   .stage{position:relative;inset:0;width:100vw;height:100dvh;background:#08202a;overflow:hidden;
     touch-action:none}
   canvas{display:block;width:100%;height:100%;background:#0a2530}
-  /* touch controls */
-  .pad{position:absolute;bottom:2.5%;display:flex;gap:10px;z-index:6;opacity:.5;transition:opacity .2s}
-  .pad:active{opacity:.85}
-  .pad.left{left:2.5%}
-  .pad.right{right:2.5%}
-  .btn{width:clamp(46px,9vw,62px);height:clamp(46px,9vw,62px);border-radius:50%;
-    background:rgba(10,40,48,.55);border:1.5px solid rgba(120,224,210,.5);color:#cdeee6;
-    display:flex;align-items:center;justify-content:center;font-size:clamp(18px,3.6vw,24px);
-    font-family:ui-monospace,monospace;touch-action:none}
-  .btn:active{background:rgba(94,201,186,.4)}
-  .btn.big{width:clamp(56px,11vw,76px);height:clamp(56px,11vw,76px);font-size:clamp(13px,2.6vw,16px);letter-spacing:.06em}
-  .vcol{display:flex;flex-direction:column;gap:8px;justify-content:flex-end}
+  /* mobile gamepad: analog movement on the left, actions on the right */
+  .pad{position:absolute;bottom:max(14px,calc(10px + env(safe-area-inset-bottom)));z-index:6;
+    opacity:.68;transition:opacity .2s;touch-action:none}
+  .pad:active{opacity:1}
+  .pad.left{left:max(14px,calc(10px + env(safe-area-inset-left)))}
+  .pad.right{right:max(14px,calc(10px + env(safe-area-inset-right)));display:grid;
+    grid-template-columns:repeat(2,clamp(58px,15vw,78px));gap:12px;align-items:end}
+  .stick{position:relative;width:clamp(112px,29vw,154px);height:clamp(112px,29vw,154px);border-radius:50%;
+    background:radial-gradient(circle,rgba(36,96,98,.18) 0 34%,rgba(5,24,30,.68) 36% 68%,rgba(94,201,186,.18) 70%);
+    border:1px solid rgba(141,236,218,.35);box-shadow:inset 0 0 25px rgba(4,16,20,.8),0 8px 28px rgba(2,10,14,.38)}
+  .stick::before,.stick::after{content:"";position:absolute;left:50%;top:50%;background:rgba(160,240,224,.14);transform:translate(-50%,-50%)}
+  .stick::before{width:62%;height:1px}.stick::after{height:62%;width:1px}
+  .stick-knob{position:absolute;left:50%;top:50%;width:44%;height:44%;border-radius:50%;transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 38% 32%,rgba(220,255,247,.72),rgba(82,178,169,.4) 28%,rgba(10,45,52,.9) 72%);
+    border:1.5px solid rgba(194,255,241,.62);box-shadow:0 4px 18px rgba(0,0,0,.45),0 0 18px rgba(94,201,186,.22);pointer-events:none}
+  .btn{width:clamp(58px,15vw,78px);height:clamp(58px,15vw,78px);border-radius:50%;
+    background:radial-gradient(circle at 38% 30%,rgba(132,226,211,.34),rgba(7,31,38,.8) 72%);
+    border:1.5px solid rgba(142,238,220,.55);color:#e3fff8;box-shadow:0 7px 24px rgba(2,12,16,.4),inset 0 0 14px rgba(94,201,186,.12);
+    display:flex;align-items:center;justify-content:center;font-size:clamp(10px,2.8vw,14px);font-weight:700;
+    letter-spacing:.08em;font-family:ui-monospace,monospace;touch-action:none}
+  .btn:active,.btn.active{background:rgba(94,201,186,.62);transform:scale(.94)}
+  .btn.jump{margin-top:-28px}
   .hud-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
     align-items:center;padding:calc(9px + env(safe-area-inset-top)) 14px 9px;pointer-events:none;font-size:12px;z-index:4;
     letter-spacing:.2em;text-transform:uppercase;color:#7fe0d2;text-shadow:0 1px 6px #041014}
   .mute{position:absolute;top:calc(8px + env(safe-area-inset-top));right:14px;pointer-events:auto;cursor:pointer;background:transparent;
     border:1px solid rgba(120,224,210,.4);color:#7fe0d2;font:inherit;font-size:10px;letter-spacing:.14em;
     padding:4px 9px;border-radius:20px;text-transform:uppercase;z-index:7}
+  .hint{position:absolute;left:50%;bottom:calc(max(14px,calc(10px + env(safe-area-inset-bottom))) + clamp(118px,30vw,160px));
+    transform:translateX(-50%) translateY(8px);max-width:min(78vw,520px);padding:8px 13px;border:1px solid rgba(130,224,210,.3);
+    border-radius:22px;background:rgba(4,20,26,.78);color:#c9eee6;font:600 11px/1.35 ui-monospace,monospace;
+    letter-spacing:.05em;text-align:center;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:5;
+    box-shadow:0 8px 28px rgba(0,0,0,.3)}
+  .hint.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
     text-align:center;gap:12px;padding:calc(22px + env(safe-area-inset-top)) 22px 22px;
     background:radial-gradient(circle at 50% 42%,rgba(16,60,66,.55),rgba(4,16,20,.96));
@@ -55,6 +71,8 @@
     box-shadow:0 0 26px rgba(94,201,186,.45)}
   .go:active{transform:translateY(1px)}
   .cap{margin-top:10px;font-size:11.5px;color:#5f7a78;font-style:italic;text-align:center;max-width:600px}
+  @media (hover:hover) and (pointer:fine){.pad{opacity:.35}.pad:hover{opacity:.72}}
+  @media (max-height:470px){.hint{bottom:calc(max(8px,env(safe-area-inset-bottom)) + 104px)}.pad{bottom:max(8px,env(safe-area-inset-bottom))}}
 </style>
 </head>
 <body>
@@ -62,37 +80,31 @@
   <div class="stage" id="stage">
     <canvas id="c"></canvas>
     <div class="hud-top"><span id="hudRoom">Silmoor</span></div>
-    <button class="mute" id="mute">Ton an</button>
+    <button class="mute" id="mute">Ton aus</button>
+    <div class="hint" id="hint" aria-live="polite"></div>
 
     <div class="pad left" id="padL">
-      <div class="vcol">
-        <div class="btn" data-k="up" aria-label="hoch">▲</div>
-        <div class="btn" data-k="down" aria-label="runter">▼</div>
-      </div>
-      <div class="vcol">
-        <div class="btn" data-k="left" aria-label="links">◀</div>
-      </div>
-      <div class="vcol">
-        <div class="btn" data-k="right" aria-label="rechts">▶</div>
+      <div class="stick" id="moveStick" role="group" aria-label="Bewegungsstick">
+        <div class="stick-knob" id="moveKnob"></div>
       </div>
     </div>
     <div class="pad right" id="padR">
-      <div class="btn big" data-k="attack" aria-label="angriff">NAGEL</div>
-      <div class="btn big" data-k="jump" aria-label="springen">SPRUNG</div>
+      <button class="btn" data-k="attack" aria-label="Mit dem Nagel angreifen">NAGEL</button>
+      <button class="btn jump" data-k="jump" aria-label="Springen">SPRUNG</button>
     </div>
 
     <div class="overlay" id="overlay">
       <h1 id="ovTitle">Silmoor</h1>
       <div class="sub" id="ovSub">Ein hohles Wesen erwacht in den überwucherten Tiefen. Schlag dich mit dem Nagel durch die Kavernen, finde die Bänke, und stell dich dem Hüter des Grundes.</div>
       <div class="keys">
-        <span class="key">◀ ▶ / A D — gehen</span>
+        <span class="key">Stick / WASD — bewegen</span>
         <span class="key">␣ — springen</span>
         <span class="key">J / X — Nagel</span>
         <span class="key">▲▼ — klettern · zielen</span>
         <span class="key">↓+Nagel in der Luft — Pogo</span>
       </div>
       <button class="go" id="startBtn">Erwachen</button>
-      <div class="cap">Passt sich an Desktop und Handy an: echtes Vollbild, Touch unten, Tastatur am Web.</div>
+      <div class="cap">Sound startet beim Erwachen. Schwere Runenblöcke drücken Dornen nieder und öffnen auf Siegeln die Tore.</div>
     </div>
   </div>
 </div>
