@@ -32,6 +32,16 @@
       "added": "2026-08-30"
     },
     {
+      "slug": "nova-break",
+      "title": "Nova Break",
+      "subtitle": "Zerschlag die Chips",
+      "description": "Lenke den Energie-Blaster und lass den Nova-Kern die Chips zersplittern. Acht Level, Power-ups und steigendes Tempo fuer Handy und Tastatur.",
+      "accent": "#5ef6ff",
+      "tags": ["Arcade", "Action", "Solo"],
+      "controls": "Touch / Pfeiltasten / Shift",
+      "added": "2026-09-01"
+    },
+    {
       "slug": "neon-swarm",
       "title": "Neon Swarm",
       "subtitle": "Überlebe den Ansturm",
