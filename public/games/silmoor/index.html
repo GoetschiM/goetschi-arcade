@@ -13,12 +13,13 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  .wrap{width:100%;display:flex;flex-direction:column;align-items:center;
-    font-family:'Georgia','Times New Roman',serif;color:#bfe0da;padding:6px 0 12px;user-select:none}
-  .stage{position:relative;width:100%;max-width:980px;aspect-ratio:16/9;background:#08202a;
-    border-radius:10px;overflow:hidden;touch-action:none;
-    box-shadow:0 20px 60px rgba(0,0,0,.7),inset 0 0 0 1px rgba(90,220,210,.14)}
+  html,body{width:100%;height:100%;overflow:hidden;background:#06161c}
+  body{margin:0;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+  *{box-sizing:border-box;padding:0}
+  .wrap{position:fixed;inset:0;display:flex;font-family:'Georgia','Times New Roman',serif;
+    color:#bfe0da;user-select:none}
+  .stage{position:relative;inset:0;width:100vw;height:100dvh;background:#08202a;overflow:hidden;
+    touch-action:none}
   canvas{display:block;width:100%;height:100%;background:#0a2530}
   /* touch controls */
   .pad{position:absolute;bottom:2.5%;display:flex;gap:10px;z-index:6;opacity:.5;transition:opacity .2s}
@@ -33,13 +34,14 @@
   .btn.big{width:clamp(56px,11vw,76px);height:clamp(56px,11vw,76px);font-size:clamp(13px,2.6vw,16px);letter-spacing:.06em}
   .vcol{display:flex;flex-direction:column;gap:8px;justify-content:flex-end}
   .hud-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
-    align-items:center;padding:9px 14px;pointer-events:none;font-size:12px;z-index:4;
+    align-items:center;padding:calc(9px + env(safe-area-inset-top)) 14px 9px;pointer-events:none;font-size:12px;z-index:4;
     letter-spacing:.2em;text-transform:uppercase;color:#7fe0d2;text-shadow:0 1px 6px #041014}
-  .mute{position:absolute;top:8px;right:14px;pointer-events:auto;cursor:pointer;background:transparent;
+  .mute{position:absolute;top:calc(8px + env(safe-area-inset-top));right:14px;pointer-events:auto;cursor:pointer;background:transparent;
     border:1px solid rgba(120,224,210,.4);color:#7fe0d2;font:inherit;font-size:10px;letter-spacing:.14em;
     padding:4px 9px;border-radius:20px;text-transform:uppercase;z-index:7}
   .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;gap:12px;padding:22px;background:radial-gradient(circle at 50% 42%,rgba(16,60,66,.55),rgba(4,16,20,.96));
+    text-align:center;gap:12px;padding:calc(22px + env(safe-area-inset-top)) 22px 22px;
+    background:radial-gradient(circle at 50% 42%,rgba(16,60,66,.55),rgba(4,16,20,.96));
     transition:opacity .5s;z-index:9}
   .overlay.hide{opacity:0;pointer-events:none}
   .overlay h1{font-size:clamp(30px,6.4vw,60px);font-weight:400;letter-spacing:.16em;text-transform:uppercase;
@@ -58,7 +60,7 @@
 <body>
 <div class="wrap">
   <div class="stage" id="stage">
-    <canvas id="c" width="960" height="540"></canvas>
+    <canvas id="c"></canvas>
     <div class="hud-top"><span id="hudRoom">Silmoor</span></div>
     <button class="mute" id="mute">Ton an</button>
 
@@ -90,7 +92,7 @@
         <span class="key">↓+Nagel in der Luft — Pogo</span>
       </div>
       <button class="go" id="startBtn">Erwachen</button>
-      <div class="cap">Läuft auf Desktop (Tastatur) und Handy (Touch-Tasten unten). Nagel-Schlag nach unten auf Gegner oder Dornen federt dich ab.</div>
+      <div class="cap">Passt sich an Desktop und Handy an: echtes Vollbild, Touch unten, Tastatur am Web.</div>
     </div>
   </div>
 </div>

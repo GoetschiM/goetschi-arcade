@@ -1,7 +1,28 @@
 (() => {
 "use strict";
 const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
-const W=960,H=540;
+let W=0,H=0,DPR=1;
+
+function viewportSize(){
+  const vv=window.visualViewport;
+  return {
+    w: Math.max(320, Math.round(vv?.width ?? window.innerWidth)),
+    h: Math.max(320, Math.round(vv?.height ?? window.innerHeight))
+  };
+}
+function resize(){
+  const size=viewportSize();
+  W=size.w;
+  H=size.h;
+  DPR=Math.min(2, window.devicePixelRatio||1);
+  canvas.width=Math.round(W*DPR);
+  canvas.height=Math.round(H*DPR);
+  canvas.style.width=`${W}px`;
+  canvas.style.height=`${H}px`;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize', resize);
+window.visualViewport?.addEventListener('resize', resize);
 
 // ---------------- Sprites (optional painted art; falls back to code art) ----------------
 // Drop matching PNGs into assets/ and they are used automatically. Missing files => code art.
@@ -690,6 +711,7 @@ startBtn.addEventListener('click',()=>{ ensureAudio(); if(actx&&actx.state==='su
   if(winShow){ winShow=false; cur=0; geo=0; masks=MAXMASK; checkpoint=null; }
   loadLevel(cur,false); running=true; overlay.classList.add('hide'); });
 
+resize();
 loadLevel(0,false);
 requestAnimationFrame(frame);
 })();
