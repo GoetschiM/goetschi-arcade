@@ -49,11 +49,11 @@
   .mute{position:absolute;top:calc(8px + env(safe-area-inset-top));right:14px;pointer-events:auto;cursor:pointer;background:transparent;
     border:1px solid rgba(120,224,210,.4);color:#7fe0d2;font:inherit;font-size:10px;letter-spacing:.14em;
     padding:4px 9px;border-radius:20px;text-transform:uppercase;z-index:7}
-  .hint{position:absolute;left:50%;bottom:calc(max(14px,calc(10px + env(safe-area-inset-bottom))) + clamp(118px,30vw,160px));
-    transform:translateX(-50%) translateY(8px);max-width:min(78vw,520px);padding:8px 13px;border:1px solid rgba(130,224,210,.3);
-    border-radius:22px;background:rgba(4,20,26,.78);color:#c9eee6;font:600 11px/1.35 ui-monospace,monospace;
+  .hint{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 44px);bottom:auto;
+    transform:translateX(-50%) translateY(-8px);width:max-content;max-width:min(calc(100vw - 28px),560px);padding:8px 13px;border:1px solid rgba(130,224,210,.3);
+    border-radius:22px;background:rgba(4,20,26,.88);color:#c9eee6;font:600 11px/1.35 ui-monospace,monospace;
     letter-spacing:.05em;text-align:center;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:5;
-    box-shadow:0 8px 28px rgba(0,0,0,.3)}
+    box-shadow:0 8px 28px rgba(0,0,0,.36);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
   .hint.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
     text-align:center;gap:12px;padding:calc(22px + env(safe-area-inset-top)) 22px 22px;
@@ -72,7 +72,7 @@
   .go:active{transform:translateY(1px)}
   .cap{margin-top:10px;font-size:11.5px;color:#5f7a78;font-style:italic;text-align:center;max-width:600px}
   @media (hover:hover) and (pointer:fine){.pad{opacity:.35}.pad:hover{opacity:.72}}
-  @media (max-height:470px){.hint{bottom:calc(max(8px,env(safe-area-inset-bottom)) + 104px)}.pad{bottom:max(8px,env(safe-area-inset-bottom))}}
+  @media (max-height:470px){.hint{top:calc(max(7px,env(safe-area-inset-top)) + 36px);font-size:10px}.pad{bottom:max(8px,env(safe-area-inset-bottom))}}
 </style>
 </head>
 <body>

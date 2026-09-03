@@ -3,6 +3,17 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
 
+test('Silmoor hints stay centered below the top HUD', () => {
+  const html = readFileSync(new URL('../public/games/silmoor/index.html', import.meta.url), 'utf8');
+  const hintRule = html.match(/\.hint\{([^}]*)\}/)?.[1] ?? '';
+
+  assert.match(hintRule, /left:50%/);
+  assert.match(hintRule, /top:calc\(max\(10px,env\(safe-area-inset-top\)\) \+ 44px\)/);
+  assert.match(hintRule, /bottom:auto/);
+  assert.match(hintRule, /translateX\(-50%\)/);
+  assert.doesNotMatch(hintRule, /safe-area-inset-bottom/);
+});
+
 test('Silmoor resizes to the viewport on load and on resize', () => {
   const source = readFileSync(new URL('../public/games/silmoor/game.js', import.meta.url), 'utf8');
   const listeners = new Map();
