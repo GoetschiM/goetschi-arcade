@@ -19,17 +19,26 @@
 
   /* ---------- Top HUD ---------- */
   #hud{
-    display:flex;align-items:center;gap:18px;flex:none;height:44px;padding:0 14px;
+    display:flex;align-items:center;gap:10px;flex:none;height:44px;padding:0 10px 0 14px;
     background:var(--hud);border-bottom:1px solid var(--line);font-size:13px;z-index:20;
-    overflow-x:auto;white-space:nowrap;
   }
-  #hud .stat{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600}
+  #hudStats{display:flex;align-items:center;gap:18px;min-width:0;overflow-x:auto;white-space:nowrap;
+    scrollbar-width:none}
+  #hudStats::-webkit-scrollbar{display:none}
+  #hud .stat{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;flex:none}
   #hud .stat b{color:var(--text);font-variant-numeric:tabular-nums}
   #hud .stat.warn b{color:var(--bad);animation:blink 1s step-start infinite}
   @keyframes blink{50%{opacity:.35}}
   #hud .sp{flex:1}
-  #hud .brand{font-weight:800;letter-spacing:.14em;color:var(--amber);font-size:12px}
+  #hud .brand{font-weight:800;letter-spacing:.14em;color:var(--amber);font-size:12px;flex:none}
   #menuToggle{display:none}
+  .zoomCtl{display:flex;gap:4px;flex:none}
+  .zoomCtl button{
+    width:28px;height:28px;border-radius:8px;border:1px solid var(--line-hi);
+    background:var(--panel2);color:var(--text);font-size:16px;font-weight:700;cursor:pointer;
+    line-height:1;
+  }
+  .zoomCtl button:active{background:var(--amber-dim)}
 
   /* ---------- Layout ---------- */
   #mid{flex:1;display:flex;min-height:0;position:relative}
@@ -37,34 +46,34 @@
   canvas#game{display:block;width:100%;height:100%;cursor:crosshair}
 
   #sidebar{
-    width:236px;flex:none;background:var(--panel);border-left:1px solid var(--line);
+    width:300px;flex:none;background:var(--panel);border-left:1px solid var(--line);
     display:flex;flex-direction:column;z-index:15;
   }
-  #emblem{display:flex;align-items:center;gap:10px;padding:12px 12px 10px;border-bottom:1px solid var(--line)}
-  #emblem .etext{font-size:13px;font-weight:800;letter-spacing:.1em;line-height:1.25;color:var(--amber)}
+  #emblem{display:flex;align-items:center;gap:12px;padding:14px 14px 12px;border-bottom:1px solid var(--line)}
+  #emblem .etext{font-size:15px;font-weight:800;letter-spacing:.1em;line-height:1.3;color:var(--amber)}
   .tabs{display:flex;border-bottom:1px solid var(--line)}
   .tabs button{
-    flex:1;padding:9px 4px;background:none;border:none;color:var(--muted);font-size:11.5px;
+    flex:1;padding:12px 4px;background:none;border:none;color:var(--muted);font-size:13px;
     letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;
     border-bottom:2px solid transparent;
   }
   .tabs button.on{color:var(--amber);border-color:var(--amber)}
-  #buildList{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:7px}
+  #buildList{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px}
 
   .bItem{
-    position:relative;display:flex;align-items:center;gap:9px;padding:8px 9px;
-    background:var(--panel2);border:1px solid var(--line);border-radius:8px;cursor:pointer;
+    position:relative;display:flex;align-items:center;gap:11px;padding:11px 12px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:9px;cursor:pointer;
     text-align:left;overflow:hidden;
   }
   .bItem:hover{border-color:var(--line-hi)}
   .bItem:disabled,.bItem.off{opacity:.4;cursor:not-allowed}
   .bItem .ic{
-    width:30px;height:30px;flex:none;border-radius:6px;display:flex;align-items:center;
-    justify-content:center;font-size:14px;font-weight:800;color:#0a0d07;
+    width:38px;height:38px;flex:none;border-radius:7px;display:flex;align-items:center;
+    justify-content:center;font-size:16px;font-weight:800;color:#0a0d07;
   }
   .bItem .info{flex:1;min-width:0}
-  .bItem .nm{font-size:12.5px;font-weight:700;color:var(--text)}
-  .bItem .cost{font-size:10.5px;color:var(--muted)}
+  .bItem .nm{font-size:14.5px;font-weight:700;color:var(--text)}
+  .bItem .cost{font-size:12px;color:var(--muted)}
   .bItem .fill{position:absolute;left:0;top:0;bottom:0;background:var(--amber-dim);z-index:0}
   .bItem .q{position:absolute;right:6px;top:6px;font-size:10px;background:var(--amber);
     color:#1a0f00;border-radius:99px;padding:1px 6px;font-weight:800}
@@ -111,25 +120,35 @@
   #toast.show{opacity:1}
 
   @media (max-width:820px){
-    #sidebar{position:absolute;right:0;top:0;bottom:0;transform:translateX(100%);
+    #sidebar{position:absolute;right:0;top:0;bottom:0;width:min(300px,86vw);
+      transform:translateX(100%);
       transition:transform .25s;box-shadow:-14px 0 30px rgba(0,0,0,.5)}
     #sidebar.open{transform:translateX(0)}
     #menuToggle{display:inline-flex;align-items:center;gap:5px;background:var(--panel2);
-      border:1px solid var(--line-hi);color:var(--amber);padding:6px 12px;border-radius:99px;
-      font-size:11.5px;font-weight:700;cursor:pointer}
+      border:1px solid var(--line-hi);color:var(--amber);padding:8px 14px;border-radius:99px;
+      font-size:12.5px;font-weight:700;cursor:pointer}
+    #hud{gap:6px;font-size:12px;padding:0 8px 0 10px}
+    #hudStats{gap:12px}
+    #hud .brand{display:none}
   }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="hud">
-    <span class="brand">IRON&nbsp;DOMINION</span>
-    <span class="stat">⛏ <b id="stCredits">0</b></span>
-    <span class="stat" id="power">⚡ <b id="stPower">0/0</b><span class="bar"><i id="powerBar"></i></span></span>
-    <span class="stat">🏗 <b id="stBld">0</b></span>
-    <span class="stat">⚔ <b id="stUnits">0</b></span>
-    <span class="stat">⏱ <b id="stTime">00:00</b></span>
+    <div id="hudStats">
+      <span class="brand">IRON&nbsp;DOMINION</span>
+      <span class="stat">⛏ <b id="stCredits">0</b></span>
+      <span class="stat" id="power">⚡ <b id="stPower">0/0</b><span class="bar"><i id="powerBar"></i></span></span>
+      <span class="stat">🏗 <b id="stBld">0</b></span>
+      <span class="stat">⚔ <b id="stUnits">0</b></span>
+      <span class="stat">⏱ <b id="stTime">00:00</b></span>
+    </div>
     <span class="sp"></span>
+    <span class="zoomCtl">
+      <button id="zoomOut" title="Verkleinern">−</button>
+      <button id="zoomIn" title="Vergrössern">+</button>
+    </span>
     <button id="menuToggle">☰ Basis</button>
   </div>
   <div id="mid">
@@ -223,6 +242,24 @@ let particles = [];
 
 let player, enemy;
 let camera = {x:0,y:0};
+let zoom = 1.4;
+const ZOOM_MIN = 0.9, ZOOM_MAX = 2.4;
+function viewW(){ return canvas.clientWidth/zoom; }
+function viewH(){ return canvas.clientHeight/zoom; }
+function clampCamera(){
+  camera.x = clamp(camera.x, 0, Math.max(0, WORLD_W-viewW()));
+  camera.y = clamp(camera.y, 0, Math.max(0, WORLD_H-viewH()));
+}
+function setZoom(z, aboutX, aboutY){
+  const oldZ = zoom;
+  zoom = clamp(z, ZOOM_MIN, ZOOM_MAX);
+  if (aboutX!=null){
+    // Kamera so verschieben, dass der Punkt unter dem Cursor/der Mitte stehen bleibt
+    camera.x += aboutX*(1/oldZ - 1/zoom);
+    camera.y += aboutY*(1/oldZ - 1/zoom);
+  }
+  clampCamera();
+}
 let selection = [];
 let controlGroups = {1:[],2:[],3:[],4:[]};
 let placing = null;     // {kind:'building', type:'power'} while placing
@@ -387,10 +424,11 @@ function setupGame(){
   spawnBase('player', 4,4, 1);
   spawnBase('enemy', MAPW-9, MAPH-9, -1);
 
-  camera.x = clamp(player.hqX - WORLD_W*0.001, 0, WORLD_W); // set below properly
+  zoom = canvas.clientWidth < 700 ? 1.3 : 1.25;
   const hq = entities.find(e=>e.owner==='player'&&e.type==='hq');
-  camera.x = clamp(hq.x - canvas.clientWidth/2, 0, WORLD_W-canvas.clientWidth);
-  camera.y = clamp(hq.y - canvas.clientHeight/2, 0, WORLD_H-canvas.clientHeight);
+  camera.x = hq.x - viewW()/2;
+  camera.y = hq.y - viewH()/2;
+  clampCamera();
   updateVision();
   buildSidebar();
 }
@@ -758,7 +796,7 @@ const keys = {};
 
 function worldFromClient(cx,cy){
   const r = canvas.getBoundingClientRect();
-  return {x: cx-r.left+camera.x, y: cy-r.top+camera.y};
+  return {x: (cx-r.left)/zoom+camera.x, y: (cy-r.top)/zoom+camera.y};
 }
 
 canvas.addEventListener('contextmenu', e=>e.preventDefault());
@@ -775,8 +813,9 @@ canvas.addEventListener('mousedown', e => {
 window.addEventListener('mousemove', e => {
   mouse = worldFromClient(e.clientX,e.clientY);
   if (dragMid){
-    camera.x = clamp(dragMid.cx - (e.clientX-dragMid.x), 0, Math.max(0,WORLD_W-canvas.clientWidth));
-    camera.y = clamp(dragMid.cy - (e.clientY-dragMid.y), 0, Math.max(0,WORLD_H-canvas.clientHeight));
+    camera.x = dragMid.cx - (e.clientX-dragMid.x)/zoom;
+    camera.y = dragMid.cy - (e.clientY-dragMid.y)/zoom;
+    clampCamera();
   }
   if (dragBox){ dragBox.x1=mouse.x; dragBox.y1=mouse.y; }
 });
@@ -796,23 +835,48 @@ window.addEventListener('mouseup', e => {
     refreshSelInfo();
   }
 });
+let touchStart=null, touchMoved=false;
+let pinch=null;
+function touchDist(ts){ return Math.hypot(ts[0].clientX-ts[1].clientX, ts[0].clientY-ts[1].clientY); }
 canvas.addEventListener('touchstart', e=>{
+  if (e.touches.length===2){
+    const r = canvas.getBoundingClientRect();
+    const mx=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left;
+    const my=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top;
+    pinch = {d0: touchDist(e.touches), z0: zoom, mx, my};
+    touchStart=null;
+    return;
+  }
   const t=e.touches[0]; const w = worldFromClient(t.clientX,t.clientY);
   if (placing){ commitPlacement(w); e.preventDefault(); return; }
   touchStart = {x:w.x,y:w.y,t:Date.now()};
+  touchMoved=false;
 },{passive:false});
-let touchStart=null, touchMoved=false;
-canvas.addEventListener('touchmove', e=>{ touchMoved=true; },{passive:true});
+canvas.addEventListener('touchmove', e=>{
+  if (pinch && e.touches.length===2){
+    const d = touchDist(e.touches);
+    setZoom(pinch.z0*(d/pinch.d0), pinch.mx, pinch.my);
+    e.preventDefault();
+    return;
+  }
+  touchMoved=true;
+},{passive:false});
 canvas.addEventListener('touchend', e=>{
+  if (e.touches.length<2) pinch=null;
   if (!touchStart) return;
   const dt = Date.now()-touchStart.t;
-  if (!touchMoved && dt<400){
-    const hit = entities.find(en=>!en.dead && en.owner==='player' && dist(en,touchStart) < 22);
+  if (!touchMoved && dt<500){
+    const hit = entities.find(en=>!en.dead && en.owner==='player' && dist(en,touchStart) < 28);
     if (hit) selection=[hit];
     else if (selection.length) handleRightClick(touchStart);
   }
   touchStart=null; touchMoved=false; refreshSelInfo();
 });
+canvas.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const r = canvas.getBoundingClientRect();
+  setZoom(zoom*(e.deltaY<0?1.12:1/1.12), e.clientX-r.left, e.clientY-r.top);
+},{passive:false});
 
 function handleRightClick(w){
   if (placing){ placing=null; refreshCursorMode(); return; }
@@ -855,20 +919,20 @@ window.addEventListener('keydown', e=>{
 window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
 
 function panFromKeys(dt){
-  const sp = 480*dt;
+  const sp = 480*dt/zoom;
   if (keys['w']||keys['arrowup']) camera.y -= sp;
   if (keys['s']||keys['arrowdown']) camera.y += sp;
   if (keys['a']||keys['arrowleft']) camera.x -= sp;
   if (keys['d']||keys['arrowright']) camera.x += sp;
-  camera.x = clamp(camera.x, 0, Math.max(0,WORLD_W-canvas.clientWidth));
-  camera.y = clamp(camera.y, 0, Math.max(0,WORLD_H-canvas.clientHeight));
+  clampCamera();
 }
 
 mm.addEventListener('click', e=>{
   const r = mm.getBoundingClientRect();
   const px = (e.clientX-r.left)/r.width, py=(e.clientY-r.top)/r.height;
-  camera.x = clamp(px*WORLD_W - canvas.clientWidth/2, 0, Math.max(0,WORLD_W-canvas.clientWidth));
-  camera.y = clamp(py*WORLD_H - canvas.clientHeight/2, 0, Math.max(0,WORLD_H-canvas.clientHeight));
+  camera.x = px*WORLD_W - viewW()/2;
+  camera.y = py*WORLD_H - viewH()/2;
+  clampCamera();
 });
 
 /* ======================= PLACEMENT ======================= */
@@ -897,15 +961,16 @@ function hash2(x,y){ const n = Math.sin(x*127.1+y*311.7)*43758.5453; return n-Ma
 
 function draw(){
   const w = canvas.clientWidth, h = canvas.clientHeight;
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-  ctx.fillStyle = '#050603'; ctx.fillRect(0,0,w,h);
+  ctx.setTransform(devicePixelRatio*zoom,0,0,devicePixelRatio*zoom,0,0);
+  ctx.fillStyle = '#050603'; ctx.fillRect(0,0,w/zoom,h/zoom);
   ctx.save();
   ctx.translate(-camera.x, -camera.y);
 
+  const vw = viewW(), vh = viewH();
   const tx0 = Math.max(0, Math.floor(camera.x/TILE)-1);
   const ty0 = Math.max(0, Math.floor(camera.y/TILE)-1);
-  const tx1 = Math.min(MAPW, Math.ceil((camera.x+w)/TILE)+1);
-  const ty1 = Math.min(MAPH, Math.ceil((camera.y+h)/TILE)+1);
+  const tx1 = Math.min(MAPW, Math.ceil((camera.x+vw)/TILE)+1);
+  const ty1 = Math.min(MAPH, Math.ceil((camera.y+vh)/TILE)+1);
 
   for(let ty=ty0; ty<ty1; ty++){
     for(let tx=tx0; tx<tx1; tx++){
@@ -1139,7 +1204,7 @@ function drawMinimap(){
   }
   mmCtx.strokeStyle='rgba(255,255,255,.7)'; mmCtx.lineWidth=1;
   mmCtx.strokeRect(camera.x/WORLD_W*mm.width, camera.y/WORLD_H*mm.height,
-    canvas.clientWidth/WORLD_W*mm.width, canvas.clientHeight/WORLD_H*mm.height);
+    viewW()/WORLD_W*mm.width, viewH()/WORLD_H*mm.height);
 }
 
 /* ======================= HUD / SIDEBAR ======================= */
@@ -1202,6 +1267,8 @@ document.querySelectorAll('.tabs button').forEach(b=>{
   };
 });
 document.getElementById('menuToggle').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+document.getElementById('zoomIn').onclick = () => setZoom(zoom*1.2, canvas.clientWidth/2, canvas.clientHeight/2);
+document.getElementById('zoomOut').onclick = () => setZoom(zoom/1.2, canvas.clientWidth/2, canvas.clientHeight/2);
 
 let toastTimer=null;
 function toast(msg){
