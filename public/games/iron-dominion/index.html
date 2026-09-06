@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Iron Dominion — Goetschi Arcade</title>
+<meta name="theme-color" content="#0a0d07">
+<meta name="description" content="Echtzeit-Strategie im Stil grosser Basisbau-Klassiker: Erz foerdern, Basis bauen, Armee produzieren, die KI vernichten.">
+<style>
+  :root{
+    --bg:#0a0d07; --panel:#12160d; --panel2:#181d12; --line:rgba(180,200,120,.18);
+    --line-hi:rgba(210,230,140,.4); --text:#e7ecd8; --muted:#8a9578; --amber:#ff8a3d;
+    --amber-dim:rgba(255,138,61,.28); --good:#7ed957; --bad:#ff5b5b; --hud:#0e1109;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column}
+
+  /* ---------- Top HUD ---------- */
+  #hud{
+    display:flex;align-items:center;gap:18px;flex:none;height:44px;padding:0 14px;
+    background:var(--hud);border-bottom:1px solid var(--line);font-size:13px;z-index:20;
+    overflow-x:auto;white-space:nowrap;
+  }
+  #hud .stat{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600}
+  #hud .stat b{color:var(--text);font-variant-numeric:tabular-nums}
+  #hud .stat.warn b{color:var(--bad);animation:blink 1s step-start infinite}
+  @keyframes blink{50%{opacity:.35}}
+  #hud .sp{flex:1}
+  #hud .brand{font-weight:800;letter-spacing:.14em;color:var(--amber);font-size:12px}
+  #menuToggle{display:none}
+
+  /* ---------- Layout ---------- */
+  #mid{flex:1;display:flex;min-height:0;position:relative}
+  #stage{flex:1;position:relative;min-width:0;background:#050603;overflow:hidden}
+  canvas#game{display:block;width:100%;height:100%;cursor:crosshair}
+
+  #sidebar{
+    width:236px;flex:none;background:var(--panel);border-left:1px solid var(--line);
+    display:flex;flex-direction:column;z-index:15;
+  }
+  #emblem{display:flex;align-items:center;gap:10px;padding:12px 12px 10px;border-bottom:1px solid var(--line)}
+  #emblem .etext{font-size:13px;font-weight:800;letter-spacing:.1em;line-height:1.25;color:var(--amber)}
+  .tabs{display:flex;border-bottom:1px solid var(--line)}
+  .tabs button{
+    flex:1;padding:9px 4px;background:none;border:none;color:var(--muted);font-size:11.5px;
+    letter-spacing:.08em;text-transform:uppercase;font-weight:700;cursor:pointer;
+    border-bottom:2px solid transparent;
+  }
+  .tabs button.on{color:var(--amber);border-color:var(--amber)}
+  #buildList{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:7px}
+
+  .bItem{
+    position:relative;display:flex;align-items:center;gap:9px;padding:8px 9px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:8px;cursor:pointer;
+    text-align:left;overflow:hidden;
+  }
+  .bItem:hover{border-color:var(--line-hi)}
+  .bItem:disabled,.bItem.off{opacity:.4;cursor:not-allowed}
+  .bItem .ic{
+    width:30px;height:30px;flex:none;border-radius:6px;display:flex;align-items:center;
+    justify-content:center;font-size:14px;font-weight:800;color:#0a0d07;
+  }
+  .bItem .info{flex:1;min-width:0}
+  .bItem .nm{font-size:12.5px;font-weight:700;color:var(--text)}
+  .bItem .cost{font-size:10.5px;color:var(--muted)}
+  .bItem .fill{position:absolute;left:0;top:0;bottom:0;background:var(--amber-dim);z-index:0}
+  .bItem .q{position:absolute;right:6px;top:6px;font-size:10px;background:var(--amber);
+    color:#1a0f00;border-radius:99px;padding:1px 6px;font-weight:800}
+
+  #mmWrap{flex:none;padding:9px;border-top:1px solid var(--line)}
+  #mmWrap canvas{width:100%;aspect-ratio:1;border-radius:8px;border:1px solid var(--line);
+    background:#000;display:block}
+  #selInfo{flex:none;padding:9px 11px;border-top:1px solid var(--line);font-size:11.5px;
+    color:var(--muted);min-height:38px}
+  #selInfo b{color:var(--text)}
+
+  /* ---------- Overlays ---------- */
+  #overlay{
+    position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 30%,rgba(255,138,61,.08),transparent 60%),rgba(4,5,2,.92);
+    padding:20px;
+  }
+  #overlay.hide{display:none}
+  .card{
+    max-width:520px;width:100%;background:var(--panel);border:1px solid var(--line-hi);
+    border-radius:14px;padding:clamp(20px,4vw,32px);text-align:center;
+  }
+  .card h1{font-size:clamp(24px,5vw,32px);letter-spacing:.03em;color:var(--amber);margin-bottom:6px}
+  .card p{color:var(--muted);font-size:13.5px;line-height:1.6;margin:10px 0}
+  .card ul{text-align:left;color:var(--muted);font-size:12.5px;line-height:1.85;margin:14px 0;
+    padding:12px 16px;background:var(--panel2);border-radius:10px;border:1px solid var(--line)}
+  .card ul b{color:var(--text)}
+  .btn{
+    margin-top:10px;padding:12px 26px;border:none;border-radius:99px;background:var(--amber);
+    color:#1a0f00;font-weight:800;font-size:14px;letter-spacing:.04em;cursor:pointer;
+  }
+  .btn:hover{filter:brightness(1.1)}
+  .btn.ghost{background:none;border:1px solid var(--line-hi);color:var(--text)}
+  #power{display:flex;align-items:center;gap:6px}
+  #power .bar{width:52px;height:7px;border-radius:99px;background:#241a10;overflow:hidden;border:1px solid var(--line)}
+  #power .bar i{display:block;height:100%;background:var(--good)}
+
+  #toast{
+    position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:30;
+    background:rgba(10,13,7,.88);border:1px solid var(--line-hi);color:var(--text);
+    padding:7px 16px;border-radius:99px;font-size:12.5px;font-weight:600;opacity:0;
+    transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;
+  }
+  #toast.show{opacity:1}
+
+  @media (max-width:820px){
+    #sidebar{position:absolute;right:0;top:0;bottom:0;transform:translateX(100%);
+      transition:transform .25s;box-shadow:-14px 0 30px rgba(0,0,0,.5)}
+    #sidebar.open{transform:translateX(0)}
+    #menuToggle{display:inline-flex;align-items:center;gap:5px;background:var(--panel2);
+      border:1px solid var(--line-hi);color:var(--amber);padding:6px 12px;border-radius:99px;
+      font-size:11.5px;font-weight:700;cursor:pointer}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <span class="brand">IRON&nbsp;DOMINION</span>
+    <span class="stat">⛏ <b id="stCredits">0</b></span>
+    <span class="stat" id="power">⚡ <b id="stPower">0/0</b><span class="bar"><i id="powerBar"></i></span></span>
+    <span class="stat">🏗 <b id="stBld">0</b></span>
+    <span class="stat">⚔ <b id="stUnits">0</b></span>
+    <span class="stat">⏱ <b id="stTime">00:00</b></span>
+    <span class="sp"></span>
+    <button id="menuToggle">☰ Basis</button>
+  </div>
+  <div id="mid">
+    <div id="stage">
+      <canvas id="game"></canvas>
+      <div id="toast"></div>
+    </div>
+    <div id="sidebar">
+      <div id="emblem">
+        <svg viewBox="0 0 60 60" width="46" height="46">
+          <polygon points="30,3 55,17 55,43 30,57 5,43 5,17" fill="#1a2013" stroke="#ff8a3d" stroke-width="2"/>
+          <polygon points="30,13 47,22.5 47,37.5 30,47 13,37.5 13,22.5" fill="none" stroke="#ff8a3d" stroke-width="1.3" opacity=".6"/>
+          <path d="M22 34 L30 16 L38 34 L32 34 L30 28 L28 34 Z" fill="#ff8a3d"/>
+        </svg>
+        <div class="etext">IRON<br>DOMINION</div>
+      </div>
+      <div class="tabs">
+        <button class="on" data-tab="build">Gebäude</button>
+        <button data-tab="unit">Einheiten</button>
+      </div>
+      <div id="buildList"></div>
+      <div id="mmWrap"><canvas id="minimap" width="180" height="180"></canvas></div>
+      <div id="selInfo">Nichts ausgewählt.</div>
+    </div>
+  </div>
+
+  <div id="overlay">
+    <div class="card">
+      <h1>IRON DOMINION</h1>
+      <p>Echtzeit-Strategie: Basis bauen, Erz fördern, Armee aufstellen — zerstöre alle
+         gegnerischen Gebäude, bevor die KI deine Basis dem Erdboden gleichmacht.</p>
+      <ul>
+        <li><b>Linksklick</b> — Einheiten auswählen (Ziehen = Mehrfachauswahl)</li>
+        <li><b>Rechtsklick</b> — Bewegen / Angreifen / Erz abbauen (Ziel)</li>
+        <li><b>Sidebar</b> — Gebäude &amp; Einheiten bauen, dann Bauplatz anklicken</li>
+        <li><b>WASD / Pfeiltasten / Ziehen mit mittlerer Maustaste</b> — Kamera</li>
+        <li><b>1–4</b> Kontrollgruppe wählen · <b>Strg+1–4</b> zuweisen</li>
+        <li>Achte auf <b>Energie</b> — zu wenig Strom bremst Bau &amp; Produktion.</li>
+      </ul>
+      <button class="btn" id="startBtn">Angriff starten ▸</button>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+'use strict';
+
+/* ======================= CONFIG ======================= */
+const TILE = 40, MAPW = 40, MAPH = 30;
+const WORLD_W = MAPW*TILE, WORLD_H = MAPH*TILE;
+const T_GRASS=0, T_ORE=1, T_ROCK=2;
+
+const BUILD_DEFS = {
+  hq:       {name:'Hauptquartier', cost:0, time:0, hp:1500, w:3,h:3, power:60, col:'#ffd66a', letter:'HQ'},
+  power:    {name:'Kraftwerk',  cost:300,  time:6000,  hp:420, w:2,h:2, power:120, col:'#5ec9ba', letter:'P'},
+  refinery: {name:'Raffinerie', cost:900,  time:11000, hp:650, w:3,h:2, power:-30, col:'#6a8dff', letter:'R'},
+  barracks: {name:'Kaserne',    cost:500,  time:8000,  hp:520, w:2,h:2, power:-20, col:'#7ed957', letter:'B'},
+  factory:  {name:'Fabrik',     cost:1300, time:13000, hp:760, w:3,h:3, power:-40, col:'#ff8a3d', letter:'F'},
+  turret:   {name:'Geschütz',   cost:650,  time:8000,  hp:420, w:1,h:1, power:-10, col:'#ff5b5b', letter:'T',
+             range:210, dmg:20, rate:650},
+};
+const UNIT_DEFS = {
+  harvester:{name:'Harvester',    cost:750, time:9000,  hp:220, speed:64, cat:'factory',  col:'#e8c34a', letter:'H'},
+  rifle:    {name:'Schütze',      cost:150, time:4000,  hp:80,  speed:88, cat:'barracks', col:'#7ed957', letter:'r',
+             dmg:8,  range:120, rate:520,  sight:180},
+  rocket:   {name:'Raketensoldat',cost:260, time:5200,  hp:70,  speed:80, cat:'barracks', col:'#5ec9ba', letter:'k',
+             dmg:24, range:170, rate:950,  sight:190, antiVehicle:1.4},
+  lighttank:{name:'Leichter Panzer',cost:750,time:9500, hp:320, speed:66, cat:'factory',  col:'#6ae0ff', letter:'l',
+             dmg:26, range:135, rate:900,  sight:200},
+  heavytank:{name:'Schwerer Panzer',cost:1150,time:14000,hp:540, speed:48, cat:'factory',  col:'#ff5b5b', letter:'H',
+             dmg:44, range:150, rate:1300, sight:210},
+};
+const HARVEST_RATE = 230;      // Erz/Sekunde
+const HARVEST_CAP  = 700;
+const BUILD_RADIUS = 6.4;      // Kacheln um eigenes Gebäude, in denen gebaut werden darf
+const VISION_HQ = 7, VISION_BLD = 5;
+
+/* ======================= STATE ======================= */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const mm = document.getElementById('minimap');
+const mmCtx = mm.getContext('2d');
+
+let terrain, oreAmt, blocked, revealed, visibleNow;
+let nextId = 1;
+const uid = () => nextId++;
+
+let entities = [];   // buildings + units, unified list for simplicity of z-order not needed
+let shots = [];
+let particles = [];
+
+let player, enemy;
+let camera = {x:0,y:0};
+let selection = [];
+let controlGroups = {1:[],2:[],3:[],4:[]};
+let placing = null;     // {kind:'building', type:'power'} while placing
+let dragBox = null;
+let paused = true;
+let gameOver = false;
+let elapsed = 0;
+let lastAiTick = 0;
+let aiWaveSize = 6;
+const AI_FIRST_ATTACK_T = 95; // Sekunden Schonfrist, bevor die KI die erste Welle schickt
+
+const rand = (a,b) => a + Math.random()*(b-a);
+const ri = (a,b) => Math.floor(rand(a,b+1));
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+const clamp = (v,a,b) => Math.max(a, Math.min(b,v));
+const tileOf = (x,y) => ({tx: Math.floor(x/TILE), ty: Math.floor(y/TILE)});
+
+/* ======================= MAP GEN ======================= */
+function genMap(){
+  terrain = new Uint8Array(MAPW*MAPH);
+  oreAmt  = new Float32Array(MAPW*MAPH);
+  const idx = (x,y) => y*MAPW+x;
+
+  function blob(cx,cy,r,type,amount){
+    for(let y=Math.max(0,cy-r); y<=Math.min(MAPH-1,cy+r); y++){
+      for(let x=Math.max(0,cx-r); x<=Math.min(MAPW-1,cx+r); x++){
+        if (dist({x,y},{x:cx,y:cy}) <= r*rand(.6,1.05)){
+          terrain[idx(x,y)] = type;
+          if (type===T_ORE) oreAmt[idx(x,y)] = amount;
+        }
+      }
+    }
+  }
+  const oreSpots = [
+    [7,10],[10,22],[19,6],[20,24],[30,8],[33,20],[19,15],[6,20],[33,11]
+  ];
+  oreSpots.forEach(([x,y]) => blob(x,y, ri(2,3), T_ORE, rand(900,1500)));
+  for(let i=0;i<9;i++) blob(ri(4,MAPW-5), ri(4,MAPH-5), ri(1,2), T_ROCK, 0);
+  // Basiszonen freihalten
+  [[5,5],[MAPW-6,MAPH-6]].forEach(([x,y])=>{
+    for(let yy=y-4; yy<=y+4; yy++) for(let xx=x-4; xx<=x+4; xx++){
+      if (xx>=0&&yy>=0&&xx<MAPW&&yy<MAPH && terrain[idx(xx,yy)]===T_ROCK) terrain[idx(xx,yy)]=T_GRASS;
+    }
+  });
+  blocked = new Uint8Array(MAPW*MAPH);
+  for(let i=0;i<terrain.length;i++) blocked[i] = terrain[i]===T_ROCK ? 1:0;
+  revealed = new Uint8Array(MAPW*MAPH);
+  visibleNow = new Uint8Array(MAPW*MAPH);
+}
+const tIdx = (tx,ty) => ty*MAPW+tx;
+const inBounds = (tx,ty) => tx>=0&&ty>=0&&tx<MAPW&&ty<MAPH;
+
+function footprintFree(tx,ty,w,h, ignore){
+  for(let yy=ty; yy<ty+h; yy++) for(let xx=tx; xx<tx+w; xx++){
+    if (!inBounds(xx,yy)) return false;
+    if (terrain[tIdx(xx,yy)] !== T_GRASS) return false;
+    for(const e of entities){
+      if (e===ignore || e.dead || !e.isBuilding) continue;
+      if (xx>=e.tx && xx<e.tx+e.w && yy>=e.ty && yy<e.ty+e.h) return false;
+    }
+  }
+  return true;
+}
+function markFootprint(tx,ty,w,h,val){
+  for(let yy=ty; yy<ty+h; yy++) for(let xx=tx; xx<tx+w; xx++) if(inBounds(xx,yy)) blocked[tIdx(xx,yy)] = val;
+}
+
+/* ======================= PATHFINDING (A*) ======================= */
+function astar(sx,sy,ex,ey){
+  sx=clamp(sx,0,MAPW-1); sy=clamp(sy,0,MAPH-1); ex=clamp(ex,0,MAPW-1); ey=clamp(ey,0,MAPH-1);
+  if (blocked[tIdx(ex,ey)]){
+    // finde nächste freie Kachel um Ziel
+    let best=null,bd=1e9;
+    for(let r=1;r<6 && !best;r++){
+      for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
+        const xx=ex+dx, yy=ey+dy;
+        if (inBounds(xx,yy) && !blocked[tIdx(xx,yy)]){
+          const d=Math.hypot(dx,dy); if(d<bd){bd=d;best={x:xx,y:yy};}
+        }
+      }
+    }
+    if(!best) return [];
+    ex=best.x; ey=best.y;
+  }
+  const open = new Map();
+  const key = (x,y)=>x+','+y;
+  const startK = key(sx,sy);
+  const g = new Map([[startK,0]]);
+  const f = new Map([[startK, Math.hypot(ex-sx,ey-sy)]]);
+  const came = new Map();
+  open.set(startK, {x:sx,y:sy});
+  const closed = new Set();
+  let iter=0;
+  while(open.size && iter++ < 2500){
+    let curK=null, curF=Infinity;
+    for(const [k,v] of open){ const fv=f.get(k)??Infinity; if(fv<curF){curF=fv;curK=k;} }
+    const cur = open.get(curK); open.delete(curK); closed.add(curK);
+    if (cur.x===ex && cur.y===ey){
+      const path=[]; let k=curK;
+      while(came.has(k)){ const [x,y]=k.split(',').map(Number); path.push({x,y}); k=came.get(k); }
+      path.reverse();
+      return path.map(p => ({x:(p.x+.5)*TILE, y:(p.y+.5)*TILE}));
+    }
+    for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+      if(!dx&&!dy) continue;
+      const nx=cur.x+dx, ny=cur.y+dy;
+      if(!inBounds(nx,ny) || blocked[tIdx(nx,ny)]) continue;
+      if (dx&&dy && blocked[tIdx(cur.x+dx,cur.y)] && blocked[tIdx(cur.x,cur.y+dy)]) continue;
+      const nk=key(nx,ny); if(closed.has(nk)) continue;
+      const ng=(g.get(curK)??0) + Math.hypot(dx,dy);
+      if(ng < (g.get(nk)??Infinity)){
+        came.set(nk,curK); g.set(nk,ng); f.set(nk, ng+Math.hypot(ex-nx,ey-ny));
+        if(!open.has(nk)) open.set(nk,{x:nx,y:ny});
+      }
+    }
+  }
+  return [];
+}
+
+/* ======================= ENTITY FACTORIES ======================= */
+function makeBuilding(owner, type, tx, ty, done){
+  const d = BUILD_DEFS[type];
+  const e = {
+    id: uid(), isBuilding:true, owner, type, tx, ty, w:d.w, h:d.h,
+    x:(tx+d.w/2)*TILE, y:(ty+d.h/2)*TILE,
+    hp: done ? d.hp : 1, maxHp: d.hp,
+    building: done ? 1 : 0, buildTime: d.time,
+    queue: [], queueProgress: 0,
+    fireCd: 0, dead:false, sight: type==='hq'?VISION_HQ:VISION_BLD,
+  };
+  entities.push(e);
+  if (done) markFootprint(tx,ty,d.w,d.h,1);
+  return e;
+}
+function makeHQ(owner, tx,ty){
+  const e = makeBuilding(owner,'hq',tx,ty,true);
+  e.sight = VISION_HQ;
+  return e;
+}
+function makeUnit(owner, type, x, y){
+  const d = UNIT_DEFS[type];
+  const e = {
+    id:uid(), isBuilding:false, owner, type, x,y, hp:d.hp, maxHp:d.hp,
+    speed:d.speed, path:[], pathI:0, target:null, moveTarget:null, dead:false,
+    fireCd:0, cargo:0, harvestState:'seek', harvestTile:null, sight: d.sight||160,
+    facing:0,
+  };
+  entities.push(e);
+  return e;
+}
+
+/* ======================= PLAYER / ENEMY SETUP ======================= */
+function newSide(owner){ return {owner, credits:2500, power:0, powerUsed:0}; }
+
+function setupGame(){
+  genMap();
+  entities = []; shots=[]; particles=[]; selection=[]; controlGroups={1:[],2:[],3:[],4:[]};
+  player = newSide('player');
+  enemy = newSide('enemy');
+  gameOver=false; elapsed=0; aiWaveSize=6;
+
+  spawnBase('player', 4,4, 1);
+  spawnBase('enemy', MAPW-9, MAPH-9, -1);
+
+  camera.x = clamp(player.hqX - WORLD_W*0.001, 0, WORLD_W); // set below properly
+  const hq = entities.find(e=>e.owner==='player'&&e.type==='hq');
+  camera.x = clamp(hq.x - canvas.clientWidth/2, 0, WORLD_W-canvas.clientWidth);
+  camera.y = clamp(hq.y - canvas.clientHeight/2, 0, WORLD_H-canvas.clientHeight);
+  updateVision();
+  buildSidebar();
+}
+function spawnBase(owner, tx,ty, dir){
+  makeHQ(owner, tx,ty);
+  const rx = dir>0 ? tx+4 : tx-4;
+  makeBuilding(owner,'refinery', rx, ty+1, true);
+  const hx=(tx+1.5)*TILE, hy=(ty+4.5)*TILE;
+  makeUnit(owner,'harvester', hx, hy);
+  makeUnit(owner,'rifle', hx-30, hy+50);
+  makeUnit(owner,'rifle', hx+30, hy+50);
+}
+
+/* ======================= ECONOMY / POWER ======================= */
+function recalcPower(side){
+  let power=0, used=0;
+  for(const e of entities){
+    if (e.dead || !e.isBuilding || e.owner!==side.owner || !e.building) continue;
+    const d = BUILD_DEFS[e.type];
+    const p = d.power||0;
+    if (p>0) power+=p; else used += -p;
+  }
+  const hqCount = entities.filter(e=>e.owner===side.owner && e.type==='hq' && !e.dead).length;
+  power += hqCount*60;
+  side.power = power; side.powerUsed = used;
+}
+function lowPower(side){ return side.powerUsed > side.power; }
+function speedFactor(side){ return lowPower(side) ? 0.4 : 1; }
+
+/* ======================= BUILD / PRODUCE ======================= */
+function canAfford(side, cost){ return side.credits >= cost; }
+
+function tryPlaceBuilding(side, type, tx, ty){
+  const d = BUILD_DEFS[type];
+  if (!canAfford(side, d.cost)) return {ok:false, msg:'Nicht genug Erz.'};
+  if (!footprintFree(tx,ty,d.w,d.h)) return {ok:false, msg:'Platz ungültig.'};
+  const near = entities.some(e => e.isBuilding && e.owner===side.owner && !e.dead &&
+    Math.hypot((tx+d.w/2)-(e.tx+e.w/2), (ty+d.h/2)-(e.ty+e.h/2)) <= BUILD_RADIUS + Math.max(e.w,e.h));
+  if (!near) return {ok:false, msg:'Zu weit von eigener Basis.'};
+  side.credits -= d.cost;
+  const e = makeBuilding(side.owner, type, tx, ty, false);
+  markFootprint(tx,ty,d.w,d.h,1);
+  return {ok:true, e};
+}
+
+function queueUnit(side, type){
+  const d = UNIT_DEFS[type];
+  if (!canAfford(side,d.cost)) { toast('Nicht genug Erz.'); return; }
+  const hasBuilding = entities.some(e=>e.isBuilding && e.owner===side.owner && !e.dead &&
+    e.building && BUILD_DEFS[e.type] && producerFor(type)===e.type);
+  if (!hasBuilding){ toast('Benötigtes Gebäude fehlt.'); return; }
+  side.credits -= d.cost;
+  const b = entities.filter(e=>e.isBuilding && e.owner===side.owner && !e.dead && e.building && e.type===producerFor(type))
+    .sort((a,b2)=>a.queue.length-b2.queue.length)[0];
+  b.queue.push({type, t:0, time:d.time});
+}
+function producerFor(unitType){
+  const cat = UNIT_DEFS[unitType].cat;
+  return cat==='barracks' ? 'barracks' : 'factory';
+}
+
+function updateProduction(side, dt){
+  const sf = speedFactor(side);
+  for(const e of entities){
+    if (e.dead || !e.isBuilding || e.owner!==side.owner) continue;
+    if (!e.building){
+      e.buildTime -= dt*1000*sf;
+      const d = BUILD_DEFS[e.type];
+      e.hp = clamp(e.hp + (d.hp/ (d.time)) * dt*1000, 1, d.hp);
+      if (e.buildTime<=0){ e.building=1; e.hp=d.hp; toast((side.owner==='player'?'':'Gegner: ')+d.name+' fertig.'); }
+      continue;
+    }
+    if (e.queue.length){
+      const item = e.queue[0];
+      item.t += dt*1000*sf;
+      if (item.t >= item.time){
+        e.queue.shift();
+        spawnProducedUnit(side, e, item.type);
+      }
+    }
+  }
+}
+function spawnProducedUnit(side, building, type){
+  const d = BUILD_DEFS[building.type];
+  const angle = rand(0,Math.PI*2);
+  const rx = building.x + Math.cos(angle)*(Math.max(d.w,d.h)*TILE*0.7+30);
+  const ry = building.y + Math.sin(angle)*(Math.max(d.w,d.h)*TILE*0.7+30);
+  const u = makeUnit(side.owner, type, building.x, building.y);
+  u.path = astar(...Object.values(tileOf(building.x,building.y)), ...Object.values(tileOf(rx,ry)));
+  u.pathI = 0;
+  if (side.owner==='player') toast((UNIT_DEFS[type].name)+' bereit.');
+}
+
+/* ======================= COMBAT ======================= */
+function isEnemyOf(a,b){ return a.owner!==b.owner; }
+function acquireTarget(u){
+  const d = u.isBuilding ? BUILD_DEFS[u.type] : UNIT_DEFS[u.type];
+  if (!d || !d.range) return null;
+  let best=null, bd=d.range*1.35;
+  for(const o of entities){
+    if (o.dead || o===u || !isEnemyOf(o,u)) continue;
+    if (!isVisibleForOwner(o,u.owner)) continue;
+    const dd = dist(u,o);
+    if (dd<bd){ bd=dd; best=o; }
+  }
+  return best;
+}
+function isVisibleForOwner(entity, owner){
+  if (owner==='enemy') return true; // KI "sieht" alles (vereinfachte KI)
+  const {tx,ty} = tileOf(entity.x,entity.y);
+  return inBounds(tx,ty) && visibleNow[tIdx(tx,ty)]===1;
+}
+
+function doAttack(u, target, dt){
+  const d = u.isBuilding ? BUILD_DEFS[u.type] : UNIT_DEFS[u.type];
+  u.fireCd -= dt*1000;
+  const dd = dist(u,target);
+  if (dd > d.range){
+    if (!u.isBuilding) steerTo(u, target.x, target.y, dt);
+    return;
+  }
+  if (u.fireCd<=0){
+    u.fireCd = d.rate;
+    let dmg = d.dmg;
+    if (d.antiVehicle && !target.isBuilding && (target.type==='lighttank'||target.type==='heavytank')) dmg*=d.antiVehicle;
+    target.hp -= dmg;
+    shots.push({x1:u.x,y1:u.y,x2:target.x,y2:target.y,life:120,col: u.owner==='player'?'#8ff0ff':'#ff8a6a'});
+    if (target.hp<=0) killEntity(target);
+  }
+}
+function killEntity(e){
+  e.dead = true;
+  particles.push({x:e.x,y:e.y,life:400,r: e.isBuilding? 34:16});
+  if (e.isBuilding) markFootprint(e.tx,e.ty,e.w,e.h,0);
+  selection = selection.filter(s=>s!==e);
+}
+
+function steerTo(u, tx, ty, dt){
+  const dx=tx-u.x, dy=ty-u.y, d=Math.hypot(dx,dy);
+  if (d<2) return;
+  const step = u.speed*dt;
+  u.x += dx/d*Math.min(step,d);
+  u.y += dy/d*Math.min(step,d);
+  u.facing = Math.atan2(dy,dx);
+}
+function followPath(u, dt){
+  if (!u.path || u.pathI>=u.path.length) return false;
+  const wp = u.path[u.pathI];
+  const d = dist(u,wp);
+  if (d < 6){ u.pathI++; return u.pathI<u.path.length; }
+  steerTo(u, wp.x, wp.y, dt);
+  return true;
+}
+
+/* ======================= HARVESTER LOGIC ======================= */
+function nearestOreTile(x,y){
+  let best=null,bd=Infinity;
+  const {tx,ty}=tileOf(x,y);
+  for(let yy=0;yy<MAPH;yy++) for(let xx=0;xx<MAPW;xx++){
+    if (terrain[tIdx(xx,yy)]===T_ORE && oreAmt[tIdx(xx,yy)]>10){
+      const dd=Math.hypot(xx-tx,yy-ty);
+      if (dd<bd){bd=dd;best={x:xx,y:yy};}
+    }
+  }
+  return best;
+}
+function nearestRefinery(owner,x,y){
+  let best=null,bd=Infinity;
+  for(const e of entities){
+    if (e.dead||!e.isBuilding||e.type!=='refinery'||e.owner!==owner||!e.building) continue;
+    const dd=dist({x,y},e); if(dd<bd){bd=dd;best=e;}
+  }
+  return best;
+}
+function updateHarvester(u, side, dt){
+  if (u.orderMove){ // manuelles Ziel überschreibt kurzzeitig
+    if (followPath(u,dt)) return;
+    u.orderMove=false;
+  }
+  if (u.harvestState==='seek'){
+    if (!u.harvestTile || oreAmt[tIdx(u.harvestTile.x,u.harvestTile.y)]<=10){
+      u.harvestTile = nearestOreTile(u.x,u.y);
+      if (!u.harvestTile) { u.harvestState='idle'; return; }
+      u.path = astar(...Object.values(tileOf(u.x,u.y)), u.harvestTile.x, u.harvestTile.y);
+      u.pathI=0;
+    }
+    const target = {x:(u.harvestTile.x+.5)*TILE, y:(u.harvestTile.y+.5)*TILE};
+    if (dist(u,target) < TILE*0.7){ u.harvestState='mine'; }
+    else if (!followPath(u,dt)) { u.harvestState='mine'; }
+  } else if (u.harvestState==='mine'){
+    const ti = tIdx(u.harvestTile.x,u.harvestTile.y);
+    const take = Math.min(HARVEST_RATE*dt, oreAmt[ti], HARVEST_CAP-u.cargo);
+    oreAmt[ti]-=take; u.cargo+=take;
+    if (oreAmt[ti]<=10 || u.cargo>=HARVEST_CAP){
+      if (oreAmt[ti]<=10) terrain[ti]=T_GRASS;
+      u.harvestState='return';
+      const rf = nearestRefinery(u.owner,u.x,u.y);
+      if (!rf){ u.harvestState='idle'; return; }
+      u.refTarget=rf;
+      u.path = astar(...Object.values(tileOf(u.x,u.y)), ...Object.values(tileOf(rf.x,rf.y)));
+      u.pathI=0;
+    }
+  } else if (u.harvestState==='return'){
+    if (!u.refTarget || u.refTarget.dead){ u.harvestState='seek'; return; }
+    if (dist(u,u.refTarget) < TILE*1.1){
+      side.credits += Math.round(u.cargo);
+      u.cargo=0; u.harvestState='seek'; u.harvestTile=null;
+    } else if (!followPath(u,dt)){
+      side.credits += Math.round(u.cargo); u.cargo=0; u.harvestState='seek';
+    }
+  } else if (u.harvestState==='idle'){
+    if (Math.random()<0.01) u.harvestState='seek';
+  }
+}
+
+/* ======================= VISION ======================= */
+function updateVision(){
+  visibleNow.fill(0);
+  for(const e of entities){
+    if (e.dead || e.owner!=='player') continue;
+    const d = e.isBuilding ? BUILD_DEFS[e.type] : UNIT_DEFS[e.type];
+    const sight = e.isBuilding ? e.sight : (d.sight? d.sight/TILE : 5);
+    const {tx,ty} = tileOf(e.x,e.y);
+    const r = Math.ceil(sight);
+    for(let yy=ty-r; yy<=ty+r; yy++) for(let xx=tx-r; xx<=tx+r; xx++){
+      if (inBounds(xx,yy) && Math.hypot(xx-tx,yy-ty)<=sight){
+        visibleNow[tIdx(xx,yy)]=1; revealed[tIdx(xx,yy)]=1;
+      }
+    }
+  }
+}
+
+/* ======================= AI ======================= */
+function aiTick(){
+  const own = 'enemy';
+  const myB = entities.filter(e=>e.owner===own && e.isBuilding && !e.dead);
+  const myU = entities.filter(e=>e.owner===own && !e.isBuilding && !e.dead);
+  const has = t => myB.some(e=>e.type===t && e.building);
+  const buildingCount = t => myB.filter(e=>e.type===t).length;
+  const hq = myB.find(e=>e.type==='hq');
+  if (!hq) return;
+
+  // Bauen
+  const order = ['power','refinery','barracks','power','factory','turret','power','barracks','factory'];
+  const wanted = order.find(t => {
+    const cnt = buildingCount(t);
+    const targetCnt = order.slice(0, order.indexOf(t)+1).filter(x=>x===t).length;
+    return cnt < targetCnt;
+  });
+  if (wanted && canAfford(enemy, BUILD_DEFS[wanted].cost)){
+    const spot = findBuildSpot(own, BUILD_DEFS[wanted].w, BUILD_DEFS[wanted].h, hq);
+    if (spot) tryPlaceBuilding(enemy, wanted, spot.x, spot.y);
+  }
+  // Wirtschaft
+  const harvesters = myU.filter(u=>u.type==='harvester').length;
+  if (harvesters<3 && has('factory')===false && has('refinery')) {
+    // Harvester braucht "factory" Kategorie laut UNIT_DEFS.cat, aber wir erlauben Refinery-Nachschub früh:
+  }
+  if (harvesters<3 && canAfford(enemy, UNIT_DEFS.harvester.cost) && has('refinery')){
+    const b = myB.find(e=>e.type===(producerFor('harvester'))&&e.building);
+    if (b) queueUnit(enemy,'harvester');
+  }
+  // Militär
+  const pool = ['rifle','rifle','rocket','lighttank','heavytank'];
+  const pick = pool[ri(0,pool.length-1)];
+  if (has(producerFor(pick)) && canAfford(enemy, UNIT_DEFS[pick].cost*1.4)) queueUnit(enemy, pick);
+
+  // Angriff formieren (KI wartet mit dem ersten Angriff, damit die Basis stehen kann)
+  const idleCombat = myU.filter(u=>u.type!=='harvester' && !u.moveTarget && !u.attackMove);
+  if (elapsed >= AI_FIRST_ATTACK_T && idleCombat.length >= aiWaveSize){
+    const playerHQ = entities.find(e=>e.owner==='player'&&e.type==='hq'&&!e.dead) ||
+                      entities.find(e=>e.owner==='player'&&!e.dead);
+    if (playerHQ){
+      idleCombat.forEach(u=>{ u.attackMove = {x:playerHQ.x,y:playerHQ.y}; u.path=astar(...Object.values(tileOf(u.x,u.y)),...Object.values(tileOf(playerHQ.x,playerHQ.y))); u.pathI=0; });
+      aiWaveSize = Math.min(aiWaveSize+2, 14);
+      toast('⚠ Feindliche Streitmacht nähert sich!');
+    }
+  }
+  // Verteidigung: Spieler nahe der Basis?
+  const threat = entities.find(e=>e.owner==='player' && !e.dead && dist(e,hq) < 9*TILE);
+  if (threat){
+    myU.filter(u=>u.type!=='harvester').forEach(u=>{ if(!u.target) u.target = threat; });
+  }
+}
+function findBuildSpot(owner, w,h, near){
+  for(let tries=0; tries<160; tries++){
+    const tx = clamp(near.tx + ri(-8,8), 0, MAPW-w);
+    const ty = clamp(near.ty + ri(-8,8), 0, MAPH-h);
+    if (footprintFree(tx,ty,w,h) &&
+        Math.hypot((tx+w/2)-(near.tx+near.w/2),(ty+h/2)-(near.ty+near.h/2)) <= BUILD_RADIUS+3){
+      return {x:tx,y:ty};
+    }
+  }
+  return null;
+}
+
+/* ======================= UPDATE LOOP ======================= */
+function update(dt){
+  if (paused || gameOver) return;
+  elapsed += dt;
+  recalcPower(player); recalcPower(enemy);
+  updateProduction(player, dt); updateProduction(enemy, dt);
+  updateVision();
+
+  for(const e of entities){
+    if (e.dead) continue;
+    if (e.isBuilding){
+      if (e.building && BUILD_DEFS[e.type] && BUILD_DEFS[e.type].range){
+        const side = e.owner==='player'?player:enemy;
+        if (!e.target || e.target.dead) e.target = acquireTarget(e);
+        if (e.target) doAttack(e, e.target, dt);
+      }
+      continue;
+    }
+    // Einheiten
+    if (e.type==='harvester'){
+      updateHarvester(e, e.owner==='player'?player:enemy, dt);
+      continue;
+    }
+    if (e.target && e.target.dead) e.target=null;
+    if (!e.target) e.target = acquireTarget(e);
+    if (e.target){
+      doAttack(e, e.target, dt);
+    } else if (e.attackMove){
+      if (!followPath(e,dt)){ e.attackMove=null; }
+    } else if (e.moveTarget){
+      if (!followPath(e,dt)) e.moveTarget=null;
+    }
+    // Trennung (leichtes Auseinanderschieben)
+  }
+  entities = entities.filter(e=>!e.dead);
+  shots.forEach(s=>s.life-=dt*1000); shots = shots.filter(s=>s.life>0);
+  particles.forEach(p=>p.life-=dt*1000); particles = particles.filter(p=>p.life>0);
+
+  lastAiTick += dt;
+  if (lastAiTick > 2){ lastAiTick=0; aiTick(); }
+
+  checkWinLose();
+  refreshHud();
+}
+
+function checkWinLose(){
+  const pB = entities.filter(e=>e.owner==='player'&&e.isBuilding&&!e.dead).length;
+  const eB = entities.filter(e=>e.owner==='enemy'&&e.isBuilding&&!e.dead).length;
+  if (pB===0){ endGame(false); }
+  else if (eB===0){ endGame(true); }
+}
+function endGame(won){
+  gameOver = true;
+  const ov = document.getElementById('overlay');
+  ov.classList.remove('hide');
+  ov.querySelector('.card').innerHTML = `
+    <h1 style="color:${won?'var(--good)':'var(--bad)'}">${won?'SIEG':'NIEDERLAGE'}</h1>
+    <p>${won ? 'Die feindliche Basis liegt in Trümmern. Iron Dominion ist gesichert.'
+              : 'Deine Basis wurde ausgelöscht. Die KI behält das Feld.'}</p>
+    <p style="color:var(--muted);font-size:12px">Spielzeit: ${fmtTime(elapsed)}</p>
+    <button class="btn" id="restartBtn">Nochmal ▸</button>`;
+  document.getElementById('restartBtn').onclick = () => { setupGame(); ov.classList.add('hide'); paused=false; };
+}
+
+/* ======================= INPUT ======================= */
+let mouse = {x:0,y:0,down:false};
+let dragMid = null;
+const keys = {};
+
+function worldFromClient(cx,cy){
+  const r = canvas.getBoundingClientRect();
+  return {x: cx-r.left+camera.x, y: cy-r.top+camera.y};
+}
+
+canvas.addEventListener('contextmenu', e=>e.preventDefault());
+canvas.addEventListener('mousedown', e => {
+  const w = worldFromClient(e.clientX,e.clientY);
+  if (e.button===1){ dragMid={x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y}; return; }
+  if (e.button===2){ handleRightClick(w); return; }
+  if (placing){
+    commitPlacement(w);
+    return;
+  }
+  dragBox = {x0:w.x,y0:w.y,x1:w.x,y1:w.y};
+});
+window.addEventListener('mousemove', e => {
+  mouse = worldFromClient(e.clientX,e.clientY);
+  if (dragMid){
+    camera.x = clamp(dragMid.cx - (e.clientX-dragMid.x), 0, Math.max(0,WORLD_W-canvas.clientWidth));
+    camera.y = clamp(dragMid.cy - (e.clientY-dragMid.y), 0, Math.max(0,WORLD_H-canvas.clientHeight));
+  }
+  if (dragBox){ dragBox.x1=mouse.x; dragBox.y1=mouse.y; }
+});
+window.addEventListener('mouseup', e => {
+  if (e.button===1){ dragMid=null; return; }
+  if (dragBox){
+    const x0=Math.min(dragBox.x0,dragBox.x1), x1=Math.max(dragBox.x0,dragBox.x1);
+    const y0=Math.min(dragBox.y0,dragBox.y1), y1=Math.max(dragBox.y0,dragBox.y1);
+    if (Math.hypot(x1-x0,y1-y0) < 5){
+      const hit = entities.find(en=>!en.dead && en.owner==='player' && dist(en,{x:x0,y:y0}) < (en.isBuilding? Math.max(en.w,en.h)*TILE/1.6:16));
+      selection = hit ? [hit] : [];
+    } else {
+      selection = entities.filter(en=>!en.dead && !en.isBuilding && en.owner==='player' &&
+        en.x>=x0&&en.x<=x1&&en.y>=y0&&en.y<=y1);
+    }
+    dragBox=null;
+    refreshSelInfo();
+  }
+});
+canvas.addEventListener('touchstart', e=>{
+  const t=e.touches[0]; const w = worldFromClient(t.clientX,t.clientY);
+  if (placing){ commitPlacement(w); e.preventDefault(); return; }
+  touchStart = {x:w.x,y:w.y,t:Date.now()};
+},{passive:false});
+let touchStart=null, touchMoved=false;
+canvas.addEventListener('touchmove', e=>{ touchMoved=true; },{passive:true});
+canvas.addEventListener('touchend', e=>{
+  if (!touchStart) return;
+  const dt = Date.now()-touchStart.t;
+  if (!touchMoved && dt<400){
+    const hit = entities.find(en=>!en.dead && en.owner==='player' && dist(en,touchStart) < 22);
+    if (hit) selection=[hit];
+    else if (selection.length) handleRightClick(touchStart);
+  }
+  touchStart=null; touchMoved=false; refreshSelInfo();
+});
+
+function handleRightClick(w){
+  if (placing){ placing=null; refreshCursorMode(); return; }
+  if (!selection.length) return;
+  const {tx,ty} = tileOf(w.x,w.y);
+  const hitEnemy = entities.find(en=>!en.dead && en.owner!=='player' && isVisibleForOwner(en,'player') &&
+    dist(en,w) < (en.isBuilding? Math.max(en.w,en.h)*TILE/1.5:18));
+  const hitOre = inBounds(tx,ty) && terrain[tIdx(tx,ty)]===T_ORE;
+  const hitRef = entities.find(en=>!en.dead && en.owner==='player' && en.type==='refinery' && dist(en,w)<Math.max(en.w,en.h)*TILE/1.5);
+  selection.forEach(u=>{
+    if (u.isBuilding) return;
+    u.target=null; u.moveTarget=null; u.attackMove=null;
+    if (u.type==='harvester'){
+      if (hitOre){ u.harvestTile={x:tx,y:ty}; u.harvestState='seek'; u.orderMove=true;
+        u.path=astar(...Object.values(tileOf(u.x,u.y)), tx,ty); u.pathI=0; }
+      else if (hitRef){ u.harvestState='return'; u.refTarget=hitRef; u.orderMove=true;
+        u.path=astar(...Object.values(tileOf(u.x,u.y)),...Object.values(tileOf(hitRef.x,hitRef.y))); u.pathI=0; }
+      else { u.orderMove=true; u.path=astar(...Object.values(tileOf(u.x,u.y)),tx,ty); u.pathI=0; }
+      return;
+    }
+    if (hitEnemy){ u.target = hitEnemy; }
+    else {
+      u.moveTarget={x:w.x,y:w.y};
+      u.path = astar(...Object.values(tileOf(u.x,u.y)), tx,ty); u.pathI=0;
+    }
+  });
+  particles.push({x:w.x,y:w.y,life:280,r:10,ring:true});
+}
+
+window.addEventListener('keydown', e=>{
+  keys[e.key.toLowerCase()]=true;
+  if (e.key==='Escape'){ placing=null; refreshCursorMode(); }
+  const n = ['1','2','3','4'].indexOf(e.key);
+  if (n>=0){
+    const g=n+1;
+    if (e.ctrlKey||e.metaKey){ controlGroups[g] = selection.slice(); toast('Gruppe '+g+' zugewiesen.'); }
+    else if (controlGroups[g].length){ selection = controlGroups[g].filter(u=>!u.dead); refreshSelInfo(); }
+  }
+});
+window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
+
+function panFromKeys(dt){
+  const sp = 480*dt;
+  if (keys['w']||keys['arrowup']) camera.y -= sp;
+  if (keys['s']||keys['arrowdown']) camera.y += sp;
+  if (keys['a']||keys['arrowleft']) camera.x -= sp;
+  if (keys['d']||keys['arrowright']) camera.x += sp;
+  camera.x = clamp(camera.x, 0, Math.max(0,WORLD_W-canvas.clientWidth));
+  camera.y = clamp(camera.y, 0, Math.max(0,WORLD_H-canvas.clientHeight));
+}
+
+mm.addEventListener('click', e=>{
+  const r = mm.getBoundingClientRect();
+  const px = (e.clientX-r.left)/r.width, py=(e.clientY-r.top)/r.height;
+  camera.x = clamp(px*WORLD_W - canvas.clientWidth/2, 0, Math.max(0,WORLD_W-canvas.clientWidth));
+  camera.y = clamp(py*WORLD_H - canvas.clientHeight/2, 0, Math.max(0,WORLD_H-canvas.clientHeight));
+});
+
+/* ======================= PLACEMENT ======================= */
+function commitPlacement(w){
+  if (!placing) return;
+  const d = BUILD_DEFS[placing.type];
+  const {tx,ty} = tileOf(w.x - d.w*TILE/2, w.y - d.h*TILE/2);
+  const res = tryPlaceBuilding(player, placing.type, tx, ty);
+  if (!res.ok) toast(res.msg); else { placing=null; }
+  refreshCursorMode();
+}
+function refreshCursorMode(){ canvas.style.cursor = placing ? 'copy' : 'crosshair'; }
+
+/* ======================= RENDER ======================= */
+function resize(){
+  const stage = document.getElementById('stage');
+  canvas.width = stage.clientWidth * devicePixelRatio;
+  canvas.height = stage.clientHeight * devicePixelRatio;
+  canvas.style.width = stage.clientWidth+'px';
+  canvas.style.height = stage.clientHeight+'px';
+}
+window.addEventListener('resize', resize);
+
+const TCOL = {[T_GRASS]:'#141c0d', [T_ORE]:'#241f0c', [T_ROCK]:'#1b1f18'};
+function hash2(x,y){ const n = Math.sin(x*127.1+y*311.7)*43758.5453; return n-Math.floor(n); }
+
+function draw(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  ctx.fillStyle = '#050603'; ctx.fillRect(0,0,w,h);
+  ctx.save();
+  ctx.translate(-camera.x, -camera.y);
+
+  const tx0 = Math.max(0, Math.floor(camera.x/TILE)-1);
+  const ty0 = Math.max(0, Math.floor(camera.y/TILE)-1);
+  const tx1 = Math.min(MAPW, Math.ceil((camera.x+w)/TILE)+1);
+  const ty1 = Math.min(MAPH, Math.ceil((camera.y+h)/TILE)+1);
+
+  for(let ty=ty0; ty<ty1; ty++){
+    for(let tx=tx0; tx<tx1; tx++){
+      const i = tIdx(tx,ty);
+      if (!revealed[i]) continue;
+      const t = terrain[i];
+      const px=tx*TILE, py=ty*TILE;
+      ctx.fillStyle = TCOL[t];
+      ctx.fillRect(px,py,TILE,TILE);
+      if (t===T_GRASS){
+        const n = hash2(tx,ty);
+        ctx.fillStyle = n>0.55 ? 'rgba(255,255,255,.02)' : 'rgba(0,0,0,.08)';
+        ctx.fillRect(px,py,TILE,TILE);
+        if (n>0.82){
+          ctx.strokeStyle='rgba(140,200,120,.16)'; ctx.lineWidth=1;
+          const bx=px+6+n*20, by=py+8+hash2(tx+9,ty+3)*20;
+          ctx.beginPath(); ctx.moveTo(bx,by+6); ctx.lineTo(bx+2,by); ctx.lineTo(bx+4,by+6); ctx.stroke();
+        }
+      } else if (t===T_ROCK){
+        ctx.fillStyle='rgba(0,0,0,.22)';
+        ctx.beginPath(); ctx.moveTo(px+4,py+TILE-4); ctx.lineTo(px+8,py+6); ctx.lineTo(px+TILE-6,py+10);
+        ctx.lineTo(px+TILE-4,py+TILE-6); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle='rgba(180,190,170,.18)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(px+8,py+6); ctx.lineTo(px+TILE-6,py+10); ctx.stroke();
+      } else if (t===T_ORE){
+        const a = clamp(oreAmt[i]/1200,0.2,1);
+        const cx=px+TILE/2, cy=py+TILE/2;
+        ctx.fillStyle = `rgba(120,100,20,${0.3+a*0.3})`;
+        ctx.beginPath(); ctx.arc(cx,cy,TILE*0.42,0,7); ctx.fill();
+        const facets = [[0,-1],[0.85,-0.3],[0.6,0.8],[-0.6,0.8],[-0.85,-0.3]];
+        for(let f=0; f<facets.length; f++){
+          const s = TILE*0.16*(0.7+a*0.6);
+          const fx=cx+facets[f][0]*TILE*0.22, fy=cy+facets[f][1]*TILE*0.22;
+          ctx.fillStyle = f%2? `rgba(255,214,110,${0.55+a*0.35})` : `rgba(255,170,60,${0.5+a*0.35})`;
+          ctx.beginPath();
+          ctx.moveTo(fx,fy-s); ctx.lineTo(fx+s*0.7,fy); ctx.lineTo(fx,fy+s); ctx.lineTo(fx-s*0.7,fy);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.fillStyle=`rgba(255,240,190,${0.15+a*0.25})`;
+        ctx.beginPath(); ctx.arc(cx-3,cy-3,TILE*0.09,0,7); ctx.fill();
+      }
+      ctx.strokeStyle='rgba(255,255,255,.025)'; ctx.strokeRect(px,py,TILE,TILE);
+      if (!visibleNow[i]) { ctx.fillStyle='rgba(0,0,0,.42)'; ctx.fillRect(px,py,TILE,TILE); }
+    }
+  }
+
+  // Placement ghost
+  if (placing){
+    const d = BUILD_DEFS[placing.type];
+    const {tx,ty} = tileOf(mouse.x-d.w*TILE/2, mouse.y-d.h*TILE/2);
+    const ok = footprintFree(tx,ty,d.w,d.h) && entities.some(e=>e.isBuilding&&e.owner==='player'&&!e.dead&&
+       Math.hypot((tx+d.w/2)-(e.tx+e.w/2),(ty+d.h/2)-(e.ty+e.h/2))<=BUILD_RADIUS+Math.max(e.w,e.h));
+    ctx.fillStyle = ok ? 'rgba(126,217,87,.35)' : 'rgba(255,91,91,.35)';
+    ctx.fillRect(tx*TILE,ty*TILE,d.w*TILE,d.h*TILE);
+    ctx.strokeStyle = ok? '#7ed957':'#ff5b5b'; ctx.strokeRect(tx*TILE,ty*TILE,d.w*TILE,d.h*TILE);
+  }
+
+  // Entities
+  for(const e of entities){
+    if (e.dead) continue;
+    const {tx,ty} = tileOf(e.x,e.y);
+    if (e.owner==='enemy' && inBounds(tx,ty) && !visibleNow[tIdx(tx,ty)]) continue;
+    drawEntity(e);
+  }
+  // Shots
+  for(const s of shots){
+    ctx.strokeStyle = s.col; ctx.globalAlpha = clamp(s.life/120,0,1); ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(s.x1,s.y1); ctx.lineTo(s.x2,s.y2); ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  // Particles
+  for(const p of particles){
+    const a = clamp(p.life/400,0,1);
+    if (p.ring){
+      ctx.strokeStyle=`rgba(255,220,140,${a})`; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(p.x,p.y,(1-a)*16+4,0,7); ctx.stroke();
+    } else {
+      ctx.fillStyle=`rgba(255,${120+a*100|0},60,${a})`;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*(1-a*0.4),0,7); ctx.fill();
+    }
+  }
+  // Selection box
+  if (dragBox){
+    ctx.strokeStyle='rgba(126,217,87,.9)'; ctx.fillStyle='rgba(126,217,87,.12)';
+    const x=Math.min(dragBox.x0,dragBox.x1), y=Math.min(dragBox.y0,dragBox.y1);
+    const ww=Math.abs(dragBox.x1-dragBox.x0), hh=Math.abs(dragBox.y1-dragBox.y0);
+    ctx.fillRect(x,y,ww,hh); ctx.strokeRect(x,y,ww,hh);
+  }
+  ctx.restore();
+  drawMinimap();
+}
+
+function shade(hex, amt){
+  const n = parseInt(hex.slice(1),16);
+  let r=(n>>16)+amt, g=(n>>8&255)+amt, b=(n&255)+amt;
+  r=clamp(r,0,255)|0; g=clamp(g,0,255)|0; b=clamp(b,0,255)|0;
+  return `rgb(${r},${g},${b})`;
+}
+function buildingIcon(type, col){
+  const ctx2 = ctx;
+  ctx2.strokeStyle = shade(col,-70); ctx2.fillStyle = shade(col,-70); ctx2.lineWidth=2.2;
+  if (type==='power'){
+    ctx2.beginPath(); ctx2.moveTo(3,-11); ctx2.lineTo(-6,3); ctx2.lineTo(-1,3); ctx2.lineTo(-4,11);
+    ctx2.lineTo(7,-2); ctx2.lineTo(2,-2); ctx2.closePath(); ctx2.fill();
+  } else if (type==='refinery'){
+    ctx2.beginPath(); ctx2.arc(-6,0,6,0,7); ctx2.stroke();
+    ctx2.beginPath(); ctx2.arc(7,0,6,0,7); ctx2.stroke();
+  } else if (type==='barracks'){
+    ctx2.beginPath(); ctx2.moveTo(-9,8); ctx2.lineTo(0,-9); ctx2.lineTo(9,8); ctx2.stroke();
+  } else if (type==='factory'){
+    ctx2.beginPath();
+    for(let k=0;k<8;k++){ const a=k/8*Math.PI*2; const r1=k%2?5:9;
+      ctx2[k?'lineTo':'moveTo'](Math.cos(a)*r1, Math.sin(a)*r1); }
+    ctx2.closePath(); ctx2.stroke();
+  } else if (type==='turret'){
+    ctx2.beginPath(); ctx2.arc(0,0,7,0,7); ctx2.stroke();
+    ctx2.beginPath(); ctx2.moveTo(-9,0); ctx2.lineTo(9,0); ctx2.moveTo(0,-9); ctx2.lineTo(0,9); ctx2.stroke();
+  } else if (type==='hq'){
+    ctx2.beginPath(); ctx2.moveTo(0,-11); ctx2.lineTo(10,-4); ctx2.lineTo(6,10); ctx2.lineTo(-6,10);
+    ctx2.lineTo(-10,-4); ctx2.closePath(); ctx2.stroke();
+  }
+}
+function drawEntity(e){
+  const isSel = selection.includes(e);
+  const pc = e.owner==='player' ? '#5ec9ba' : '#ff5b5b';
+  if (e.isBuilding){
+    const d = BUILD_DEFS[e.type];
+    const x=e.tx*TILE, y=e.ty*TILE, ww=e.w*TILE, hh=e.h*TILE;
+    const col = d.col||'#888';
+    ctx.save();
+    if (!e.building){
+      // Baustelle: Gerüst-Optik
+      ctx.strokeStyle='rgba(255,255,255,.28)'; ctx.lineWidth=1; ctx.setLineDash([5,4]);
+      ctx.strokeRect(x+3,y+3,ww-6,hh-6); ctx.setLineDash([]);
+      const p = 1 - clamp(e.buildTime/(BUILD_DEFS[e.type].time||1),0,1);
+      ctx.fillStyle = shade(col,-40); ctx.globalAlpha=.5;
+      ctx.fillRect(x+3, y+3+(hh-6)*(1-p), ww-6, (hh-6)*p);
+      ctx.globalAlpha=1;
+    } else {
+      // Fundament-Schatten
+      ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fillRect(x+4,y+hh-6,ww-4,6);
+      // Baukörper mit Fasen (pseudo-3D)
+      ctx.fillStyle = shade(col,-55); ctx.fillRect(x+2,y+2,ww-4,hh-4);
+      ctx.fillStyle = col; ctx.fillRect(x+4,y+4,ww-8,hh-9);
+      ctx.fillStyle = shade(col,50); ctx.fillRect(x+4,y+4,ww-8,3);
+      ctx.fillStyle = shade(col,-25); ctx.fillRect(x+4,y+hh-9,ww-8,4);
+      // Teamfarb-Streifen
+      ctx.fillStyle = pc; ctx.fillRect(x+4, y+hh-11, ww-8, 3);
+      ctx.save(); ctx.translate(x+ww/2, y+hh/2-2); buildingIcon(e.type, col); ctx.restore();
+    }
+    ctx.strokeStyle = isSel? '#fff' : shade(col,-80); ctx.lineWidth = isSel?2.5:1.3;
+    ctx.strokeRect(x+2,y+2,ww-4,hh-4);
+    ctx.restore();
+    drawHpBar(x+4, y-7, ww-8, e.hp, e.maxHp);
+    if (!e.building){
+      ctx.fillStyle='#fff'; ctx.font='10px system-ui'; ctx.textAlign='center';
+      ctx.fillText(Math.max(0,Math.ceil(e.buildTime/1000))+'s', x+ww/2, y+hh+13);
+    } else if (e.queue.length){
+      ctx.fillStyle='#ffd66a'; ctx.font='9px system-ui'; ctx.textAlign='center';
+      ctx.fillText(e.queue.length+' in Produktion', x+ww/2, y+hh+13);
+      const item=e.queue[0], p=item.t/item.time;
+      ctx.fillStyle='rgba(0,0,0,.4)'; ctx.fillRect(x+4,y+hh+16,ww-8,4);
+      ctx.fillStyle='#ffd66a'; ctx.fillRect(x+4,y+hh+16,(ww-8)*p,4);
+    }
+    if (d.range && isSel){ ctx.strokeStyle='rgba(255,255,255,.15)'; ctx.beginPath(); ctx.arc(e.x,e.y,d.range,0,7); ctx.stroke(); }
+  } else {
+    const d = UNIT_DEFS[e.type];
+    const isVehicle = e.type==='lighttank'||e.type==='heavytank'||e.type==='harvester';
+    ctx.save(); ctx.translate(e.x,e.y);
+    // Schatten
+    ctx.fillStyle='rgba(0,0,0,.32)'; ctx.beginPath();
+    ctx.ellipse(1,2, e.type==='heavytank'?12:e.type==='lighttank'?10:e.type==='harvester'?11:6,
+                      e.type==='heavytank'?8:e.type==='lighttank'?7:e.type==='harvester'?8:5, 0,0,7); ctx.fill();
+
+    if (e.type==='harvester'){
+      ctx.rotate(e.facing||0);
+      ctx.fillStyle=shade(d.col,-40); ctx.fillRect(-13,-8,26,16);
+      ctx.fillStyle=d.col; ctx.fillRect(-11,-6,16,12);
+      ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fillRect(-1,-6,9,12);
+      if (e.cargo>0){ ctx.fillStyle='#ffd66a'; ctx.fillRect(-1,-6, 9*(e.cargo/HARVEST_CAP), 12); }
+      ctx.strokeStyle=pc; ctx.lineWidth=1.6; ctx.strokeRect(-13,-8,26,16);
+    } else if (isVehicle){
+      const big = e.type==='heavytank';
+      ctx.rotate(e.facing||0);
+      const hw = big?11:9, hh2=big?8:6.5;
+      ctx.fillStyle = shade(d.col,-45); ctx.fillRect(-hw,-hh2,hw*2,hh2*2);
+      ctx.fillStyle = d.col; ctx.fillRect(-hw+2,-hh2+2,hw*2-4,hh2*2-4);
+      ctx.fillStyle='rgba(0,0,0,.25)';
+      for(let k=-hw+2;k<hw-2;k+=4) ctx.fillRect(k,-hh2-1,2,hh2*2+2);
+      ctx.strokeStyle=pc; ctx.lineWidth=1.6; ctx.strokeRect(-hw,-hh2,hw*2,hh2*2);
+      ctx.fillStyle=shade(d.col,-20); ctx.beginPath(); ctx.arc(0,0, big?6:4.5,0,7); ctx.fill();
+      ctx.strokeStyle=shade(d.col,-70); ctx.lineWidth=big?3.4:2.6;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(big?15:12,0); ctx.stroke();
+    } else {
+      // Infanterie
+      ctx.fillStyle='rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(0,0,7,0,7); ctx.fill();
+      ctx.fillStyle=d.col; ctx.beginPath(); ctx.arc(0,0,5.5,0,7); ctx.fill();
+      ctx.strokeStyle=pc; ctx.lineWidth=1.8; ctx.beginPath(); ctx.arc(0,0,5.5,0,7); ctx.stroke();
+      ctx.rotate(e.facing||0);
+      ctx.strokeStyle=shade(d.col,-60); ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(9,0); ctx.stroke();
+    }
+    ctx.restore();
+    if (isSel){ ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.arc(e.x,e.y, e.type==='heavytank'?15:e.type==='lighttank'?13:e.type==='harvester'?15:9, 0,7); ctx.stroke(); }
+    drawHpBar(e.x-14, e.y-20, 28, e.hp, e.maxHp);
+  }
+}
+function drawHpBar(x,y,w,hp,maxHp){
+  if (hp>=maxHp) return;
+  const p = clamp(hp/maxHp,0,1);
+  ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(x,y,w,4);
+  ctx.fillStyle = p>.5?'#7ed957':p>.25?'#ffd66a':'#ff5b5b';
+  ctx.fillRect(x,y,w*p,4);
+}
+
+function drawMinimap(){
+  mmCtx.clearRect(0,0,mm.width,mm.height);
+  const sx = mm.width/MAPW, sy = mm.height/MAPH;
+  for(let ty=0;ty<MAPH;ty++) for(let tx=0;tx<MAPW;tx++){
+    const i=tIdx(tx,ty); if(!revealed[i]) continue;
+    mmCtx.fillStyle = terrain[i]===T_ORE?'#a08528':terrain[i]===T_ROCK?'#2b3026':'#1a2312';
+    mmCtx.fillRect(tx*sx,ty*sy,sx+1,sy+1);
+  }
+  for(const e of entities){
+    if (e.dead) continue;
+    if (e.owner==='enemy'){ const {tx,ty}=tileOf(e.x,e.y); if(!revealed[tIdx(tx,ty)]) continue; }
+    mmCtx.fillStyle = e.owner==='player'?'#5ec9ba':'#ff5b5b';
+    const px=e.x/WORLD_W*mm.width, py=e.y/WORLD_H*mm.height;
+    mmCtx.fillRect(px-(e.isBuilding?2:1.4), py-(e.isBuilding?2:1.4), e.isBuilding?4:2.8, e.isBuilding?4:2.8);
+  }
+  mmCtx.strokeStyle='rgba(255,255,255,.7)'; mmCtx.lineWidth=1;
+  mmCtx.strokeRect(camera.x/WORLD_W*mm.width, camera.y/WORLD_H*mm.height,
+    canvas.clientWidth/WORLD_W*mm.width, canvas.clientHeight/WORLD_H*mm.height);
+}
+
+/* ======================= HUD / SIDEBAR ======================= */
+function fmtTime(s){ const m=Math.floor(s/60), sec=Math.floor(s%60); return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'); }
+function refreshHud(){
+  document.getElementById('stCredits').textContent = Math.floor(player.credits);
+  document.getElementById('stPower').textContent = player.powerUsed+'/'+player.power;
+  document.getElementById('stBld').textContent = entities.filter(e=>e.owner==='player'&&e.isBuilding&&!e.dead).length;
+  document.getElementById('stUnits').textContent = entities.filter(e=>e.owner==='player'&&!e.isBuilding&&!e.dead).length;
+  document.getElementById('stTime').textContent = fmtTime(elapsed);
+  const pw = document.getElementById('power');
+  pw.classList.toggle('warn', lowPower(player));
+  document.getElementById('powerBar').style.width = clamp(player.powerUsed/Math.max(1,player.power)*100,0,100)+'%';
+  buildSidebar();
+}
+function refreshSelInfo(){
+  const el = document.getElementById('selInfo');
+  if (!selection.length){ el.textContent='Nichts ausgewählt.'; return; }
+  const counts={};
+  selection.forEach(u=>{ const n = u.isBuilding? BUILD_DEFS[u.type].name : UNIT_DEFS[u.type].name; counts[n]=(counts[n]||0)+1; });
+  el.innerHTML = Object.entries(counts).map(([n,c])=>`<b>${c}×</b> ${n}`).join(' · ');
+}
+
+let activeTab='build';
+function buildSidebar(){
+  const list = document.getElementById('buildList');
+  list.innerHTML='';
+  if (activeTab==='build'){
+    for(const [type,d] of Object.entries(BUILD_DEFS)){
+      if (type==='hq') continue;
+      const btn = document.createElement('button');
+      btn.className='bItem'+(placing&&placing.type===type?' off':'');
+      const afford = canAfford(player,d.cost);
+      btn.disabled = !afford;
+      btn.innerHTML = `<span class="ic" style="background:${d.col}">${d.letter}</span>
+        <span class="info"><div class="nm">${d.name}</div><div class="cost">⛏ ${d.cost} · ${(d.time/1000)|0}s</div></span>`;
+      btn.onclick = () => { placing = (placing&&placing.type===type)? null : {kind:'building', type}; refreshCursorMode(); };
+      list.appendChild(btn);
+    }
+  } else {
+    for(const [type,d] of Object.entries(UNIT_DEFS)){
+      const btn = document.createElement('button');
+      const hasBld = entities.some(e=>e.isBuilding&&e.owner==='player'&&!e.dead&&e.building&&e.type===producerFor(type));
+      btn.className='bItem'+((!hasBld||!canAfford(player,d.cost))?' off':'');
+      btn.disabled = !hasBld || !canAfford(player,d.cost);
+      const qCount = entities.filter(e=>e.isBuilding&&e.owner==='player'&&e.type===producerFor(type))
+        .reduce((s,e)=>s+e.queue.filter(q=>q.type===type).length,0);
+      btn.innerHTML = `<span class="ic" style="background:${d.col}">${d.letter.toUpperCase()}</span>
+        <span class="info"><div class="nm">${d.name}</div><div class="cost">⛏ ${d.cost} · ${(d.time/1000)|0}s${!hasBld?' · Gebäude fehlt':''}</div></span>
+        ${qCount?`<span class="q">${qCount}</span>`:''}`;
+      btn.onclick = () => queueUnit(player, type);
+      list.appendChild(btn);
+    }
+  }
+}
+document.querySelectorAll('.tabs button').forEach(b=>{
+  b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); activeTab=b.dataset.tab; buildSidebar();
+  };
+});
+document.getElementById('menuToggle').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+
+let toastTimer=null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ======================= MAIN LOOP ======================= */
+let lastT = performance.now();
+function loop(now){
+  const dt = Math.min(0.05,(now-lastT)/1000); lastT=now;
+  panFromKeys(dt);
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+document.getElementById('startBtn').onclick = () => {
+  document.getElementById('overlay').classList.add('hide');
+  paused=false;
+};
+
+resize();
+setupGame();
+refreshHud();
+requestAnimationFrame(loop);
+
+if (/[?&]test=1/.test(location.search)){
+  window.__dbg = {
+    update, draw, setupGame,
+    get entities(){ return entities; },
+    get player(){ return player; },
+    get enemy(){ return enemy; },
+    setPaused(v){ paused = v; },
+    tryPlaceBuilding, queueUnit,
+    get selection(){ return selection; }, set selection(v){ selection=v; },
+  };
+}
+})();
+</script>
+</body>
+</html>

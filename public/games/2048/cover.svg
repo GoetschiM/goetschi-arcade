@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="2048">
+  <defs>
+    <radialGradient id="bg"><stop stop-color="#141b34"/><stop offset="1" stop-color="#04060f"/></radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <pattern id="grid" width="52" height="52" patternUnits="userSpaceOnUse"><path d="M52 0H0V52" fill="none" stroke="#6a8dff" stroke-opacity=".08"/></pattern>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/><rect width="800" height="500" fill="url(#grid)"/>
+
+  <g filter="url(#glow)">
+    <rect x="180" y="150" width="120" height="120" rx="14" fill="#33406e"/>
+    <text x="240" y="222" text-anchor="middle" fill="#9db2ff" font-family="system-ui,sans-serif" font-weight="800" font-size="34">2</text>
+
+    <rect x="330" y="110" width="140" height="140" rx="14" fill="#4a5da0"/>
+    <text x="400" y="192" text-anchor="middle" fill="#dfe6ff" font-family="system-ui,sans-serif" font-weight="800" font-size="40">8</text>
+
+    <rect x="500" y="160" width="120" height="120" rx="14" fill="#33406e"/>
+    <text x="560" y="232" text-anchor="middle" fill="#9db2ff" font-family="system-ui,sans-serif" font-weight="800" font-size="34">4</text>
+
+    <rect x="345" y="270" width="110" height="110" rx="14" fill="#6a8dff"/>
+    <text x="400" y="337" text-anchor="middle" fill="#0a1030" font-family="system-ui,sans-serif" font-weight="900" font-size="32">16</text>
+  </g>
+  <g stroke="#6a8dff" stroke-width="2" stroke-opacity=".5" fill="none">
+    <path d="M300 210 L330 190" marker-end="url(#a)"/>
+    <path d="M500 220 L470 200"/>
+  </g>
+
+  <text x="400" y="452" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-weight="900" font-size="54" letter-spacing="10">2048</text>
+</svg>

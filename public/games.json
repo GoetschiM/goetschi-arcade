@@ -16,6 +16,7 @@
       "title": "2048",
       "subtitle": "Kacheln verschmelzen",
       "description": "Klassisches 2048 — wische die Kacheln zusammen bis die 2048 fällt. Speichert automatisch, perfekt für kurze Pausen.",
+      "cover": "games/2048/cover.svg",
       "accent": "#6a8dff",
       "tags": ["Puzzle", "Solo"],
       "controls": "Touch & Pfeiltasten",
@@ -26,6 +27,7 @@
       "title": "Void Dash",
       "subtitle": "Durchs Asteroidenfeld",
       "description": "Tippen, um deinen Kurs zu heben, und den Asteroidenfeldern ausweichen — so lange wie möglich durchhalten. Wird mit jedem Punkt schneller und enger.",
+      "cover": "games/void-dash/cover.svg",
       "accent": "#6ae0ff",
       "tags": ["Action", "Arcade", "Solo"],
       "controls": "Tippen / Klicken / Leertaste",
@@ -51,6 +53,28 @@
       "tags": ["Survival", "Action", "Upgrades", "Solo"],
       "controls": "Touch / WASD / Pfeiltasten",
       "added": "2026-08-30"
+    },
+    {
+      "slug": "blockfront",
+      "title": "Blockfront",
+      "subtitle": "Kistenhafen",
+      "description": "Ein schneller Cartoon-Arena-Shooter mit drei Waffen, Trainingsplatz und privaten Räumen für bis zu acht Spieler.",
+      "cover": "games/blockfront/cover.svg",
+      "accent": "#ffda45",
+      "tags": ["Shooter", "Multiplayer", "3D"],
+      "controls": "Touch / WASD / Maus",
+      "added": "2026-09-05"
+    },
+    {
+      "slug": "iron-dominion",
+      "title": "Iron Dominion",
+      "subtitle": "Basis. Erz. Übernahme.",
+      "description": "Echtzeit-Strategie im Stil der grossen Basisbau-Klassiker: Erz fördern, Energie verwalten, Kaserne und Fabrik hochziehen und die feindliche KI mit Panzern und Infanterie plattmachen.",
+      "cover": "games/iron-dominion/cover.svg",
+      "accent": "#ff8a3d",
+      "tags": ["Strategie", "RTS", "Basisbau", "Solo vs. KI"],
+      "controls": "Maus (Links = Auswahl, Rechts = Befehl) & Tastatur",
+      "added": "2026-09-06"
     }
   ]
 }

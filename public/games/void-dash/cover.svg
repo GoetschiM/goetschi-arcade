@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Void Dash">
+  <defs>
+    <radialGradient id="bg"><stop stop-color="#062028"/><stop offset="1" stop-color="#020608"/></radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <pattern id="stars" width="90" height="90" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="18" r="1.4" fill="#6ae0ff" opacity=".5"/>
+      <circle cx="60" cy="50" r="1" fill="#fff" opacity=".4"/>
+      <circle cx="40" cy="80" r="1.6" fill="#6ae0ff" opacity=".35"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/><rect width="800" height="500" fill="url(#stars)"/>
+
+  <g stroke="#6ae0ff" stroke-width="3" fill="none" opacity=".55" filter="url(#glow)">
+    <path d="M60 380 C 220 330, 300 240, 420 210"/>
+    <path d="M60 400 C 220 352, 300 262, 420 232"/>
+  </g>
+
+  <g filter="url(#glow)">
+    <polygon points="440,196 466,214 452,240 428,236 420,212" fill="#6ae0ff"/>
+    <polygon points="452,205 466,214 458,226" fill="#eafcff"/>
+  </g>
+
+  <g fill="#294a55" filter="url(#glow)">
+    <polygon points="560,140 596,150 592,186 560,198 536,170"/>
+    <polygon points="640,270 672,262 686,292 664,318 636,304"/>
+    <polygon points="520,330 548,318 566,342 548,368 518,360"/>
+    <polygon points="700,150 722,158 716,182 694,186 686,164"/>
+  </g>
+
+  <text x="400" y="452" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-weight="900" font-size="48" letter-spacing="8">VOID DASH</text>
+</svg>
