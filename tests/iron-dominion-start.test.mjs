@@ -74,12 +74,17 @@ function makeSandbox({ search = '' } = {}) {
     addEventListener() {},
     removeEventListener() {}
   };
+  class FakeImage {
+    constructor() { this.complete = false; this.naturalWidth = 0; this.naturalHeight = 0; }
+    set src(_v) { /* no network in tests -- sprite stays "not ready", vector fallback draws */ }
+  }
   const sandbox = {
     document,
     location: { search },
     innerWidth: 960,
     innerHeight: 640,
     devicePixelRatio: 1,
+    Image: FakeImage,
     performance: { now: () => 0 },
     requestAnimationFrame: callback => frames.push(callback),
     setTimeout: () => 0,
@@ -125,4 +130,33 @@ test('Iron Dominion starts without crashing and keeps simulating', () => {
   assert.ok(enemyCredits > 2500, 'enemy economy should have grown from harvesting');
   assert.ok(dbg.entities.filter(e => e.owner === 'enemy' && e.isBuilding && !e.dead).length >= 2,
     'enemy AI should have kept or expanded its base');
+});
+
+test('sidebar build buttons stay the same DOM node across frames (regression: rebuilding every frame ate clicks)', () => {
+  const html = readFileSync(new URL('../public/games/iron-dominion/index.html', import.meta.url), 'utf8');
+  const source = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+
+  const { sandbox, frames, elements } = makeSandbox({ search: '?test=1' });
+  vm.runInContext(source, sandbox);
+  frames.shift()(0);
+  elements.get('startBtn').onclick();
+
+  const dbg = sandbox.__dbg;
+  dbg.setPaused(false);
+
+  const list = elements.get('buildList');
+  assert.ok(list.children.length > 0, 'sidebar should have build buttons after first render');
+  const powerBtnBefore = list.children[0];
+
+  // Simuliert echtes Nutzerverhalten: ein Klick besteht aus mousedown + (etwas
+  // spaeter) mouseup. Dazwischen laufen mehrere Animationsframes. Wenn
+  // refreshHud() die Buttons bei jedem Frame neu erzeugt, ist der Knoten unter
+  // dem Cursor beim mouseup schon ein anderer -> kein click-Event, Bauen tot.
+  for (let i = 0; i < 30; i++) dbg.update(0.05); // ~1.5s, viele HUD-Refreshs
+
+  const powerBtnAfter = list.children[0];
+  assert.strictEqual(powerBtnAfter, powerBtnBefore,
+    'the same button element must survive many HUD refreshes, not be replaced');
+
+  assert.doesNotThrow(() => powerBtnAfter.onclick(), 'clicking the surviving button must still work');
 });

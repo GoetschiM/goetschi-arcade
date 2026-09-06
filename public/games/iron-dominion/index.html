@@ -232,6 +232,21 @@ const ctx = canvas.getContext('2d');
 const mm = document.getElementById('minimap');
 const mmCtx = mm.getContext('2d');
 
+// Lokal generierte Sprites (siehe sprites/README) -- Bildobjekte werden
+// asynchron geladen; bis dahin faellt drawEntity() auf die alten
+// Vektor-Formen zurueck (sprite.complete/naturalWidth pruefen).
+const SPRITES = {};
+['hq','power','refinery','barracks','factory','turret',
+ 'harvester','lighttank','heavytank','rifle','rocket'].forEach(name => {
+  const img = new Image();
+  img.src = 'sprites/' + name + '.png';
+  SPRITES[name] = img;
+});
+function spriteReady(name){
+  const img = SPRITES[name];
+  return img && img.complete && img.naturalWidth > 0;
+}
+
 let terrain, oreAmt, blocked, revealed, visibleNow;
 let nextId = 1;
 const uid = () => nextId++;
@@ -1093,6 +1108,19 @@ function buildingIcon(type, col){
     ctx2.lineTo(-10,-4); ctx2.closePath(); ctx2.stroke();
   }
 }
+// Zielbreite (in Weltpixeln) je Einheit, damit Sprites mit sehr
+// unterschiedlichem Seitenverhaeltnis trotzdem stimmig gross wirken.
+const UNIT_SPRITE_W = {harvester:TILE*1.4, lighttank:TILE*1.3, heavytank:TILE*1.45, rifle:TILE*0.68, rocket:TILE*0.68};
+
+function drawSpritePlate(img, cx, bottomY, targetW, opacity){
+  const ar = img.naturalHeight/img.naturalWidth;
+  const w = targetW, h = targetW*ar;
+  ctx.globalAlpha = opacity==null?1:opacity;
+  ctx.drawImage(img, cx-w/2, bottomY-h, w, h);
+  ctx.globalAlpha = 1;
+  return h;
+}
+
 function drawEntity(e){
   const isSel = selection.includes(e);
   const pc = e.owner==='player' ? '#5ec9ba' : '#ff5b5b';
@@ -1100,29 +1128,39 @@ function drawEntity(e){
     const d = BUILD_DEFS[e.type];
     const x=e.tx*TILE, y=e.ty*TILE, ww=e.w*TILE, hh=e.h*TILE;
     const col = d.col||'#888';
+    const sprite = spriteReady(e.type) ? SPRITES[e.type] : null;
     ctx.save();
     if (!e.building){
-      // Baustelle: Gerüst-Optik
+      // Baustelle: Gerüst-Optik (auch mit Sprite als schwacher Vorschau-Schatten)
+      if (sprite){
+        drawSpritePlate(sprite, x+ww/2, y+hh-2, ww*1.2, .22);
+      }
       ctx.strokeStyle='rgba(255,255,255,.28)'; ctx.lineWidth=1; ctx.setLineDash([5,4]);
       ctx.strokeRect(x+3,y+3,ww-6,hh-6); ctx.setLineDash([]);
       const p = 1 - clamp(e.buildTime/(BUILD_DEFS[e.type].time||1),0,1);
       ctx.fillStyle = shade(col,-40); ctx.globalAlpha=.5;
       ctx.fillRect(x+3, y+3+(hh-6)*(1-p), ww-6, (hh-6)*p);
       ctx.globalAlpha=1;
+      ctx.strokeStyle = isSel? '#fff' : shade(col,-80); ctx.lineWidth = isSel?2.5:1.3;
+      ctx.strokeRect(x+2,y+2,ww-4,hh-4);
+    } else if (sprite){
+      ctx.fillStyle='rgba(0,0,0,.32)'; ctx.beginPath();
+      ctx.ellipse(x+ww/2, y+hh-4, ww*0.42, hh*0.16, 0,0,7); ctx.fill();
+      drawSpritePlate(sprite, x+ww/2, y+hh-2, ww*1.22);
+      ctx.fillStyle = pc; ctx.fillRect(x+ww/2-ww*0.24, y+hh-4, ww*0.48, 3.5);
+      if (isSel){ ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=2; ctx.strokeRect(x+2,y+2,ww-4,hh-4); }
     } else {
-      // Fundament-Schatten
+      // Fallback ohne geladenes Sprite: bisherige Vektor-Optik
       ctx.fillStyle='rgba(0,0,0,.35)'; ctx.fillRect(x+4,y+hh-6,ww-4,6);
-      // Baukörper mit Fasen (pseudo-3D)
       ctx.fillStyle = shade(col,-55); ctx.fillRect(x+2,y+2,ww-4,hh-4);
       ctx.fillStyle = col; ctx.fillRect(x+4,y+4,ww-8,hh-9);
       ctx.fillStyle = shade(col,50); ctx.fillRect(x+4,y+4,ww-8,3);
       ctx.fillStyle = shade(col,-25); ctx.fillRect(x+4,y+hh-9,ww-8,4);
-      // Teamfarb-Streifen
       ctx.fillStyle = pc; ctx.fillRect(x+4, y+hh-11, ww-8, 3);
       ctx.save(); ctx.translate(x+ww/2, y+hh/2-2); buildingIcon(e.type, col); ctx.restore();
+      ctx.strokeStyle = isSel? '#fff' : shade(col,-80); ctx.lineWidth = isSel?2.5:1.3;
+      ctx.strokeRect(x+2,y+2,ww-4,hh-4);
     }
-    ctx.strokeStyle = isSel? '#fff' : shade(col,-80); ctx.lineWidth = isSel?2.5:1.3;
-    ctx.strokeRect(x+2,y+2,ww-4,hh-4);
     ctx.restore();
     drawHpBar(x+4, y-7, ww-8, e.hp, e.maxHp);
     if (!e.building){
@@ -1139,43 +1177,57 @@ function drawEntity(e){
   } else {
     const d = UNIT_DEFS[e.type];
     const isVehicle = e.type==='lighttank'||e.type==='heavytank'||e.type==='harvester';
-    ctx.save(); ctx.translate(e.x,e.y);
-    // Schatten
-    ctx.fillStyle='rgba(0,0,0,.32)'; ctx.beginPath();
-    ctx.ellipse(1,2, e.type==='heavytank'?12:e.type==='lighttank'?10:e.type==='harvester'?11:6,
-                      e.type==='heavytank'?8:e.type==='lighttank'?7:e.type==='harvester'?8:5, 0,0,7); ctx.fill();
+    const ringR = e.type==='heavytank'?15:e.type==='lighttank'?13:e.type==='harvester'?15:9;
+    const sprite = spriteReady(e.type) ? SPRITES[e.type] : null;
 
-    if (e.type==='harvester'){
-      ctx.rotate(e.facing||0);
-      ctx.fillStyle=shade(d.col,-40); ctx.fillRect(-13,-8,26,16);
-      ctx.fillStyle=d.col; ctx.fillRect(-11,-6,16,12);
-      ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fillRect(-1,-6,9,12);
-      if (e.cargo>0){ ctx.fillStyle='#ffd66a'; ctx.fillRect(-1,-6, 9*(e.cargo/HARVEST_CAP), 12); }
-      ctx.strokeStyle=pc; ctx.lineWidth=1.6; ctx.strokeRect(-13,-8,26,16);
-    } else if (isVehicle){
-      const big = e.type==='heavytank';
-      ctx.rotate(e.facing||0);
-      const hw = big?11:9, hh2=big?8:6.5;
-      ctx.fillStyle = shade(d.col,-45); ctx.fillRect(-hw,-hh2,hw*2,hh2*2);
-      ctx.fillStyle = d.col; ctx.fillRect(-hw+2,-hh2+2,hw*2-4,hh2*2-4);
-      ctx.fillStyle='rgba(0,0,0,.25)';
-      for(let k=-hw+2;k<hw-2;k+=4) ctx.fillRect(k,-hh2-1,2,hh2*2+2);
-      ctx.strokeStyle=pc; ctx.lineWidth=1.6; ctx.strokeRect(-hw,-hh2,hw*2,hh2*2);
-      ctx.fillStyle=shade(d.col,-20); ctx.beginPath(); ctx.arc(0,0, big?6:4.5,0,7); ctx.fill();
-      ctx.strokeStyle=shade(d.col,-70); ctx.lineWidth=big?3.4:2.6;
-      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(big?15:12,0); ctx.stroke();
+    if (sprite){
+      // Team-Ring am Boden statt Recolor -- die Sprites sind neutral gerendert.
+      ctx.beginPath(); ctx.ellipse(e.x, e.y+ringR*0.55, ringR*0.8, ringR*0.34, 0,0,7);
+      ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fill();
+      ctx.strokeStyle=pc; ctx.lineWidth=2; ctx.stroke();
+      const targetW = UNIT_SPRITE_W[e.type] || TILE*0.7;
+      const h = drawSpritePlate(sprite, e.x, e.y+ringR*0.6, targetW);
+      if (e.type==='harvester' && e.cargo>0){
+        ctx.fillStyle='#ffd66a'; ctx.globalAlpha=.85;
+        ctx.beginPath(); ctx.arc(e.x, e.y-h*0.32, 3+e.cargo/HARVEST_CAP*3, 0,7); ctx.fill();
+        ctx.globalAlpha=1;
+      }
     } else {
-      // Infanterie
-      ctx.fillStyle='rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(0,0,7,0,7); ctx.fill();
-      ctx.fillStyle=d.col; ctx.beginPath(); ctx.arc(0,0,5.5,0,7); ctx.fill();
-      ctx.strokeStyle=pc; ctx.lineWidth=1.8; ctx.beginPath(); ctx.arc(0,0,5.5,0,7); ctx.stroke();
-      ctx.rotate(e.facing||0);
-      ctx.strokeStyle=shade(d.col,-60); ctx.lineWidth=1.6;
-      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(9,0); ctx.stroke();
+      ctx.save(); ctx.translate(e.x,e.y);
+      ctx.fillStyle='rgba(0,0,0,.32)'; ctx.beginPath();
+      ctx.ellipse(1,2, e.type==='heavytank'?12:e.type==='lighttank'?10:e.type==='harvester'?11:6,
+                        e.type==='heavytank'?8:e.type==='lighttank'?7:e.type==='harvester'?8:5, 0,0,7); ctx.fill();
+      if (e.type==='harvester'){
+        ctx.rotate(e.facing||0);
+        ctx.fillStyle=shade(d.col,-40); ctx.fillRect(-13,-8,26,16);
+        ctx.fillStyle=d.col; ctx.fillRect(-11,-6,16,12);
+        ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fillRect(-1,-6,9,12);
+        if (e.cargo>0){ ctx.fillStyle='#ffd66a'; ctx.fillRect(-1,-6, 9*(e.cargo/HARVEST_CAP), 12); }
+        ctx.strokeStyle=pc; ctx.lineWidth=1.6; ctx.strokeRect(-13,-8,26,16);
+      } else if (isVehicle){
+        const big = e.type==='heavytank';
+        ctx.rotate(e.facing||0);
+        const hw = big?11:9, hh2=big?8:6.5;
+        ctx.fillStyle = shade(d.col,-45); ctx.fillRect(-hw,-hh2,hw*2,hh2*2);
+        ctx.fillStyle = d.col; ctx.fillRect(-hw+2,-hh2+2,hw*2-4,hh2*2-4);
+        ctx.fillStyle='rgba(0,0,0,.25)';
+        for(let k=-hw+2;k<hw-2;k+=4) ctx.fillRect(k,-hh2-1,2,hh2*2+2);
+        ctx.strokeStyle=pc; ctx.lineWidth=1.6; ctx.strokeRect(-hw,-hh2,hw*2,hh2*2);
+        ctx.fillStyle=shade(d.col,-20); ctx.beginPath(); ctx.arc(0,0, big?6:4.5,0,7); ctx.fill();
+        ctx.strokeStyle=shade(d.col,-70); ctx.lineWidth=big?3.4:2.6;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(big?15:12,0); ctx.stroke();
+      } else {
+        ctx.fillStyle='rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(0,0,7,0,7); ctx.fill();
+        ctx.fillStyle=d.col; ctx.beginPath(); ctx.arc(0,0,5.5,0,7); ctx.fill();
+        ctx.strokeStyle=pc; ctx.lineWidth=1.8; ctx.beginPath(); ctx.arc(0,0,5.5,0,7); ctx.stroke();
+        ctx.rotate(e.facing||0);
+        ctx.strokeStyle=shade(d.col,-60); ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(9,0); ctx.stroke();
+      }
+      ctx.restore();
     }
-    ctx.restore();
     if (isSel){ ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=1.4;
-      ctx.beginPath(); ctx.arc(e.x,e.y, e.type==='heavytank'?15:e.type==='lighttank'?13:e.type==='harvester'?15:9, 0,7); ctx.stroke(); }
+      ctx.beginPath(); ctx.arc(e.x,e.y, ringR, 0,7); ctx.stroke(); }
     drawHpBar(e.x-14, e.y-20, 28, e.hp, e.maxHp);
   }
 }
@@ -1218,7 +1270,7 @@ function refreshHud(){
   const pw = document.getElementById('power');
   pw.classList.toggle('warn', lowPower(player));
   document.getElementById('powerBar').style.width = clamp(player.powerUsed/Math.max(1,player.power)*100,0,100)+'%';
-  buildSidebar();
+  updateSidebarState();
 }
 function refreshSelInfo(){
   const el = document.getElementById('selInfo');
@@ -1229,34 +1281,67 @@ function refreshSelInfo(){
 }
 
 let activeTab='build';
+let sidebarBuiltFor=null;
+let sidebarBtns={};
+
+// Baut die Button-Elemente nur EINMAL pro Tab-Wechsel neu auf. Ein Neuaufbau
+// bei jedem Frame (wie fruher) zerstoert das Element unter dem Mauszeiger
+// zwischen mousedown und mouseup, wodurch der Browser gar kein click-Event
+// mehr feuert -> Bauen war dadurch komplett kaputt. Deshalb: Elemente bleiben
+// stabil, updateSidebarState() aendert nur noch Text/disabled/Klassen daran.
 function buildSidebar(){
+  if (sidebarBuiltFor===activeTab) { updateSidebarState(); return; }
+  sidebarBuiltFor = activeTab;
+  sidebarBtns = {};
   const list = document.getElementById('buildList');
   list.innerHTML='';
   if (activeTab==='build'){
     for(const [type,d] of Object.entries(BUILD_DEFS)){
       if (type==='hq') continue;
       const btn = document.createElement('button');
-      btn.className='bItem'+(placing&&placing.type===type?' off':'');
-      const afford = canAfford(player,d.cost);
-      btn.disabled = !afford;
+      btn.className='bItem';
       btn.innerHTML = `<span class="ic" style="background:${d.col}">${d.letter}</span>
         <span class="info"><div class="nm">${d.name}</div><div class="cost">⛏ ${d.cost} · ${(d.time/1000)|0}s</div></span>`;
       btn.onclick = () => { placing = (placing&&placing.type===type)? null : {kind:'building', type}; refreshCursorMode(); };
       list.appendChild(btn);
+      sidebarBtns[type] = btn;
     }
   } else {
     for(const [type,d] of Object.entries(UNIT_DEFS)){
       const btn = document.createElement('button');
-      const hasBld = entities.some(e=>e.isBuilding&&e.owner==='player'&&!e.dead&&e.building&&e.type===producerFor(type));
-      btn.className='bItem'+((!hasBld||!canAfford(player,d.cost))?' off':'');
-      btn.disabled = !hasBld || !canAfford(player,d.cost);
-      const qCount = entities.filter(e=>e.isBuilding&&e.owner==='player'&&e.type===producerFor(type))
-        .reduce((s,e)=>s+e.queue.filter(q=>q.type===type).length,0);
+      btn.className='bItem';
       btn.innerHTML = `<span class="ic" style="background:${d.col}">${d.letter.toUpperCase()}</span>
-        <span class="info"><div class="nm">${d.name}</div><div class="cost">⛏ ${d.cost} · ${(d.time/1000)|0}s${!hasBld?' · Gebäude fehlt':''}</div></span>
-        ${qCount?`<span class="q">${qCount}</span>`:''}`;
+        <span class="info"><div class="nm">${d.name}</div><div class="cost cost-text"></div></span>
+        <span class="q" hidden></span>`;
       btn.onclick = () => queueUnit(player, type);
       list.appendChild(btn);
+      sidebarBtns[type] = btn;
+    }
+  }
+  updateSidebarState();
+}
+function updateSidebarState(){
+  if (sidebarBuiltFor!==activeTab || !player) return;
+  if (activeTab==='build'){
+    for(const [type,d] of Object.entries(BUILD_DEFS)){
+      if (type==='hq') continue;
+      const btn = sidebarBtns[type]; if(!btn) continue;
+      const afford = canAfford(player,d.cost);
+      btn.disabled = !afford;
+      btn.classList.toggle('off', placing&&placing.type===type);
+    }
+  } else {
+    for(const [type,d] of Object.entries(UNIT_DEFS)){
+      const btn = sidebarBtns[type]; if(!btn) continue;
+      const hasBld = entities.some(e=>e.isBuilding&&e.owner==='player'&&!e.dead&&e.building&&e.type===producerFor(type));
+      const afford = canAfford(player,d.cost);
+      btn.disabled = !hasBld || !afford;
+      btn.classList.toggle('off', !hasBld||!afford);
+      const qCount = entities.filter(e=>e.isBuilding&&e.owner==='player'&&e.type===producerFor(type))
+        .reduce((s,e)=>s+e.queue.filter(q=>q.type===type).length,0);
+      btn.querySelector('.cost-text').textContent = `⛏ ${d.cost} · ${(d.time/1000)|0}s${!hasBld?' · Gebäude fehlt':''}`;
+      const qEl = btn.querySelector('.q');
+      qEl.hidden = !qCount; qEl.textContent = qCount;
     }
   }
 }
