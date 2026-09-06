@@ -570,7 +570,12 @@ function doAttack(u, target, dt){
     let dmg = d.dmg;
     if (d.antiVehicle && !target.isBuilding && (target.type==='lighttank'||target.type==='heavytank')) dmg*=d.antiVehicle;
     target.hp -= dmg;
-    shots.push({x1:u.x,y1:u.y,x2:target.x,y2:target.y,life:120,col: u.owner==='player'?'#8ff0ff':'#ff8a6a'});
+    const shotCol = u.owner==='player' ? '#8ff0ff' : '#ff8a6a';
+    const big = !u.isBuilding && (u.type==='heavytank'||u.type==='lighttank');
+    shots.push({x1:u.x,y1:u.y,x2:target.x,y2:target.y,life:190,maxLife:190,col:shotCol,w: big?3.6:2});
+    particles.push({x:u.x,y:u.y,life:130,maxLife:130,r: big?13:7,flash:true,col:shotCol});
+    particles.push({x:target.x,y:target.y,life:260,maxLife:260,r: big?11:6,spark:true,col:shotCol,
+      dirx:(target.x-u.x)/(dd||1), diry:(target.y-u.y)/(dd||1)});
     if (target.hp<=0) killEntity(target);
   }
 }
@@ -971,7 +976,7 @@ function resize(){
 }
 window.addEventListener('resize', resize);
 
-const TCOL = {[T_GRASS]:'#141c0d', [T_ORE]:'#241f0c', [T_ROCK]:'#1b1f18'};
+const TCOL = {[T_GRASS]:'#182611', [T_ORE]:'#241f0c', [T_ROCK]:'#1b1f18'};
 function hash2(x,y){ const n = Math.sin(x*127.1+y*311.7)*43758.5453; return n-Math.floor(n); }
 
 function draw(){
@@ -996,6 +1001,11 @@ function draw(){
       ctx.fillStyle = TCOL[t];
       ctx.fillRect(px,py,TILE,TILE);
       if (t===T_GRASS){
+        // Grossflaechige Farbflecken (weicher Raster-Hash) brechen die
+        // gleichfoermige Kachel-Optik auf, bevor der Fein-Noise drueberkommt.
+        const patch = hash2(Math.floor(tx/5), Math.floor(ty/5));
+        ctx.fillStyle = patch>0.6 ? 'rgba(90,140,60,.07)' : patch<0.25 ? 'rgba(20,50,60,.10)' : 'rgba(0,0,0,0)';
+        if (patch>0.6 || patch<0.25) ctx.fillRect(px,py,TILE,TILE);
         const n = hash2(tx,ty);
         ctx.fillStyle = n>0.55 ? 'rgba(255,255,255,.02)' : 'rgba(0,0,0,.08)';
         ctx.fillRect(px,py,TILE,TILE);
@@ -1050,18 +1060,47 @@ function draw(){
     if (e.owner==='enemy' && inBounds(tx,ty) && !visibleNow[tIdx(tx,ty)]) continue;
     drawEntity(e);
   }
-  // Shots
+  // Shots: leuchtender Tracer mit weichem Glow, nicht nur ein duenner Strich
   for(const s of shots){
-    ctx.strokeStyle = s.col; ctx.globalAlpha = clamp(s.life/120,0,1); ctx.lineWidth=2;
+    const a = clamp(s.life/(s.maxLife||120),0,1);
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    ctx.strokeStyle = s.col; ctx.lineCap='round';
+    ctx.globalAlpha = a*0.35; ctx.lineWidth = (s.w||2)*3;
     ctx.beginPath(); ctx.moveTo(s.x1,s.y1); ctx.lineTo(s.x2,s.y2); ctx.stroke();
-    ctx.globalAlpha=1;
+    ctx.globalAlpha = a; ctx.lineWidth = s.w||2;
+    ctx.beginPath(); ctx.moveTo(s.x1,s.y1); ctx.lineTo(s.x2,s.y2); ctx.stroke();
+    ctx.restore();
   }
   // Particles
   for(const p of particles){
-    const a = clamp(p.life/400,0,1);
+    const a = clamp(p.life/(p.maxLife||400),0,1);
     if (p.ring){
       ctx.strokeStyle=`rgba(255,220,140,${a})`; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(p.x,p.y,(1-a)*16+4,0,7); ctx.stroke();
+    } else if (p.flash){
+      // Muendungsfeuer: heller, schnell verblassender Glow am Abschusspunkt
+      ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=a;
+      ctx.fillStyle = p.col||'#fff';
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*a,0,7); ctx.fill();
+      ctx.globalAlpha=a*0.5;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*a*2.2,0,7); ctx.fill();
+      ctx.restore();
+    } else if (p.spark){
+      // Einschlag: kleine Funken, die vom Treffer wegspritzen
+      if (p.n==null){ p.n=5+Math.floor(Math.random()*3); p.a0=[]; p.sp=[];
+        for(let k=0;k<p.n;k++){ p.a0.push(Math.random()*Math.PI*2); p.sp.push(20+Math.random()*40); } }
+      const t = (1-a) * (p.maxLife/1000);
+      ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.fillStyle=p.col||'#fff';
+      for(let k=0;k<p.n;k++){
+        const ang = p.a0[k], sp = p.sp[k];
+        const px = p.x + Math.cos(ang)*sp*t*3, py = p.y + Math.sin(ang)*sp*t*3;
+        ctx.globalAlpha = a*0.9;
+        ctx.beginPath(); ctx.arc(px,py, Math.max(0.5,p.r*0.22*a), 0,7); ctx.fill();
+      }
+      ctx.globalAlpha = a*0.7;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*0.6*a,0,7); ctx.fill();
+      ctx.restore();
     } else {
       ctx.fillStyle=`rgba(255,${120+a*100|0},60,${a})`;
       ctx.beginPath(); ctx.arc(p.x,p.y,p.r*(1-a*0.4),0,7); ctx.fill();
@@ -1181,15 +1220,29 @@ function drawEntity(e){
     const sprite = spriteReady(e.type) ? SPRITES[e.type] : null;
 
     if (sprite){
+      // Der Sprite selbst dreht sich nicht (3/4-Perspektive wuerde beim Rotieren
+      // verzerrt aussehen) -- Bewegung wird stattdessen ueber ein leichtes Wippen
+      // und einen Richtungspfeil am Fuss der Einheit sichtbar gemacht, sonst
+      // wirkt eine laufende Einheit wie eingefroren.
+      const isMoving = !!(e.path && e.pathI < e.path.length);
+      const bob = isMoving ? Math.sin(elapsed*13 + e.id)*1.4 : 0;
+      const baseY = e.y + ringR*0.6 + bob;
       // Team-Ring am Boden statt Recolor -- die Sprites sind neutral gerendert.
       ctx.beginPath(); ctx.ellipse(e.x, e.y+ringR*0.55, ringR*0.8, ringR*0.34, 0,0,7);
       ctx.fillStyle='rgba(0,0,0,.3)'; ctx.fill();
       ctx.strokeStyle=pc; ctx.lineWidth=2; ctx.stroke();
+      if (isMoving){
+        ctx.save(); ctx.translate(e.x, e.y+ringR*0.55); ctx.rotate(e.facing||0);
+        ctx.fillStyle=pc;
+        ctx.beginPath(); ctx.moveTo(ringR*1.05,0); ctx.lineTo(ringR*0.55,-ringR*0.32); ctx.lineTo(ringR*0.55,ringR*0.32);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
       const targetW = UNIT_SPRITE_W[e.type] || TILE*0.7;
-      const h = drawSpritePlate(sprite, e.x, e.y+ringR*0.6, targetW);
+      const h = drawSpritePlate(sprite, e.x, baseY, targetW);
       if (e.type==='harvester' && e.cargo>0){
         ctx.fillStyle='#ffd66a'; ctx.globalAlpha=.85;
-        ctx.beginPath(); ctx.arc(e.x, e.y-h*0.32, 3+e.cargo/HARVEST_CAP*3, 0,7); ctx.fill();
+        ctx.beginPath(); ctx.arc(e.x, baseY-h*0.32, 3+e.cargo/HARVEST_CAP*3, 0,7); ctx.fill();
         ctx.globalAlpha=1;
       }
     } else {
