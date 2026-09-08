@@ -11,6 +11,9 @@ function makeSandbox({ search = '' } = {}) {
       if (key === 'createRadialGradient' || key === 'createLinearGradient') {
         return () => ({ addColorStop() {} });
       }
+      if (key === 'createImageData' || key === 'getImageData') {
+        return (w, h) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) });
+      }
       return target[key] ?? (() => {});
     },
     set(target, key, value) {
