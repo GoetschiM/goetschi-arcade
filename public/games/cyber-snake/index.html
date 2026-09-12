@@ -896,35 +896,49 @@ audioBtn.addEventListener('click', toggleAudio);
 
   if (window.GoetschiAIPilot) {
     window.GoetschiAIPilot.register({
-      interval: 80,
+      interval: 75,
       getObs: function() {
         if (state === 'START' || state === 'GAMEOVER') return null;
         const g = GRID_SIZE || 22;
         const h = (snake && snake[0]) ? snake[0] : {x: 10, y: 10};
         const hx = h.x, hy = h.y;
         const f = food || {x: 15, y: 11};
+        const curDir = dir || {x: 1, y: 0};
+        const dx = curDir.x, dy = curDir.y;
         const bodySet = new Set((snake || []).slice(1).map(s => s.x + ',' + s.y));
         const isGhost = (typeof activePower !== 'undefined' && activePower === 'GHOST');
-        function isUnsafe(x, y) {
-          if (isGhost) return 0;
-          if (x < 0 || x >= g || y < 0 || y >= g) return 1;
-          return bodySet.has(x + ',' + y) ? 1 : 0;
+        function isBlocked(x, y) {
+          if (isGhost) return 0.0;
+          if (x < 0 || x >= g || y < 0 || y >= g) return 1.0;
+          return bodySet.has(x + ',' + y) ? 1.0 : 0.0;
         }
+
+        const danger_straight = isBlocked(hx + dx, hy + dy);
+        const danger_right = isBlocked(hx - dy, hy + dx);
+        const danger_left = isBlocked(hx + dy, hy - dx);
+
+        const rel_food_x = f.x - hx;
+        const rel_food_y = f.y - hy;
+        const dot_forward = rel_food_x * dx + rel_food_y * dy;
+        const cross_right = rel_food_x * (-dy) + rel_food_y * dx;
+
         return [
-          (hx / g) * 2 - 1,
-          (hy / g) * 2 - 1,
-          dir.x,
-          dir.y,
-          (f.x - hx) / g,
-          (f.y - hy) / g,
+          danger_straight,
+          danger_right,
+          danger_left,
+          rel_food_x / g,
+          rel_food_y / g,
+          dot_forward > 0 ? 1.0 : 0.0,
+          cross_right > 0 ? 1.0 : 0.0,
+          cross_right < 0 ? 1.0 : 0.0,
+          dot_forward < 0 ? 1.0 : 0.0,
+          (dx === 0 && dy === -1) ? 1.0 : 0.0,
+          (dx === 1 && dy === 0) ? 1.0 : 0.0,
+          (dx === 0 && dy === 1) ? 1.0 : 0.0,
+          (dx === -1 && dy === 0) ? 1.0 : 0.0,
           hy / g,
           (g - 1 - hx) / g,
-          (g - 1 - hy) / g,
-          hx / g,
-          isUnsafe(hx, hy - 1),
-          isUnsafe(hx + 1, hy),
-          isUnsafe(hx, hy + 1),
-          isUnsafe(hx - 1, hy)
+          (g - 1 - hy) / g
         ];
       },
       applyAction: function(act) {

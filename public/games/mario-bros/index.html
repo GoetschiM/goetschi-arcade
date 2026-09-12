@@ -435,7 +435,7 @@ class Player {
     }
 
     if (keys.jump && this.isGrounded && !this.jumpPressedLast) {
-      this.vy = this.powerState > 0 ? -315 : -295;
+      this.vy = this.powerState > 0 ? -340 : -325;
       this.isGrounded = false;
       if (this.powerState > 0) sfx.superJump();
       else sfx.jump();
@@ -1048,12 +1048,14 @@ function buildLevel(lvlIndex) {
     tileMap[13][x] = 1;
   }
 
-  // Add Pipes
-  const numPipes = Math.floor(worldW / 35);
+  // Add Pipes with guaranteed clearance (max height 2-3, no blocks overhead)
+  const pipePositions = [];
+  const numPipes = Math.floor(worldW / 36);
   for (let i = 0; i < numPipes; i++) {
-    const px = Math.floor(25 + i * 32);
-    if (!pitLocations.includes(px) && px < worldW - 40) {
-      const h = (i % 3) + 2;
+    const px = Math.floor(26 + i * 34);
+    if (!pitLocations.includes(px) && !pitLocations.includes(px + 1) && px < worldW - 40) {
+      const h = (i % 2 === 0 ? 2 : 3); // 2 or 3 tiles tall (32px or 48px) - always jumpable!
+      pipePositions.push(px, px + 1, px - 1, px + 2);
       for (let dy = 0; dy < h; dy++) {
         tileMap[12 - 1 - dy][px] = 2;
         tileMap[12 - 1 - dy][px + 1] = 3;
@@ -1061,13 +1063,13 @@ function buildLevel(lvlIndex) {
     }
   }
 
-  // Add Mystery & Brick blocks
-  for (let x = 16; x < worldW - 35; x += 12) {
-    if (!pitLocations.includes(x)) {
-      blocks.push(new Block(x, 8, 'Q', (x % 24 === 0 ? 'MUSHROOM' : (x % 36 === 0 ? 'STAR' : 'COIN'))));
+  // Add Mystery & Brick blocks ONLY where no pipes or pits are nearby
+  for (let x = 16; x < worldW - 35; x += 10) {
+    if (!pitLocations.includes(x) && !pitLocations.includes(x+1) && !pitLocations.includes(x+2) && !pipePositions.includes(x) && !pipePositions.includes(x+1) && !pipePositions.includes(x+2)) {
+      blocks.push(new Block(x, 8, 'Q', (x % 20 === 0 ? 'MUSHROOM' : (x % 30 === 0 ? 'STAR' : 'COIN'))));
       blocks.push(new Block(x + 1, 8, 'B'));
       blocks.push(new Block(x + 2, 8, 'B'));
-      if (x % 24 === 0) blocks.push(new Block(x + 1, 4, 'B'));
+      if (x % 20 === 0) blocks.push(new Block(x + 1, 4, 'B'));
     }
   }
 
