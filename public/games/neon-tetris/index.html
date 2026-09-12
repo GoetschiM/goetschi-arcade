@@ -134,6 +134,7 @@ html,body{
   .preview-canvas{width:42px;height:42px}
 }
 </style>
+  <script src="/js/goetschi-ai-pilot.js"></script>
 </head>
 <body>
 
@@ -842,6 +843,49 @@ document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('retryBtn').addEventListener('click', restartGame);
 pauseBtn.addEventListener('click', togglePause);
 audioBtn.addEventListener('click', toggleAudio);
+
+
+  if (window.GoetschiAIPilot) {
+    const PIECE_TYPES = { I: 1, J: 2, L: 3, O: 4, S: 5, T: 6, Z: 7 };
+    window.GoetschiAIPilot.register({
+      interval: 70,
+      getObs: function() {
+        if (state !== 'PLAYING') return null;
+        const heights = new Array(10).fill(0);
+        let holes = 0;
+        for (let c = 0; c < 10; c++) {
+          let found = false;
+          for (let r = 0; r < 20; r++) {
+            if (grid[r] && grid[r][c] !== 0) {
+              if (!found) { heights[c] = 20 - r; found = true; }
+            } else if (found) { holes++; }
+          }
+        }
+        let bumpiness = 0;
+        for (let c = 0; c < 9; c++) bumpiness += Math.abs(heights[c] - heights[c+1]);
+        const aggHeight = heights.reduce((a,b) => a+b, 0);
+        const cp = currentPiece || {};
+        const np_ = nextPiece || {};
+        const p_type = (PIECE_TYPES[cp.type] || 0) / 7.0;
+        const n_type = (PIECE_TYPES[np_.type] || 0) / 7.0;
+        return [
+          p_type, (cp.x || 4) / 10.0, (cp.y || 0) / 20.0, n_type,
+          bumpiness / 20.0, holes / 10.0, aggHeight / 100.0,
+          ...heights.map(h => h / 20.0)
+        ];
+      },
+      applyAction: function(act) {
+        if (state === 'START') { startGame(); return; }
+        if (state === 'GAMEOVER') { restartGame(); return; }
+        if (act === 0) movePiece(-1, 0);
+        else if (act === 1) movePiece(1, 0);
+        else if (act === 2) rotatePiece();
+        else if (act === 3) softDrop();
+        else if (act === 4) hardDrop();
+        else if (act === 5) hold();
+      }
+    });
+  }
 
 })();
 </script>

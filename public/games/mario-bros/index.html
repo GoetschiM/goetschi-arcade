@@ -133,6 +133,7 @@ html,body{
   .touch-container:hover{opacity:1}
 }
 </style>
+  <script src="/js/goetschi-ai-pilot.js"></script>
 </head>
 <body>
 
@@ -1451,6 +1452,53 @@ bindButton(document.getElementById('btnRight'), 'right');
 bindButton(document.getElementById('btnDown'), 'down');
 bindButton(document.getElementById('btnA'), 'jump');
 bindButton(document.getElementById('btnB'), 'run');
+
+
+  if (window.GoetschiAIPilot) {
+    window.GoetschiAIPilot.register({
+      interval: 50,
+      getObs: function() {
+        if (state !== 'PLAYING' || !player) return null;
+        const px = player.x, py = player.y;
+        const pvx = player.vx, pvy = player.vy;
+        const grounded = player.grounded ? 1.0 : 0.0;
+        const pState = player.fire ? 1.0 : (player.big ? 0.5 : 0.0);
+        const aliveEnemies = (enemies || []).filter(e => e.alive && e.x >= px - 60).sort((a,b) => Math.abs(a.x - px) - Math.abs(b.x - px));
+        const e1_dx = aliveEnemies[0] ? (aliveEnemies[0].x - px) / 200.0 : 2.0;
+        const e1_dy = aliveEnemies[0] ? (aliveEnemies[0].y - py) / 200.0 : 0.0;
+        const e2_dx = aliveEnemies[1] ? (aliveEnemies[1].x - px) / 200.0 : 2.0;
+        const e2_dy = aliveEnemies[1] ? (aliveEnemies[1].y - py) / 200.0 : 0.0;
+        return [
+          (px % 500.0) / 250.0 - 1.0,
+          (py / 400.0) * 2 - 1.0,
+          Math.max(-2, Math.min(2, pvx / 5.0)),
+          Math.max(-2, Math.min(2, pvy / 10.0)),
+          grounded,
+          pState,
+          Math.max(-2, Math.min(2, e1_dx)), Math.max(-2, Math.min(2, e1_dy)),
+          Math.max(-2, Math.min(2, e2_dx)), Math.max(-2, Math.min(2, e2_dy)),
+          grounded, 0, 0, 1, 1, 0,
+          (px - cameraX) / 300.0 - 1.0,
+          Math.max(0, timeLeft / 300.0)
+        ];
+      },
+      applyAction: function(act) {
+        if (state !== 'PLAYING') {
+          loadLevel(currentLevelIndex || 0);
+          return;
+        }
+        keys.left = (act === 1 || act === 5);
+        keys.right = (act === 2 || act === 4);
+        keys.jump = (act === 3 || act === 4 || act === 5);
+        keys.run = (act === 2 || act === 4);
+      },
+      onStop: function() {
+        if (typeof keys !== 'undefined') {
+          keys.left = false; keys.right = false; keys.jump = false; keys.run = false;
+        }
+      }
+    });
+  }
 
 })();
 </script>

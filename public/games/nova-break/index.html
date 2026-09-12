@@ -31,6 +31,7 @@ button{border:0;color:#0a0616;font:inherit;font-weight:850;cursor:pointer}
 @media(max-width:560px){.score{font-size:24px}.stats{font-size:9px}.panel{max-height:94vh;overflow:auto}.logo{font-size:clamp(38px,13vw,58px)}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+  <script src="/js/goetschi-ai-pilot.js"></script>
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -568,6 +569,36 @@ $('retryBtn').onclick=launchGame;
 
 ui.best.textContent='Rekord '+best;
 requestAnimationFrame(loop);
+
+  if (window.GoetschiAIPilot) {
+    window.GoetschiAIPilot.register({
+      interval: 50,
+      getObs: function() {
+        if (state !== 'play' || !paddle) return null;
+        const b = (balls && balls[0]) ? balls[0] : {x: W/2, y: H/2, vx: 0, vy: 5};
+        return [
+          (paddle.x / W) * 2 - 1,
+          paddle.w / W,
+          (b.x / W) * 2 - 1,
+          (b.y / H) * 2 - 1,
+          Math.max(-1.5, Math.min(1.5, b.vx / 10.0)),
+          Math.max(-1.5, Math.min(1.5, b.vy / 10.0)),
+          (b.x - paddle.x) / W,
+          (b.y - (H - 50)) / H,
+          bricks.filter(br => br.alive).length / 50.0,
+          lives / 3.0,
+          ((levelIndex || 0) + 1) / 10.0,
+          0.0
+        ];
+      },
+      applyAction: function(act) {
+        if (state !== 'play') { launchGame(); return; }
+        if (act === 1) paddle.x = Math.max(paddle.w / 2, paddle.x - 24);
+        else if (act === 2) paddle.x = Math.min(W - paddle.w / 2, paddle.x + 24);
+      }
+    });
+  }
+
 })();
 </script>
 </body>

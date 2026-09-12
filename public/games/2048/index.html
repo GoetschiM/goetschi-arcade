@@ -182,6 +182,7 @@
     text-align: center;
   }
 </style>
+  <script src="/js/goetschi-ai-pilot.js"></script>
 </head>
 <body>
 <div id="app">
@@ -454,6 +455,37 @@
   } else {
     render(true);
   }
+
+  if (window.GoetschiAIPilot) {
+    window.GoetschiAIPilot.register({
+      interval: 100,
+      getObs: function() {
+        if (!state || !state.board) return null;
+        const flat = [];
+        let empty = 0;
+        let curMax = 0;
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            const v = state.board[r][c];
+            if (v === 0) { flat.push(0); empty++; }
+            else {
+              flat.push(Math.min(1.0, Math.log2(v) / 16.0));
+              if (v > curMax) curMax = v;
+            }
+          }
+        }
+        flat.push(empty / 16.0);
+        flat.push(Math.min(1.0, Math.log2(Math.max(2, curMax)) / 16.0));
+        return flat;
+      },
+      applyAction: function(act) {
+        if (state.over) { newGame(); return; }
+        const dirs = ['up', 'right', 'down', 'left'];
+        doMove(dirs[act] || 'down');
+      }
+    });
+  }
+
 })();
 </script>
 </body>

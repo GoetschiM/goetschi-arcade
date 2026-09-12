@@ -139,6 +139,7 @@ html,body{
   .dpad-container{display:none}
 }
 </style>
+  <script src="/js/goetschi-ai-pilot.js"></script>
 </head>
 <body>
 
@@ -891,6 +892,50 @@ startBtn.addEventListener('click', startGame);
 retryBtn.addEventListener('click', restartGame);
 pauseBtn.addEventListener('click', togglePause);
 audioBtn.addEventListener('click', toggleAudio);
+
+
+  if (window.GoetschiAIPilot) {
+    window.GoetschiAIPilot.register({
+      interval: 80,
+      getObs: function() {
+        if (state === 'START' || state === 'GAMEOVER') return null;
+        const g = GRID_SIZE || 22;
+        const h = (snake && snake[0]) ? snake[0] : {x: 10, y: 10};
+        const hx = h.x, hy = h.y;
+        const f = food || {x: 15, y: 11};
+        const bodySet = new Set((snake || []).slice(1).map(s => s.x + ',' + s.y));
+        const isGhost = (typeof activePower !== 'undefined' && activePower === 'GHOST');
+        function isUnsafe(x, y) {
+          if (isGhost) return 0;
+          if (x < 0 || x >= g || y < 0 || y >= g) return 1;
+          return bodySet.has(x + ',' + y) ? 1 : 0;
+        }
+        return [
+          (hx / g) * 2 - 1,
+          (hy / g) * 2 - 1,
+          dir.x,
+          dir.y,
+          (f.x - hx) / g,
+          (f.y - hy) / g,
+          hy / g,
+          (g - 1 - hx) / g,
+          (g - 1 - hy) / g,
+          hx / g,
+          isUnsafe(hx, hy - 1),
+          isUnsafe(hx + 1, hy),
+          isUnsafe(hx, hy + 1),
+          isUnsafe(hx - 1, hy)
+        ];
+      },
+      applyAction: function(act) {
+        if (state === 'START') { startGame(); return; }
+        if (state === 'GAMEOVER') { restartGame(); return; }
+        const dirs = [{x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0}];
+        const d = dirs[act];
+        if (d) changeDirection(d.x, d.y);
+      }
+    });
+  }
 
 })();
 </script>
