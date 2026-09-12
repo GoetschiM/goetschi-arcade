@@ -1,6 +1,17 @@
 {
   "games": [
     {
+      "slug": "mario-bros",
+      "title": "Super Goetschi Bros",
+      "subtitle": "Klassisches Retro Jump 'n' Run",
+      "description": "Renne und springe durch die Welten! Sammle Münzen, zertrete Gumbas und Koopas, finde Power-Pilze und rette das Ziel.",
+      "cover": "games/mario-bros/cover.svg",
+      "accent": "#e52521",
+      "tags": ["Platformer", "Action", "Retro", "Solo"],
+      "controls": "Touch / D-Pad / Pfeiltasten / WASD / Leertaste",
+      "added": "2026-09-12"
+    },
+    {
       "slug": "cyber-snake",
       "title": "Cyber Snake DX",
       "subtitle": "Neon-Jagd im Cyberspace",
