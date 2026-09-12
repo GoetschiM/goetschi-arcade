@@ -581,7 +581,7 @@ class Player {
     setTimeout(() => {
       if (lives > 0) respawn();
       else gameOver();
-    }, 2000);
+    }, 800);
   }
 
   draw() {
@@ -1493,6 +1493,13 @@ bindButton(document.getElementById('btnB'), 'run');
         keys.right = (act === 2 || act === 4);
         keys.jump = (act === 3 || act === 4 || act === 5);
         keys.run = (act === 2 || act === 4);
+      },
+      isDead: function() {
+        return state === 'GAMEOVER' || state === 'OVERLAY' || state === 'DYING';
+      },
+      restart: function() {
+        if (state === 'GAMEOVER') restartGame();
+        else loadLevel(currentLevelIndex || 0);
       },
       onStop: function() {
         if (typeof keys !== 'undefined') {

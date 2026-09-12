@@ -1,6 +1,7 @@
 /**
  * Goetschi Arcade - Client-Side Neural AI Pilot
  * Runs PyTorch PPO policies directly inside the browser at 60 FPS without server delay.
+ * Includes automatic game-over detection, instant retry loops, and robust error recovery.
  */
 (function() {
   'use strict';
@@ -9,6 +10,7 @@
   let isAiActive = false;
   let aiInterval = null;
   let currentDriver = null;
+  let restartTimeout = null;
 
   // Pure JS Matrix Multiplication Forward Pass
   function predictAction(obs, model) {
@@ -62,6 +64,23 @@
     return false;
   }
 
+  function triggerAutoRestart() {
+    if (restartTimeout) return;
+    restartTimeout = setTimeout(() => {
+      restartTimeout = null;
+      if (!isAiActive || !currentDriver) return;
+      try {
+        if (currentDriver.restart) {
+          currentDriver.restart();
+        } else if (currentDriver.applyAction) {
+          currentDriver.applyAction(-1);
+        }
+      } catch (e) {
+        console.warn('[Goetschi AI Pilot] Restart error:', e);
+      }
+    }, 350);
+  }
+
   function toggleAi() {
     if (!currentModel) {
       document.getElementById('ai-file-input')?.click();
@@ -74,6 +93,13 @@
         btn.classList.add('active');
         btn.innerHTML = '🤖 KI-PILOT: <span style="color:#00ffcc;font-weight:bold;">AKTIV</span>';
         startAiLoop();
+        if (currentDriver) {
+          if (currentDriver.isDead && currentDriver.isDead()) {
+            triggerAutoRestart();
+          } else if (currentDriver.restart) {
+            currentDriver.restart();
+          }
+        }
       } else {
         btn.classList.remove('active');
         btn.innerHTML = '🤖 KI-PILOT: <span style="color:#888;">AUS</span>';
@@ -85,24 +111,35 @@
   function startAiLoop() {
     stopAiLoop();
     if (!currentDriver) return;
+    const intervalMs = currentDriver.interval || 60;
     aiInterval = setInterval(() => {
       if (!isAiActive || !currentModel || !currentDriver) return;
       try {
-        const obs = currentDriver.getObs();
+        if (currentDriver.isDead && currentDriver.isDead()) {
+          triggerAutoRestart();
+          return;
+        }
+        const obs = currentDriver.getObs ? currentDriver.getObs() : null;
         if (obs && obs.length === currentModel.obs_dim) {
           const act = predictAction(obs, currentModel);
           currentDriver.applyAction(act);
+        } else if (!obs) {
+          triggerAutoRestart();
         }
       } catch (err) {
         console.error('[Goetschi AI Pilot] Error in step:', err);
       }
-    }, currentDriver.interval || 60);
+    }, intervalMs);
   }
 
   function stopAiLoop() {
     if (aiInterval) {
       clearInterval(aiInterval);
       aiInterval = null;
+    }
+    if (restartTimeout) {
+      clearTimeout(restartTimeout);
+      restartTimeout = null;
     }
     if (currentDriver && currentDriver.onStop) {
       currentDriver.onStop();
@@ -245,6 +282,7 @@
     },
     predict: predictAction,
     toggle: toggleAi,
+    restart: triggerAutoRestart,
     isActive: () => isAiActive
   };
 })();

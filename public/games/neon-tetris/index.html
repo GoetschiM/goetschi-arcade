@@ -883,6 +883,13 @@ audioBtn.addEventListener('click', toggleAudio);
         else if (act === 3) softDrop();
         else if (act === 4) hardDrop();
         else if (act === 5) hold();
+      },
+      isDead: function() {
+        return state === 'GAMEOVER' || state === 'START';
+      },
+      restart: function() {
+        if (state === 'GAMEOVER') restartGame();
+        else startGame();
       }
     });
   }
