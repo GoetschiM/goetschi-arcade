@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Cyber Snake DX">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#071a14"/>
+      <stop offset="60%" stop-color="#030c09"/>
+      <stop offset="100%" stop-color="#010403"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#00ff88" stroke-width="0.8" opacity="0.12"/>
+    </pattern>
+    <filter id="neon" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="snakeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00ffff"/>
+      <stop offset="50%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#39ff14"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background & Grid -->
+  <rect width="800" height="500" fill="url(#bg)"/>
+  <rect width="800" height="500" fill="url(#grid)"/>
+
+  <!-- Cyber Glow Trails -->
+  <g filter="url(#glow-soft)" opacity="0.3">
+    <path d="M 100 380 Q 250 200 400 320 T 700 180" fill="none" stroke="#00ff88" stroke-width="24"/>
+  </g>
+
+  <!-- Snake Body -->
+  <g filter="url(#neon)">
+    <!-- Body segments -->
+    <circle cx="120" cy="380" r="16" fill="#00ff88" opacity="0.5"/>
+    <circle cx="150" cy="360" r="17" fill="#00ff88" opacity="0.6"/>
+    <circle cx="185" cy="330" r="18" fill="#00ff88" opacity="0.7"/>
+    <circle cx="225" cy="295" r="19" fill="#00ff88" opacity="0.8"/>
+    <circle cx="270" cy="265" r="20" fill="#00ffaa" opacity="0.85"/>
+    <circle cx="320" cy="250" r="21" fill="#00ffcc" opacity="0.9"/>
+    <circle cx="370" cy="255" r="22" fill="#00ffff" opacity="0.95"/>
+    <circle cx="420" cy="275" r="23" fill="#00ffaa"/>
+    <circle cx="470" cy="305" r="24" fill="#00ff88"/>
+    <circle cx="525" cy="315" r="25" fill="#39ff14"/>
+    <circle cx="580" cy="295" r="26" fill="#39ff14"/>
+    <circle cx="630" cy="250" r="27" fill="#50ff30"/>
+    
+    <!-- Snake Head -->
+    <circle cx="675" cy="200" r="29" fill="#70ff00"/>
+    <!-- Eyes -->
+    <circle cx="668" cy="188" r="6" fill="#ffffff"/>
+    <circle cx="688" cy="195" r="6" fill="#ffffff"/>
+    <circle cx="669" cy="187" r="3" fill="#003311"/>
+    <circle cx="689" cy="194" r="3" fill="#003311"/>
+  </g>
+
+  <!-- Glowing Food Items -->
+  <g filter="url(#neon)">
+    <!-- Food Apple / Data Core -->
+    <circle cx="730" cy="150" r="15" fill="#ff0055"/>
+    <circle cx="726" cy="146" r="5" fill="#ffffff" opacity="0.8"/>
+    
+    <!-- Golden Power Orb -->
+    <circle cx="260" cy="140" r="13" fill="#ffd700"/>
+    <circle cx="257" cy="137" r="4" fill="#ffffff" opacity="0.9"/>
+
+    <!-- Ice Freeze Orb -->
+    <circle cx="480" cy="120" r="12" fill="#00d4ff"/>
+    <circle cx="477" cy="117" r="4" fill="#ffffff" opacity="0.9"/>
+  </g>
+
+  <!-- Title Typography -->
+  <g filter="url(#neon)">
+    <text x="400" y="445" text-anchor="middle" fill="#00ff88" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="44" letter-spacing="8">CYBER SNAKE DX</text>
+  </g>
+</svg>

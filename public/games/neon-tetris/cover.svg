@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Neon Tetris">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#140624"/>
+      <stop offset="60%" stop-color="#090212"/>
+      <stop offset="100%" stop-color="#020005"/>
+    </radialGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#9b5de5" stroke-width="0.8" opacity="0.1"/>
+    </pattern>
+    <filter id="neon" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="url(#bg)"/>
+  <rect width="800" height="500" fill="url(#grid)"/>
+
+  <!-- Glowing background shapes -->
+  <g filter="url(#glow-soft)" opacity="0.25">
+    <rect x="250" y="120" width="300" height="260" fill="#9b5de5"/>
+  </g>
+
+  <!-- Matrix Frame -->
+  <rect x="260" y="60" width="280" height="340" rx="10" fill="none" stroke="#9b5de5" stroke-width="2" opacity="0.4"/>
+
+  <!-- Tetromino Blocks -->
+  <g filter="url(#neon)">
+    <!-- Cyan I Piece falling -->
+    <rect x="365" y="90" width="28" height="28" rx="4" fill="#00f0ff" stroke="#fff" stroke-width="1.5"/>
+    <rect x="395" y="90" width="28" height="28" rx="4" fill="#00f0ff" stroke="#fff" stroke-width="1.5"/>
+    <rect x="425" y="90" width="28" height="28" rx="4" fill="#00f0ff" stroke="#fff" stroke-width="1.5"/>
+    <rect x="455" y="90" width="28" height="28" rx="4" fill="#00f0ff" stroke="#fff" stroke-width="1.5"/>
+
+    <!-- Purple T Piece -->
+    <rect x="335" y="280" width="28" height="28" rx="4" fill="#c74dff" stroke="#fff" stroke-width="1"/>
+    <rect x="365" y="280" width="28" height="28" rx="4" fill="#c74dff" stroke="#fff" stroke-width="1"/>
+    <rect x="395" y="280" width="28" height="28" rx="4" fill="#c74dff" stroke="#fff" stroke-width="1"/>
+    <rect x="365" y="250" width="28" height="28" rx="4" fill="#c74dff" stroke="#fff" stroke-width="1"/>
+
+    <!-- Yellow O Piece -->
+    <rect x="275" y="340" width="28" height="28" rx="4" fill="#ffd700" stroke="#fff" stroke-width="1"/>
+    <rect x="305" y="340" width="28" height="28" rx="4" fill="#ffd700" stroke="#fff" stroke-width="1"/>
+    <rect x="275" y="370" width="28" height="28" rx="4" fill="#ffd700" stroke="#fff" stroke-width="1"/>
+    <rect x="305" y="370" width="28" height="28" rx="4" fill="#ffd700" stroke="#fff" stroke-width="1"/>
+
+    <!-- Green S Piece -->
+    <rect x="455" y="340" width="28" height="28" rx="4" fill="#00ff88" stroke="#fff" stroke-width="1"/>
+    <rect x="485" y="340" width="28" height="28" rx="4" fill="#00ff88" stroke="#fff" stroke-width="1"/>
+    <rect x="425" y="370" width="28" height="28" rx="4" fill="#00ff88" stroke="#fff" stroke-width="1"/>
+    <rect x="455" y="370" width="28" height="28" rx="4" fill="#00ff88" stroke="#fff" stroke-width="1"/>
+
+    <!-- Orange L Piece -->
+    <rect x="335" y="340" width="28" height="28" rx="4" fill="#ff7700" stroke="#fff" stroke-width="1"/>
+    <rect x="335" y="370" width="28" height="28" rx="4" fill="#ff7700" stroke="#fff" stroke-width="1"/>
+    <rect x="365" y="370" width="28" height="28" rx="4" fill="#ff7700" stroke="#fff" stroke-width="1"/>
+    <rect x="395" y="370" width="28" height="28" rx="4" fill="#ff7700" stroke="#fff" stroke-width="1"/>
+
+    <!-- Red Z Piece -->
+    <rect x="485" y="370" width="28" height="28" rx="4" fill="#ff2a55" stroke="#fff" stroke-width="1"/>
+    <rect x="515" y="370" width="28" height="28" rx="4" fill="#ff2a55" stroke="#fff" stroke-width="1"/>
+  </g>
+
+  <!-- Title -->
+  <g filter="url(#neon)">
+    <text x="400" y="445" text-anchor="middle" fill="#f72585" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="44" letter-spacing="8">NEON TETRIS</text>
+  </g>
+</svg>

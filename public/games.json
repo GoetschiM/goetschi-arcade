@@ -1,6 +1,28 @@
 {
   "games": [
     {
+      "slug": "cyber-snake",
+      "title": "Cyber Snake DX",
+      "subtitle": "Neon-Jagd im Cyberspace",
+      "description": "Steuere die Neon-Schlange durch den Cyberspace. Sammle Datenkerne, aktiviere Power-Orbs wie Zeitlupe, Geist-Phase und Magnet, und jage den Highscore.",
+      "cover": "games/cyber-snake/cover.svg",
+      "accent": "#00ff88",
+      "tags": ["Arcade", "Snake", "Retro", "Solo"],
+      "controls": "Touch / Swipe / Pfeiltasten / WASD",
+      "added": "2026-09-12"
+    },
+    {
+      "slug": "neon-tetris",
+      "title": "Neon Tetris",
+      "subtitle": "Block-Matrix im Cyberspace",
+      "description": "Der legendäre Block-Klassiker im glühenden Neon-Gewand. Kacheln drehen, Reihen abräumen, Combos zünden mit Ghost-Vorschau und Hold-Funktion.",
+      "cover": "games/neon-tetris/cover.svg",
+      "accent": "#ff00aa",
+      "tags": ["Puzzle", "Arcade", "Retro", "Solo"],
+      "controls": "Touch / Swipe / Pfeiltasten / WASD / Leertaste",
+      "added": "2026-09-12"
+    },
+    {
       "slug": "silmoor",
       "title": "Silmoor",
       "subtitle": "Tiefen von Silmoor",
