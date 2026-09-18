@@ -146,7 +146,7 @@ html,body{
   <div class="panel">
     <h1 class="logo">NEON <span>RUNNER</span></h1>
     <div class="subtitle">Cyber Synthwave Endless Dash</div>
-    <p>Steuere den Cyber-Hoverboarder auf 3 Spuren! Weiche Hindernissen aus: <b>Springe</b> über Boden-Barrieren, <b>slide</b> unter Lasern durch und <b>wechsle Spuren</b> bei Mauern!</p>
+    <p>Surfe auf dem Neon-Highway! Weiche Hindernissen aus: <b>Springe</b> über Boden-Barrieren, <b>slide</b> unter Lasern durch und <b>wechsle Spuren</b> bei Mauern!</p>
     <div class="stat-box">
       <div class="stat-item"><div class="l">Rekord</div><div class="v" id="bestDistStart">0m</div></div>
       <div class="stat-item"><div class="l">Kerne</div><div class="v" id="bestCoinsStart">0</div></div>
@@ -247,21 +247,19 @@ resize();
 /* ==========================================================================
    GAME STATE & LOGIC
    ========================================================================== */
-let state = 'START'; // START, PLAYING, PAUSED, GAMEOVER
+let state = 'START';
 let distance = 0;
 let coins = 0;
 let bestDistance = parseInt(localStorage.getItem('neon_runner_best') || '0', 10) || 0;
-let speed = 300;
+let speed = 360;
 let roadZ = 0;
 
 bestDistStart.textContent = bestDistance + 'm';
 
 // Lanes: -1 (Left), 0 (Center), 1 (Right)
 const player = {
-  lane: 0,
   targetLane: 0,
-  laneX: 0, // -1 to 1 interpolated
-  jumpProgress: 0, // 0 to 1
+  laneX: 0,
   jumpY: 0,
   jumpVy: 0,
   isJumping: false,
@@ -276,14 +274,75 @@ const player = {
 let obstacles = [];
 let pickups = [];
 let particles = [];
-let nextSpawnDist = 180;
+
+/* ==========================================================================
+   PERSPECTIVE PROJECTION
+   Player is ALWAYS at z = 0, which corresponds to H * BASE_ROAD_RATIO
+   ========================================================================== */
+const HORIZON_RATIO = 0.32;
+const BASE_ROAD_RATIO = 0.82;
+const MAX_Z = 850;
+
+function project(lane, z, height=0) {
+  const horizonY = H * HORIZON_RATIO;
+  const baseY = H * BASE_ROAD_RATIO;
+  const clampedZ = Math.max(0, Math.min(MAX_Z, z));
+  const t = clampedZ / MAX_Z; // 0 at player (near), 1 at horizon (far)
+
+  const p = Math.pow(1 - t, 2.2);
+  const scale = 0.16 + 0.84 * p;
+
+  const trackWidthAtHorizon = W * 0.18;
+  const trackWidthAtBase = W * 0.88;
+  const curTrackWidth = trackWidthAtHorizon + (trackWidthAtBase - trackWidthAtHorizon) * (1 - t);
+
+  const laneSpan = (curTrackWidth / 3);
+  const screenX = W / 2 + (lane * laneSpan);
+  const screenY = horizonY + (baseY - horizonY) * (1 - t) - (height * scale);
+
+  return { x: screenX, y: screenY, scale };
+}
+
+/* ==========================================================================
+   SPAWN PATTERNS (IMMEDIATE & CONTINUOUS STREAM)
+   ========================================================================== */
+function spawnAtZ(targetZ) {
+  const lane = Math.floor(Math.random() * 3) - 1;
+  const rand = Math.random();
+
+  if (rand < 0.38) {
+    // Low hurdle (Jump required)
+    obstacles.push({ lane, z: targetZ, type: 'HURDLE', w: 60, h: 26 });
+  } else if (rand < 0.72) {
+    // High laser beam (Slide required)
+    obstacles.push({ lane, z: targetZ, type: 'LASER', w: 75, h: 65 });
+  } else {
+    // Tall solid barrier (Lane change required)
+    obstacles.push({ lane, z: targetZ, type: 'WALL', w: 65, h: 90 });
+    if (Math.random() < 0.4 && distance > 100) {
+      const otherLane = (lane === 0) ? (Math.random() < 0.5 ? -1 : 1) : 0;
+      obstacles.push({ lane: otherLane, z: targetZ, type: 'WALL', w: 65, h: 90 });
+    }
+  }
+
+  // Energy Cells (Coins) on a different lane
+  const coinLane = (lane === 0) ? (Math.random() < 0.5 ? -1 : 1) : 0;
+  for (let i = 0; i < 3; i++) {
+    pickups.push({ lane: coinLane, z: targetZ - 60 + i * 45, type: 'COIN' });
+  }
+
+  // Rare powerup
+  if (Math.random() < 0.18) {
+    const pLane = Math.floor(Math.random() * 3) - 1;
+    pickups.push({ lane: pLane, z: targetZ + 90, type: Math.random() < 0.5 ? 'SHIELD' : 'MAGNET' });
+  }
+}
 
 function resetGame() {
   distance = 0;
   coins = 0;
-  speed = 320;
+  speed = 360;
   roadZ = 0;
-  player.lane = 0;
   player.targetLane = 0;
   player.laneX = 0;
   player.jumpY = 0;
@@ -295,13 +354,21 @@ function resetGame() {
   player.hasMagnet = false;
   player.magnetTimer = 0;
   player.tiltAngle = 0;
+
   obstacles = [];
   pickups = [];
   particles = [];
-  nextSpawnDist = 200;
+
   scoreEl.textContent = '0m';
   coinsEl.textContent = '🪙 0';
   powerPill.style.display = 'none';
+
+  // PRE-POPULATE A STREAM OF OBSTACLES IMMEDIATELY!
+  // The player sees coins & hurdles right from meter 1!
+  spawnAtZ(240);
+  spawnAtZ(440);
+  spawnAtZ(640);
+  spawnAtZ(840);
 }
 
 function startGame() {
@@ -346,82 +413,12 @@ function jump() {
 function slide() {
   if (state !== 'PLAYING') return;
   if (player.isJumping) {
-    player.jumpVy = 900; // fast dive down
+    player.jumpVy = 900;
   } else if (!player.isSliding) {
     player.isSliding = true;
     player.slideTimer = 0.65;
     sfx.slide();
   }
-}
-
-/* ==========================================================================
-   ROCK-SOLID PROJECTION (Character ALWAYS strictly at H * 0.78)
-   ========================================================================== */
-const HORIZON_RATIO = 0.32;
-const BASE_ROAD_RATIO = 0.82;
-const MAX_Z = 800;
-
-function project(lane, z, height=0) {
-  const horizonY = H * HORIZON_RATIO;
-  const baseY = H * BASE_ROAD_RATIO;
-  // Normalized depth t: 0 is right at the player (baseY), 1 is at horizon
-  const clampedZ = Math.max(0, Math.min(MAX_Z, z));
-  const t = clampedZ / MAX_Z;
-
-  // Non-linear perspective scaling
-  const p = Math.pow(1 - t, 2.2);
-  const scale = 0.15 + 0.85 * p;
-
-  // Screen coordinates
-  const trackWidthAtHorizon = W * 0.18;
-  const trackWidthAtBase = W * 0.88;
-  const curTrackWidth = trackWidthAtHorizon + (trackWidthAtBase - trackWidthAtHorizon) * (1 - t);
-
-  const laneSpan = (curTrackWidth / 3);
-  const screenX = W / 2 + (lane * laneSpan);
-  const screenY = horizonY + (baseY - horizonY) * (1 - t) - (height * scale);
-
-  return { x: screenX, y: screenY, scale };
-}
-
-/* ==========================================================================
-   SPAWN PATTERNS
-   ========================================================================== */
-function spawnPattern() {
-  const z = MAX_Z;
-  const rand = Math.random();
-  const lane = Math.floor(Math.random() * 3) - 1;
-
-  if (rand < 0.36) {
-    // Low hurdle (Jump required)
-    obstacles.push({ lane, z, type: 'HURDLE', w: 60, h: 26 });
-  } else if (rand < 0.70) {
-    // High laser beam (Slide required)
-    obstacles.push({ lane, z, type: 'LASER', w: 75, h: 65 });
-  } else {
-    // Tall solid block (Lane change required)
-    obstacles.push({ lane, z, type: 'WALL', w: 65, h: 90 });
-    // Double wall on higher distance
-    if (Math.random() < 0.45 && distance > 180) {
-      const otherLane = (lane === 0) ? (Math.random() < 0.5 ? -1 : 1) : 0;
-      obstacles.push({ lane: otherLane, z, type: 'WALL', w: 65, h: 90 });
-    }
-  }
-
-  // Energy Cells (Coins)
-  const coinLane = (lane === 0) ? (Math.random() < 0.5 ? -1 : 1) : 0;
-  for (let i = 0; i < 4; i++) {
-    pickups.push({ lane: coinLane, z: z + i * 50, type: 'COIN' });
-  }
-
-  // Rare power-up
-  if (Math.random() < 0.16) {
-    const pLane = Math.floor(Math.random() * 3) - 1;
-    const pType = Math.random() < 0.5 ? 'SHIELD' : 'MAGNET';
-    pickups.push({ lane: pLane, z: z + 260, type: pType });
-  }
-
-  nextSpawnDist = distance + Math.max(14, 28 - distance * 0.01);
 }
 
 /* ==========================================================================
@@ -432,17 +429,17 @@ let lastTime = performance.now();
 function update(dt) {
   if (state !== 'PLAYING') return;
 
-  speed = Math.min(880, 320 + distance * 0.45);
+  speed = Math.min(880, 360 + distance * 0.45);
   distance += Math.round(speed * dt * 0.08);
   scoreEl.textContent = distance + 'm';
 
-  roadZ = (roadZ + speed * dt * 0.4) % 100;
+  roadZ = (roadZ + speed * dt * 0.45) % 100;
 
-  // Smooth lane interpolation & tilting
+  // Smooth lane interpolation & body carving tilt
   const targetX = player.targetLane;
   const laneDiff = targetX - player.laneX;
   player.laneX += laneDiff * Math.min(1, 15 * dt);
-  player.tiltAngle = laneDiff * 0.45; // Lean into turn
+  player.tiltAngle = laneDiff * 0.45;
 
   // Jump physics
   if (player.isJumping) {
@@ -470,17 +467,22 @@ function update(dt) {
     }
   }
 
-  // Spawn obstacles
-  if (distance >= nextSpawnDist) {
-    spawnPattern();
+  // CONTINUOUS SPAWN QUEUE:
+  // Find highest z among all existing obstacles. If none or highest < 700, spawn at 850!
+  let maxZ = 0;
+  for (const o of obstacles) {
+    if (o.z > maxZ) maxZ = o.z;
+  }
+  if (maxZ < 680) {
+    spawnAtZ(MAX_Z);
   }
 
-  // Update Obstacles (z moves from MAX_Z down to 0)
+  // Move Obstacles (towards camera)
   for (let i = obstacles.length - 1; i >= 0; i--) {
     const o = obstacles[i];
     o.z -= speed * dt;
 
-    // Collision window around player (z ≈ 0 to 45)
+    // Collision check near player (z ≈ 0 to 40)
     if (o.z > -15 && o.z < 45) {
       const laneDist = Math.abs(player.laneX - o.lane);
       if (laneDist < 0.55) {
@@ -507,7 +509,7 @@ function update(dt) {
     if (o.z < -60) obstacles.splice(i, 1);
   }
 
-  // Update Pickups
+  // Move Pickups
   for (let i = pickups.length - 1; i >= 0; i--) {
     const p = pickups[i];
     p.z -= speed * dt;
@@ -544,18 +546,27 @@ function update(dt) {
     if (p.z < -60) pickups.splice(i, 1);
   }
 
-  // Thruster trail particles
-  if (Math.random() < 0.8) {
-    const charPos = project(player.laneX, 0, -player.jumpY);
+  // Dual Thruster exhaust sparks shooting BACKWARDS towards camera
+  const charPos = project(player.laneX, 0, -player.jumpY);
+  if (Math.random() < 0.85) {
     particles.push({
-      x: charPos.x + (Math.random() - 0.5) * 16,
-      y: charPos.y + 4,
-      vx: (Math.random() - 0.5) * 20,
-      vy: Math.random() * 25 + 15,
-      life: 0.3,
+      x: charPos.x - 12 + (Math.random() - 0.5) * 6,
+      y: charPos.y + 6,
+      vx: (Math.random() - 0.5) * 15,
+      vy: Math.random() * 30 + 20, // shoots down/towards player
+      life: 0.28,
+      col: player.isSliding ? '#ff00bb' : '#00f0ff'
+    });
+    particles.push({
+      x: charPos.x + 12 + (Math.random() - 0.5) * 6,
+      y: charPos.y + 6,
+      vx: (Math.random() - 0.5) * 15,
+      vy: Math.random() * 30 + 20,
+      life: 0.28,
       col: player.isSliding ? '#ff00bb' : '#00f0ff'
     });
   }
+
   for (let i = particles.length - 1; i >= 0; i--) {
     const pt = particles[i];
     pt.life -= dt;
@@ -574,14 +585,13 @@ function draw() {
   const horizonY = H * HORIZON_RATIO;
   const baseY = H * BASE_ROAD_RATIO;
 
-  // 1. Synthwave Sky with Stars
+  // 1. Synthwave Sky with Sunset
   const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
   skyGrad.addColorStop(0, '#100322');
   skyGrad.addColorStop(1, '#3b064e');
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, W, horizonY);
 
-  // Distant glowing sun
   const sunR = Math.min(W * 0.24, 95);
   const sunGrad = ctx.createLinearGradient(W/2, horizonY - sunR, W/2, horizonY);
   sunGrad.addColorStop(0, '#ff007f');
@@ -592,21 +602,21 @@ function draw() {
   ctx.arc(W / 2, horizonY, sunR, Math.PI, 0);
   ctx.fill();
 
-  // Sun horizontal slices
+  // Sun stripes
   ctx.fillStyle = '#100322';
   for (let i = 1; i <= 5; i++) {
     const sy = horizonY - (sunR * 0.16 * i);
     ctx.fillRect(W / 2 - sunR, sy, sunR * 2, 2 + i);
   }
 
-  // Skyline silhouette
+  // Skyline
   ctx.fillStyle = '#0a0216';
   ctx.beginPath();
   ctx.moveTo(0, horizonY);
-  ctx.lineTo(20, horizonY - 20); ctx.lineTo(50, horizonY - 20); ctx.lineTo(50, horizonY);
-  ctx.lineTo(90, horizonY - 35); ctx.lineTo(120, horizonY - 35); ctx.lineTo(120, horizonY);
-  ctx.lineTo(W - 130, horizonY); ctx.lineTo(W - 130, horizonY - 30); ctx.lineTo(W - 90, horizonY - 30);
-  ctx.lineTo(W - 60, horizonY - 15); ctx.lineTo(W - 30, horizonY - 15); ctx.lineTo(W, horizonY);
+  ctx.lineTo(25, horizonY - 22); ctx.lineTo(55, horizonY - 22); ctx.lineTo(55, horizonY);
+  ctx.lineTo(95, horizonY - 38); ctx.lineTo(125, horizonY - 38); ctx.lineTo(125, horizonY);
+  ctx.lineTo(W - 135, horizonY); ctx.lineTo(W - 135, horizonY - 32); ctx.lineTo(W - 95, horizonY - 32);
+  ctx.lineTo(W - 65, horizonY - 18); ctx.lineTo(W - 35, horizonY - 18); ctx.lineTo(W, horizonY);
   ctx.fill();
 
   // Horizon Neon Glow
@@ -620,7 +630,7 @@ function draw() {
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // 2. Neon Highway Floor (Perspective Polygon)
+  // 2. Highway Floor
   const pFarLeft = project(-1.5, MAX_Z);
   const pFarRight = project(1.5, MAX_Z);
   const pNearLeft = project(-1.5, 0);
@@ -656,7 +666,7 @@ function draw() {
     const left = project(-1.5, z);
     const right = project(1.5, z);
     const alpha = Math.max(0, 1 - (z / MAX_Z));
-    ctx.strokeStyle = `rgba(255, 0, 187, ${alpha * 0.7})`;
+    ctx.strokeStyle = `rgba(255, 0, 187, ${alpha * 0.75})`;
     ctx.lineWidth = 1.5 + (1 - (z / MAX_Z)) * 3.5;
     ctx.beginPath();
     ctx.moveTo(left.x, left.y);
@@ -704,7 +714,6 @@ function draw() {
       const h = ent.h * pos.scale;
 
       if (ent.type === 'HURDLE') {
-        // Low Spikes (Jump over)
         ctx.fillStyle = '#ff0055';
         ctx.strokeStyle = '#ffe600';
         ctx.lineWidth = 2 * pos.scale;
@@ -712,27 +721,22 @@ function draw() {
         ctx.shadowBlur = 14;
         ctx.fillRect(pos.x - w / 2, pos.y - h, w, h);
         ctx.strokeRect(pos.x - w / 2, pos.y - h, w, h);
-        // Hazard stripes
         ctx.fillStyle = '#ffe600';
         for (let s = -w/2 + 6; s < w/2; s += 16 * pos.scale) {
           ctx.fillRect(pos.x + s, pos.y - h, 6 * pos.scale, h);
         }
       } else if (ent.type === 'LASER') {
-        // High Laser Beam (Slide under)
         ctx.fillStyle = '#00f0ff';
         ctx.shadowColor = '#00f0ff';
         ctx.shadowBlur = 14;
-        // Two side pillars
         const pillarW = 8 * pos.scale;
         ctx.fillRect(pos.x - w/2, pos.y - h, pillarW, h);
         ctx.fillRect(pos.x + w/2 - pillarW, pos.y - h, pillarW, h);
-        // Glowing laser beam up high
         ctx.fillStyle = '#ff00bb';
         ctx.shadowColor = '#ff00bb';
         ctx.shadowBlur = 18;
         ctx.fillRect(pos.x - w/2, pos.y - h, w, 14 * pos.scale);
       } else if (ent.type === 'WALL') {
-        // Solid Cyber Barrier (Lane change required)
         ctx.fillStyle = '#6a0dad';
         ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 3 * pos.scale;
@@ -740,7 +744,6 @@ function draw() {
         ctx.shadowBlur = 16;
         ctx.fillRect(pos.x - w/2, pos.y - h, w, h);
         ctx.strokeRect(pos.x - w/2, pos.y - h, w, h);
-        // Warning Emblem
         ctx.fillStyle = '#fff';
         ctx.fillRect(pos.x - 4 * pos.scale, pos.y - h * 0.7, 8 * pos.scale, h * 0.4);
       }
@@ -748,100 +751,151 @@ function draw() {
     }
   }
 
-  // 4. Draw Particles
+  // 4. Exhaust Particles
   for (const pt of particles) {
     ctx.fillStyle = pt.col;
-    ctx.globalAlpha = Math.max(0, pt.life / 0.3);
+    ctx.globalAlpha = Math.max(0, pt.life / 0.28);
     ctx.fillRect(pt.x - 3, pt.y - 3, 6, 6);
   }
   ctx.globalAlpha = 1.0;
 
-  // 5. DRAW PLAYER CHARACTER (Guaranteed front & center at z = 0, y = baseY)
+  // 5. DRAW CYBER HOVERBOARDER FROM BEHIND (RACING INTO THE SCREEN!)
   const charPos = project(player.laneX, 0, -player.jumpY);
 
   ctx.save();
   ctx.translate(charPos.x, charPos.y);
   ctx.rotate(player.tiltAngle);
 
-  // Ground Shadow
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  // Ground Shadow (anchored to track beneath player)
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
   ctx.beginPath();
-  ctx.ellipse(0, 8, 38, 12, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 8 + player.jumpY * 0.2, 38, 12, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Shield Dome if active
+  // Shield Aura
   if (player.hasShield) {
     ctx.strokeStyle = '#00f0ff';
     ctx.lineWidth = 3;
     ctx.shadowColor = '#00f0ff';
     ctx.shadowBlur = 20;
     ctx.beginPath();
-    ctx.arc(0, -38, 48, 0, Math.PI * 2);
+    ctx.arc(0, -38, 50, 0, Math.PI * 2);
     ctx.stroke();
     ctx.shadowBlur = 0;
   }
 
-  // Hoverboard (Bottom)
-  ctx.fillStyle = '#120428';
+  // HOVERBOARD (Viewed from Behind: Foreshortened perspective pointing away into the screen)
+  // Deck: Wider near camera at bottom (y = 6), narrower forward into screen (y = -18)
+  ctx.fillStyle = '#14062a';
   ctx.strokeStyle = '#ff007f';
   ctx.lineWidth = 2.5;
   ctx.shadowColor = '#ff007f';
   ctx.shadowBlur = 14;
   ctx.beginPath();
-  ctx.roundRect(-36, -6, 72, 12, 6);
+  ctx.moveTo(-22, 6);   // rear left
+  ctx.lineTo(-12, -18); // front left (narrower)
+  ctx.lineTo(12, -18);  // front right
+  ctx.lineTo(22, 6);    // rear right
+  ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // Hoverboard Thruster Jets (Glowing Cyan / Orange)
+  // Neon Deck Inlay Stripes
+  ctx.strokeStyle = '#00f0ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-14, 4); ctx.lineTo(-8, -14);
+  ctx.moveTo(14, 4); ctx.lineTo(8, -14);
+  ctx.stroke();
+
+  // Twin Rear Rocket Thrusters (facing towards player camera)
   ctx.fillStyle = '#00f0ff';
   ctx.shadowColor = '#00f0ff';
   ctx.shadowBlur = 16;
-  ctx.fillRect(-28, 4, 12, 8);
-  ctx.fillRect(16, 4, 12, 8);
+  ctx.fillRect(-18, 5, 10, 8); // left thruster nozzle
+  ctx.fillRect(8, 5, 10, 8);  // right thruster nozzle
 
-  // Cyber Runner Figure
+  // Thruster Glow Core
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(-15, 7, 4, 4);
+  ctx.fillRect(11, 7, 4, 4);
+
+  // SKATER CHARACTER (REAR VIEW - RACING FORWARD AWAY FROM CAMERA)
   if (player.isSliding) {
-    // Low Aerodynamic Slide Stance
-    ctx.fillStyle = '#00f0ff';
+    // Low Aerodynamic Tuck / Slide Stance
+    ctx.fillStyle = '#1e083c';
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 2;
     ctx.shadowColor = '#00f0ff';
     ctx.shadowBlur = 12;
     ctx.beginPath();
-    ctx.roundRect(-24, -28, 48, 22, 6); // low torso
+    ctx.roundRect(-22, -26, 44, 20, 6);
     ctx.fill();
-    // Visor
-    ctx.fillStyle = '#ffe600';
-    ctx.fillRect(8, -26, 14, 6);
-  } else {
-    // Upright / Surfing Cyber Runner
-    // Legs
-    ctx.fillStyle = '#ff00bb';
-    ctx.fillRect(-14, -26, 10, 24);
-    ctx.fillRect(4, -26, 10, 24);
+    ctx.stroke();
 
-    // Torso / Energy Vest
-    ctx.fillStyle = '#00f0ff';
+    // Glowing Cyber Spine on Back
+    ctx.fillStyle = '#ff00bb';
+    ctx.shadowColor = '#ff00bb';
+    ctx.shadowBlur = 10;
+    ctx.fillRect(-4, -24, 8, 16);
+
+    // Helmet (Rear)
+    ctx.fillStyle = '#0e031c';
+    ctx.beginPath();
+    ctx.arc(0, -32, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  } else {
+    // Surfing / Upright Stance (Viewed from Behind)
+    // Feet & Lower Legs (firmly planted on board)
+    ctx.fillStyle = '#ff007f';
+    ctx.shadowColor = '#ff007f';
+    ctx.shadowBlur = 8;
+    ctx.fillRect(-16, -24, 10, 24); // left leg
+    ctx.fillRect(6, -24, 10, 24);   // right leg
+
+    // Torso / Cyber Jacket (Back View)
+    ctx.fillStyle = '#14062a';
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 2;
     ctx.shadowColor = '#00f0ff';
     ctx.shadowBlur = 14;
-    ctx.fillRect(-16, -56, 32, 32);
+    ctx.fillRect(-16, -56, 32, 34);
+    ctx.strokeRect(-16, -56, 32, 34);
 
-    // Cyber Chest Core
-    ctx.fillStyle = '#ffe600';
-    ctx.fillRect(-5, -46, 10, 10);
+    // Glowing Cybernetic Spine on Back
+    ctx.fillStyle = '#00f0ff';
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 12;
+    for (let s = 0; s < 4; s++) {
+      ctx.fillRect(-4, -52 + s * 8, 8, 5);
+    }
 
-    // Helmet & Glowing Visor
-    ctx.fillStyle = '#18042c';
+    // Shoulder Armor Pads
+    ctx.fillStyle = '#ff007f';
+    ctx.fillRect(-22, -56, 8, 12);
+    ctx.fillRect(14, -56, 8, 12);
+
+    // Helmet (Viewed from BACK)
+    ctx.fillStyle = '#0b0218';
     ctx.strokeStyle = '#ff007f';
     ctx.lineWidth = 2;
+    ctx.shadowColor = '#ff007f';
+    ctx.shadowBlur = 10;
     ctx.beginPath();
     ctx.arc(0, -68, 14, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    // Glowing Neon Visor
+    // Rear Helmet LED Strip
     ctx.fillStyle = '#00f0ff';
     ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 10;
-    ctx.fillRect(-10, -71, 20, 7);
+    ctx.shadowBlur = 12;
+    ctx.fillRect(-10, -70, 20, 4);
+
+    // Futuristic Antenna / Ponytail Light on Helmet Top
+    ctx.fillStyle = '#ff00bb';
+    ctx.fillRect(-2, -86, 4, 6);
   }
 
   ctx.shadowBlur = 0;
