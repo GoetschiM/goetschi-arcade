@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Cyber Citadel TD - Goetschi Arcade</title>
+<meta name="theme-color" content="#030b12">
+<meta name="description" content="Cyber Citadel TD - Taktisches Neon Tower Defense mit 4 Turmklassen, Upgrades, 20 Gegnerwellen und Cyber-Sound.">
+<style>
+:root{
+  --cyan:#00f0ff;
+  --green:#00ff88;
+  --gold:#ffd700;
+  --purple:#c74dff;
+  --red:#ff2a55;
+  --bg:#030b12;
+  --card:rgba(8,24,36,0.92);
+  --line:rgba(0,240,255,0.25);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;
+  background:var(--bg);color:#e0f4ff;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  touch-action:none;user-select:none;-webkit-user-select:none;
+}
+#game-wrap{
+  position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+#canvas{
+  display:block;width:100%;height:100%;max-width:640px;max-height:920px;
+  background:#02060a;box-shadow:0 0 40px rgba(0,240,255,0.12);border:1px solid var(--line);
+}
+/* Top HUD */
+.hud{
+  position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;right:12px;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;pointer-events:none;
+}
+.hud-stats{
+  display:flex;align-items:center;gap:8px;pointer-events:auto;
+}
+.stat-chip{
+  background:var(--card);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:10px;padding:5px 10px;
+  display:flex;flex-direction:column;box-shadow:0 4px 14px rgba(0,0,0,0.6);
+}
+.stat-chip .lbl{font-size:8.5px;color:#7aa2c0;letter-spacing:0.12em;text-transform:uppercase;font-weight:700}
+.stat-chip .val{font-size:16px;font-weight:900;letter-spacing:0.02em;line-height:1.1}
+.hud-right{display:flex;align-items:center;gap:6px;pointer-events:auto}
+.hud-btn{
+  background:var(--card);backdrop-filter:blur(8px);border:1px solid var(--line);
+  color:#fff;border-radius:10px;padding:7px 11px;font-size:12px;font-weight:800;
+  cursor:pointer;transition:all 0.15s ease;display:flex;align-items:center;gap:4px;
+}
+.hud-btn:active{transform:scale(0.94);border-color:var(--cyan)}
+.hud-btn.active{background:rgba(0,240,255,0.25);border-color:var(--cyan);color:var(--cyan)}
+
+/* Bottom Controls & Build Bar */
+.bottom-bar{
+  position:fixed;bottom:max(10px,env(safe-area-inset-bottom));left:12px;right:12px;
+  z-index:15;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  pointer-events:auto;
+}
+.turret-select{
+  display:flex;gap:6px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:6px;backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,0,0.6);
+}
+.t-card{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.1);
+  border-radius:10px;width:58px;height:58px;cursor:pointer;transition:all 0.12s ease;
+}
+.t-card:active,.t-card.selected{
+  background:rgba(0,240,255,0.2);border-color:var(--cyan);transform:translateY(-2px);
+  box-shadow:0 0 14px rgba(0,240,255,0.4);
+}
+.t-card .icon{font-size:18px;line-height:1}
+.t-card .name{font-size:8px;font-weight:800;text-transform:uppercase;margin-top:2px;color:#a0c8e0}
+.t-card .cost{font-size:10px;font-weight:900;color:var(--gold)}
+
+.action-btn{
+  background:linear-gradient(135deg,var(--cyan),#0077ff);border:none;border-radius:14px;
+  color:#030b12;font-size:13px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;
+  padding:14px 16px;cursor:pointer;box-shadow:0 4px 16px rgba(0,240,255,0.4);
+  transition:all 0.15s ease;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.action-btn:active{transform:scale(0.95)}
+.action-btn.auto{background:linear-gradient(135deg,var(--purple),#e024c3);color:#fff}
+
+/* Selected Turret Upgrade / Sell Modal Popup */
+.upgrade-menu{
+  position:fixed;bottom:max(86px,env(safe-area-inset-bottom) + 76px);left:50%;transform:translateX(-50%);
+  z-index:25;background:var(--card);border:1.5px solid var(--cyan);border-radius:16px;
+  padding:12px 16px;display:none;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,0.8),0 0 20px rgba(0,240,255,0.3);
+  backdrop-filter:blur(10px);
+}
+.up-info{display:flex;flex-direction:column}
+.up-title{font-size:13px;font-weight:900;color:#fff}
+.up-stats{font-size:10px;color:#a0c8e0;margin-top:2px}
+.up-actions{display:flex;gap:8px}
+.up-btn{
+  background:rgba(0,240,255,0.15);border:1px solid var(--cyan);border-radius:8px;
+  color:var(--cyan);font-size:11px;font-weight:800;padding:6px 12px;cursor:pointer;
+}
+.up-btn:active{background:var(--cyan);color:#000}
+.sell-btn{
+  background:rgba(255,42,85,0.15);border:1px solid var(--red);border-radius:8px;
+  color:var(--red);font-size:11px;font-weight:800;padding:6px 12px;cursor:pointer;
+}
+.sell-btn:active{background:var(--red);color:#fff}
+
+/* Overlays */
+.overlay{
+  position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 45%,rgba(6,28,42,0.94),rgba(2,6,10,0.98));
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:20px;
+}
+.panel{
+  width:min(440px,100%);text-align:center;background:var(--card);border:1px solid var(--line);
+  border-radius:22px;padding:26px 22px;box-shadow:0 12px 40px rgba(0,0,0,0.85),0 0 30px rgba(0,240,255,0.15);
+}
+.logo{
+  margin:0 0 4px 0;font-size:clamp(28px,7vw,40px);font-weight:950;letter-spacing:1px;
+  text-transform:uppercase;color:#fff;line-height:1;font-family:'Impact',sans-serif;
+}
+.logo span{color:var(--cyan);text-shadow:0 0 20px rgba(0,240,255,0.6)}
+.subtitle{font-size:11px;color:var(--gold);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:18px;font-weight:700}
+.panel p{font-size:13px;color:#b0d4ec;line-height:1.55;margin:0 0 18px 0}
+.play-btn{
+  width:100%;border:none;background:linear-gradient(135deg,var(--cyan),#0066ff);
+  color:#030b12;font-size:15px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
+  padding:14px;border-radius:99px;cursor:pointer;box-shadow:0 6px 24px rgba(0,240,255,0.4);
+  transition:all 0.15s ease;
+}
+.play-btn:active{transform:scale(0.97)}
+</style>
+<script src="/js/goetschi-ai-pilot.js"></script>
+</head>
+<body>
+
+<div id="game-wrap">
+  <canvas id="canvas"></canvas>
+</div>
+
+<!-- Top HUD -->
+<div class="hud">
+  <div class="hud-stats">
+    <div class="stat-chip">
+      <span class="lbl">Kern-HP</span>
+      <span class="val" id="coreHpEl" style="color:var(--red)">100</span>
+    </div>
+    <div class="stat-chip">
+      <span class="lbl">Energie</span>
+      <span class="val" id="creditsEl" style="color:var(--gold)">⚡ 180</span>
+    </div>
+    <div class="stat-chip">
+      <span class="lbl">Welle</span>
+      <span class="val" id="waveEl">1 / 20</span>
+    </div>
+  </div>
+  <div class="hud-right">
+    <button class="hud-btn" id="speedBtn">1x</button>
+    <button class="hud-btn" id="audioBtn">🔊</button>
+    <button class="hud-btn" id="pauseBtn">⏸</button>
+  </div>
+</div>
+
+<!-- Turret Upgrade / Sell Menu -->
+<div class="upgrade-menu" id="upgradeMenu">
+  <div class="up-info">
+    <span class="up-title" id="upTitle">Laser Blaster (Lvl 1)</span>
+    <span class="up-stats" id="upStats">Dmg: 18 | Rate: 1.2s | Range: 110</span>
+  </div>
+  <div class="up-actions">
+    <button class="up-btn" id="btnUpgrade">Lvl 2 (⚡ 60)</button>
+    <button class="sell-btn" id="btnSell">Verkauf (+30)</button>
+  </div>
+</div>
+
+<!-- Bottom Control Bar -->
+<div class="bottom-bar">
+  <div class="turret-select">
+    <div class="t-card selected" data-type="LASER">
+      <span class="icon" style="color:var(--cyan)">⚡</span>
+      <span class="name">Laser</span>
+      <span class="cost">100</span>
+    </div>
+    <div class="t-card" data-type="GATLING">
+      <span class="icon" style="color:var(--green)">🔫</span>
+      <span class="name">Gatling</span>
+      <span class="cost">140</span>
+    </div>
+    <div class="t-card" data-type="CRYO">
+      <span class="icon" style="color:var(--purple)">❄️</span>
+      <span class="name">Cryo</span>
+      <span class="cost">160</span>
+    </div>
+    <div class="t-card" data-type="PLASMA">
+      <span class="icon" style="color:var(--gold)">💥</span>
+      <span class="name">Plasma</span>
+      <span class="cost">220</span>
+    </div>
+  </div>
+  <button class="action-btn" id="waveActionBtn">
+    <span>Welle Start</span>
+    <small style="font-size:9px;opacity:0.8">1 / 20</small>
+  </button>
+</div>
+
+<!-- Start Overlay -->
+<div class="overlay" id="startOverlay">
+  <div class="panel">
+    <h1 class="logo">CYBER <span>CITADEL TD</span></h1>
+    <div class="subtitle">Grid Protocol Defense</div>
+    <p>Verteidige den Citadel-Kern gegen 20 feindliche Cyber-Wellen! Platziere Laser-, Gatling-, Cryo- und Plasma-Türme auf den Montagefeldern und verbessere sie.</p>
+    <button class="play-btn" id="startBtn">System Aktivieren</button>
+  </div>
+</div>
+
+<!-- Game Over / Victory Overlay -->
+<div class="overlay" id="endOverlay" style="display:none">
+  <div class="panel">
+    <h1 class="logo" id="endTitle" style="color:var(--red)">KERN <span>ZERSTÖRT</span></h1>
+    <div class="subtitle" id="endSubtitle">Welle 8 Überstanden</div>
+    <p id="endDesc">Die Citadel-Kerne wurden von der Cyber-Bedrohung überrannt.</p>
+    <button class="play-btn" id="retryBtn">Neu Formieren</button>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+
+/* ==========================================================================
+   WEB AUDIO SYNTHESIZER
+   ========================================================================== */
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, type='sawtooth', duration=0.1, gainVal=0.12, slide=null) {
+  if (!soundEnabled || !audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slide), now + duration);
+    gain.gain.setValueAtTime(gainVal, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + duration);
+  } catch(e){}
+}
+
+const sfx = {
+  laser() { playTone(880, 'sine', 0.12, 0.14, 220); },
+  gatling() { playTone(240, 'sawtooth', 0.06, 0.12, 80); },
+  cryo() { playTone(500, 'triangle', 0.2, 0.15, 180); },
+  plasma() { playTone(140, 'square', 0.28, 0.2, 40); },
+  build() { [440, 660, 880].forEach((f, i) => setTimeout(() => playTone(f, 'triangle', 0.08, 0.1), i * 40)); },
+  upgrade() { [520, 680, 1040].forEach((f, i) => setTimeout(() => playTone(f, 'sine', 0.09, 0.12), i * 45)); },
+  enemyHit() { playTone(160, 'triangle', 0.05, 0.08, 60); },
+  enemyDie() { playTone(180, 'sawtooth', 0.15, 0.12, 40); },
+  coreHit() { playTone(90, 'square', 0.3, 0.25, 30); },
+  waveStart() { [330, 440, 550, 660].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.1, 0.12), i * 60)); }
+};
+
+/* ==========================================================================
+   CANVAS & RESIZING
+   ========================================================================== */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const coreHpEl = document.getElementById('coreHpEl');
+const creditsEl = document.getElementById('creditsEl');
+const waveEl = document.getElementById('waveEl');
+const waveActionBtn = document.getElementById('waveActionBtn');
+const upgradeMenu = document.getElementById('upgradeMenu');
+const upTitle = document.getElementById('upTitle');
+const upStats = document.getElementById('upStats');
+const btnUpgrade = document.getElementById('btnUpgrade');
+const btnSell = document.getElementById('btnSell');
+const startOverlay = document.getElementById('startOverlay');
+const endOverlay = document.getElementById('endOverlay');
+const endTitle = document.getElementById('endTitle');
+const endSubtitle = document.getElementById('endSubtitle');
+const endDesc = document.getElementById('endDesc');
+const speedBtn = document.getElementById('speedBtn');
+const audioBtn = document.getElementById('audioBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const startBtn = document.getElementById('startBtn');
+const retryBtn = document.getElementById('retryBtn');
+
+let W = 0, H = 0;
+function resize() {
+  const wrap = document.getElementById('game-wrap');
+  W = canvas.width = Math.min(wrap.clientWidth, 640);
+  H = canvas.height = wrap.clientHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ==========================================================================
+   TOWER STATS & SPECS
+   ========================================================================== */
+const TURRET_SPECS = {
+  LASER: { name: 'Laser Blaster', cost: 100, range: 125, dmg: 16, rate: 0.7, col: '#00f0ff', desc: 'Schnellfeuer Strahl' },
+  GATLING: { name: 'Pulse Gatling', cost: 140, range: 105, dmg: 12, rate: 0.25, col: '#00ff88', desc: 'Extrem schnelles Projektilfeuer' },
+  CRYO: { name: 'Cryo EMP', cost: 160, range: 110, dmg: 8, rate: 1.2, col: '#c74dff', slow: 0.5, desc: 'Flächen-Verlangsamung' },
+  PLASMA: { name: 'Nova Plasma', cost: 220, range: 140, dmg: 55, rate: 1.8, splash: 55, col: '#ffd700', desc: 'Schwerer Flächenschaden' }
+};
+
+/* ==========================================================================
+   WAYPOINTS & PATH
+   ========================================================================== */
+function getWaypoints() {
+  return [
+    { x: 0, y: H * 0.22 },
+    { x: W * 0.28, y: H * 0.22 },
+    { x: W * 0.28, y: H * 0.44 },
+    { x: W * 0.72, y: H * 0.44 },
+    { x: W * 0.72, y: H * 0.68 },
+    { x: W * 0.25, y: H * 0.68 },
+    { x: W * 0.25, y: H * 0.84 },
+    { x: W + 20, y: H * 0.84 }
+  ];
+}
+
+// Preset Build Slots (Strategic mounting pads)
+function getBuildSlots() {
+  return [
+    { x: W * 0.14, y: H * 0.12, turret: null },
+    { x: W * 0.42, y: H * 0.14, turret: null },
+    { x: W * 0.14, y: H * 0.33, turret: null },
+    { x: W * 0.44, y: H * 0.34, turret: null },
+    { x: W * 0.86, y: H * 0.34, turret: null },
+    { x: W * 0.56, y: H * 0.56, turret: null },
+    { x: W * 0.86, y: H * 0.56, turret: null },
+    { x: W * 0.14, y: H * 0.76, turret: null },
+    { x: W * 0.44, y: H * 0.76, turret: null },
+    { x: W * 0.72, y: H * 0.76, turret: null }
+  ];
+}
+
+/* ==========================================================================
+   GAME STATE
+   ========================================================================== */
+let state = 'START'; // START, WAITING_WAVE, WAVE_RUNNING, PAUSED, VICTORY, GAMEOVER
+let gameSpeed = 1; // 1, 2, 4
+let coreHp = 100;
+let credits = 240;
+let wave = 1;
+const MAX_WAVES = 20;
+
+let buildSlots = [];
+let enemies = [];
+let projectiles = [];
+let particles = [];
+let selectedSlot = null;
+let selectedTurretType = 'LASER';
+let waveSpawnTimer = 0;
+let enemiesToSpawn = [];
+
+function initGame() {
+  coreHp = 100;
+  credits = 240;
+  wave = 1;
+  enemies = [];
+  projectiles = [];
+  particles = [];
+  selectedSlot = null;
+  buildSlots = getBuildSlots();
+  updateHUD();
+}
+
+function updateHUD() {
+  coreHpEl.textContent = Math.max(0, coreHp);
+  creditsEl.textContent = '⚡ ' + credits;
+  waveEl.textContent = `${wave} / ${MAX_WAVES}`;
+}
+
+function startWave() {
+  if (state === 'WAVE_RUNNING') return;
+  initAudio();
+  sfx.waveStart();
+  state = 'WAVE_RUNNING';
+  waveActionBtn.querySelector('span').textContent = 'Welle Läuft...';
+  waveActionBtn.classList.add('auto');
+
+  // Generate Wave Enemies
+  enemiesToSpawn = [];
+  const count = 8 + wave * 3;
+  const hpBase = 40 + Math.pow(wave, 1.35) * 15;
+  const speedBase = Math.min(130, 60 + wave * 3.5);
+
+  const isBossWave = (wave % 5 === 0);
+
+  for (let i = 0; i < count; i++) {
+    const isTank = (i % 4 === 0 && wave > 2);
+    const isFast = (i % 3 === 1 && wave > 1);
+    enemiesToSpawn.push({
+      delay: i * (isBossWave ? 0.9 : 0.65),
+      hp: isTank ? hpBase * 2.2 : (isFast ? hpBase * 0.65 : hpBase),
+      maxHp: isTank ? hpBase * 2.2 : (isFast ? hpBase * 0.65 : hpBase),
+      speed: isFast ? speedBase * 1.4 : (isTank ? speedBase * 0.7 : speedBase),
+      radius: isTank ? 14 : (isFast ? 8 : 11),
+      reward: isTank ? 18 : 10,
+      color: isTank ? '#ff0055' : (isFast ? '#ffe600' : '#00f0ff'),
+      isBoss: false
+    });
+  }
+
+  if (isBossWave) {
+    enemiesToSpawn.push({
+      delay: count * 0.75 + 1.2,
+      hp: hpBase * 7.0,
+      maxHp: hpBase * 7.0,
+      speed: speedBase * 0.55,
+      radius: 20,
+      reward: 100,
+      color: '#ff2a55',
+      isBoss: true
+    });
+  }
+}
+
+function gameOver(victory = false) {
+  state = victory ? 'VICTORY' : 'GAMEOVER';
+  upgradeMenu.style.display = 'none';
+  if (victory) {
+    endTitle.innerHTML = 'CITADEL <span>GERETTET!</span>';
+    endTitle.style.color = 'var(--green)';
+    endSubtitle.textContent = 'Alle 20 Wellen Abgewehrt';
+    endDesc.textContent = 'Exzellente Taktik! Das System ist vollständig gesichert.';
+  } else {
+    endTitle.innerHTML = 'KERN <span>ZERSTÖRT</span>';
+    endTitle.style.color = 'var(--red)';
+    endSubtitle.textContent = `Welle ${wave} von 20`;
+    endDesc.textContent = 'Der Citadel-Kern konnte dem Ansturm nicht standhalten.';
+  }
+  endOverlay.style.display = 'flex';
+}
+
+/* ==========================================================================
+   TURRET MANAGEMENT
+   ========================================================================== */
+function buildTurret(slot, typeKey) {
+  const spec = TURRET_SPECS[typeKey];
+  if (!spec || credits < spec.cost || slot.turret) return false;
+
+  credits -= spec.cost;
+  slot.turret = {
+    type: typeKey,
+    level: 1,
+    range: spec.range,
+    dmg: spec.dmg,
+    rate: spec.rate,
+    cooldown: 0,
+    spec: spec,
+    x: slot.x,
+    y: slot.y,
+    angle: 0
+  };
+  sfx.build();
+  updateHUD();
+  return true;
+}
+
+function upgradeTurret(slot) {
+  if (!slot || !slot.turret) return;
+  const t = slot.turret;
+  if (t.level >= 3) return;
+  const cost = Math.round(t.spec.cost * 0.7 * t.level);
+  if (credits < cost) return;
+
+  credits -= cost;
+  t.level++;
+  t.dmg = Math.round(t.dmg * 1.45);
+  t.range = Math.round(t.range * 1.15);
+  t.rate = Math.max(0.15, t.rate * 0.88);
+  sfx.upgrade();
+  updateHUD();
+  showUpgradeMenu(slot);
+}
+
+function sellTurret(slot) {
+  if (!slot || !slot.turret) return;
+  const refund = Math.round(slot.turret.spec.cost * 0.6 * slot.turret.level);
+  credits += refund;
+  slot.turret = null;
+  upgradeMenu.style.display = 'none';
+  selectedSlot = null;
+  updateHUD();
+}
+
+function showUpgradeMenu(slot) {
+  selectedSlot = slot;
+  if (!slot.turret) {
+    upgradeMenu.style.display = 'none';
+    return;
+  }
+  const t = slot.turret;
+  upTitle.textContent = `${t.spec.name} (Stufe ${t.level})`;
+  upStats.textContent = `Dmg: ${t.dmg} | Rate: ${t.rate.toFixed(2)}s | Range: ${t.range}`;
+
+  if (t.level < 3) {
+    const cost = Math.round(t.spec.cost * 0.7 * t.level);
+    btnUpgrade.textContent = `Lvl ${t.level + 1} (⚡ ${cost})`;
+    btnUpgrade.style.display = 'inline-block';
+  } else {
+    btnUpgrade.style.display = 'none';
+  }
+
+  const refund = Math.round(t.spec.cost * 0.6 * t.level);
+  btnSell.textContent = `Verkauf (+${refund})`;
+  upgradeMenu.style.display = 'flex';
+}
+
+/* ==========================================================================
+   UPDATE LOGIC
+   ========================================================================== */
+let lastTime = performance.now();
+const waypoints = getWaypoints();
+
+function update(dt) {
+  if (state === 'PAUSED' || state === 'START' || state === 'GAMEOVER' || state === 'VICTORY') return;
+
+  const effDt = dt * gameSpeed;
+
+  // Wave Spawner
+  if (state === 'WAVE_RUNNING') {
+    waveSpawnTimer += effDt;
+    for (let i = enemiesToSpawn.length - 1; i >= 0; i--) {
+      const e = enemiesToSpawn[i];
+      if (waveSpawnTimer >= e.delay) {
+        enemies.push({
+          hp: e.hp,
+          maxHp: e.maxHp,
+          speed: e.speed,
+          radius: e.radius,
+          reward: e.reward,
+          color: e.color,
+          isBoss: e.isBoss,
+          wpIndex: 0,
+          x: waypoints[0].x,
+          y: waypoints[0].y,
+          slowTimer: 0
+        });
+        enemiesToSpawn.splice(i, 1);
+      }
+    }
+
+    // Check if Wave Completed
+    if (enemiesToSpawn.length === 0 && enemies.length === 0) {
+      state = 'WAITING_WAVE';
+      waveSpawnTimer = 0;
+      credits += 50 + wave * 10; // Wave bonus
+      updateHUD();
+      if (wave >= MAX_WAVES) {
+        gameOver(true);
+        return;
+      }
+      wave++;
+      updateHUD();
+      waveActionBtn.querySelector('span').textContent = 'Welle Start';
+      waveActionBtn.querySelector('small').textContent = `${wave} / ${MAX_WAVES}`;
+      waveActionBtn.classList.remove('auto');
+    }
+  }
+
+  // Update Enemies
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const e = enemies[i];
+    if (e.slowTimer > 0) e.slowTimer -= effDt;
+
+    const targetWp = waypoints[e.wpIndex + 1];
+    if (!targetWp) {
+      // Reached core!
+      coreHp -= e.isBoss ? 35 : 10;
+      sfx.coreHit();
+      updateHUD();
+      enemies.splice(i, 1);
+      if (coreHp <= 0) {
+        gameOver(false);
+        return;
+      }
+      continue;
+    }
+
+    const dx = targetWp.x - e.x;
+    const dy = targetWp.y - e.y;
+    const dist = Math.hypot(dx, dy);
+
+    const curSpeed = (e.slowTimer > 0 ? e.speed * 0.5 : e.speed) * effDt;
+    if (dist <= curSpeed) {
+      e.x = targetWp.x;
+      e.y = targetWp.y;
+      e.wpIndex++;
+    } else {
+      e.x += (dx / dist) * curSpeed;
+      e.y += (dy / dist) * curSpeed;
+    }
+  }
+
+  // Update Turrets & Firing
+  for (const slot of buildSlots) {
+    const t = slot.turret;
+    if (!t) continue;
+
+    if (t.cooldown > 0) t.cooldown -= effDt;
+
+    // Find closest enemy within range
+    let target = null;
+    let maxDist = t.range;
+    for (const e of enemies) {
+      const d = Math.hypot(e.x - t.x, e.y - t.y);
+      if (d <= maxDist) {
+        target = e;
+        break; // target leading enemy
+      }
+    }
+
+    if (target) {
+      t.angle = Math.atan2(target.y - t.y, target.x - t.x);
+      if (t.cooldown <= 0) {
+        t.cooldown = t.rate;
+        fireTurret(t, target);
+      }
+    }
+  }
+
+  // Update Projectiles
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i];
+    p.life -= effDt;
+
+    p.x += p.vx * effDt;
+    p.y += p.vy * effDt;
+
+    // Hit check against target or nearby enemies
+    let hit = false;
+    for (let j = enemies.length - 1; j >= 0; j--) {
+      const e = enemies[j];
+      if (Math.hypot(e.x - p.x, e.y - p.y) < e.radius + 6) {
+        hit = true;
+        applyDamage(e, p.dmg, j);
+
+        if (p.splash) {
+          // Splash Damage
+          for (let k = enemies.length - 1; k >= 0; k--) {
+            const near = enemies[k];
+            if (near !== e && Math.hypot(near.x - p.x, near.y - p.y) < p.splash) {
+              applyDamage(near, p.dmg * 0.65, k);
+            }
+          }
+        }
+        break;
+      }
+    }
+
+    if (hit || p.life <= 0) {
+      projectiles.splice(i, 1);
+    }
+  }
+
+  // Update Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const pt = particles[i];
+    pt.life -= effDt;
+    pt.x += pt.vx * effDt;
+    pt.y += pt.vy * effDt;
+    if (pt.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function fireTurret(t, target) {
+  if (t.type === 'LASER') {
+    sfx.laser();
+    // Instant Laser Beam Damage
+    applyDamage(target, t.dmg);
+    particles.push({
+      type: 'BEAM', x1: t.x, y1: t.y, x2: target.x, y2: target.y,
+      col: '#00f0ff', life: 0.12
+    });
+  } else if (t.type === 'GATLING') {
+    sfx.gatling();
+    const speed = 480;
+    const angle = Math.atan2(target.y - t.y, target.x - t.x);
+    projectiles.push({
+      x: t.x, y: t.y,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      dmg: t.dmg, life: 1.0, col: '#00ff88'
+    });
+  } else if (t.type === 'CRYO') {
+    sfx.cryo();
+    // Area EMP Pulse
+    particles.push({ type: 'EMP', x: t.x, y: t.y, r: t.range, life: 0.35, col: '#c74dff' });
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      if (Math.hypot(e.x - t.x, e.y - t.y) <= t.range) {
+        e.slowTimer = 2.5;
+        applyDamage(e, t.dmg, i);
+      }
+    }
+  } else if (t.type === 'PLASMA') {
+    sfx.plasma();
+    const speed = 280;
+    const angle = Math.atan2(target.y - t.y, target.x - t.x);
+    projectiles.push({
+      x: t.x, y: t.y,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      dmg: t.dmg, splash: t.spec.splash, life: 1.5, col: '#ffd700'
+    });
+  }
+}
+
+function applyDamage(enemy, amount, index) {
+  enemy.hp -= amount;
+  sfx.enemyHit();
+
+  // Blood / Spark Particles
+  for (let i = 0; i < 3; i++) {
+    particles.push({
+      type: 'SPARK', x: enemy.x, y: enemy.y,
+      vx: (Math.random() - 0.5) * 60, vy: (Math.random() - 0.5) * 60,
+      life: 0.25, col: enemy.color
+    });
+  }
+
+  if (enemy.hp <= 0) {
+    credits += enemy.reward;
+    sfx.enemyDie();
+    updateHUD();
+    const idx = (index !== undefined) ? index : enemies.indexOf(enemy);
+    if (idx !== -1) enemies.splice(idx, 1);
+  }
+}
+
+/* ==========================================================================
+   RENDER LOOP
+   ========================================================================== */
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background Grid & Circuit Board
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+  ctx.lineWidth = 1;
+  const gridSize = 40;
+  for (let x = 0; x < W; x += gridSize) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += gridSize) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Draw Path (Circuit Road)
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.2)';
+  ctx.lineWidth = 32;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(waypoints[0].x, waypoints[0].y);
+  for (let i = 1; i < waypoints.length; i++) ctx.lineTo(waypoints[i].x, waypoints[i].y);
+  ctx.stroke();
+
+  // Glowing center neon line
+  ctx.strokeStyle = '#00f0ff';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#00f0ff';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(waypoints[0].x, waypoints[0].y);
+  for (let i = 1; i < waypoints.length; i++) ctx.lineTo(waypoints[i].x, waypoints[i].y);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Citadel Core (Exit base)
+  const lastWp = waypoints[waypoints.length - 2];
+  ctx.fillStyle = '#071822';
+  ctx.strokeStyle = '#00f0ff';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#00f0ff';
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.arc(lastWp.x + 20, lastWp.y, 28, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#00f0ff';
+  ctx.beginPath();
+  ctx.arc(lastWp.x + 20, lastWp.y, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Draw Build Slots
+  for (const slot of buildSlots) {
+    ctx.fillStyle = 'rgba(8, 28, 44, 0.8)';
+    ctx.strokeStyle = (selectedSlot === slot) ? '#ffd700' : 'rgba(0, 240, 255, 0.4)';
+    ctx.lineWidth = (selectedSlot === slot) ? 2.5 : 1.5;
+    ctx.beginPath();
+    ctx.arc(slot.x, slot.y, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    if (!slot.turret) {
+      // Empty slot plus sign
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(slot.x - 8, slot.y); ctx.lineTo(slot.x + 8, slot.y);
+      ctx.moveTo(slot.x, slot.y - 8); ctx.lineTo(slot.x, slot.y + 8);
+      ctx.stroke();
+    } else {
+      // Draw Turret
+      const t = slot.turret;
+      ctx.save();
+      ctx.translate(slot.x, slot.y);
+
+      // Range indicator if selected
+      if (selectedSlot === slot) {
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, t.range, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.rotate(t.angle);
+      ctx.fillStyle = t.spec.col;
+      ctx.shadowColor = t.spec.col;
+      ctx.shadowBlur = 8;
+      // Barrel
+      ctx.fillRect(0, -4, 18, 8);
+      // Base circle
+      ctx.beginPath();
+      ctx.arc(0, 0, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Level stars/dots
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fff';
+      for (let s = 0; s < t.level; s++) {
+        ctx.fillRect(-6 + s * 6, -14, 4, 3);
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // Draw Enemies
+  for (const e of enemies) {
+    ctx.fillStyle = e.color;
+    ctx.shadowColor = e.color;
+    ctx.shadowBlur = e.isBoss ? 16 : 8;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Slow frost ring
+    if (e.slowTimer > 0) {
+      ctx.strokeStyle = '#c74dff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.radius + 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Health Bar
+    const hpWidth = e.radius * 2.2;
+    const hpFrac = Math.max(0, e.hp / e.maxHp);
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(e.x - hpWidth / 2, e.y - e.radius - 8, hpWidth, 4);
+    ctx.fillStyle = hpFrac > 0.5 ? '#00ff88' : '#ff0055';
+    ctx.fillRect(e.x - hpWidth / 2, e.y - e.radius - 8, hpWidth * hpFrac, 4);
+  }
+
+  // Draw Projectiles
+  for (const p of projectiles) {
+    ctx.fillStyle = p.col;
+    ctx.shadowColor = p.col;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.splash ? 6 : 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Draw Particles / Beams
+  for (const pt of particles) {
+    if (pt.type === 'BEAM') {
+      ctx.strokeStyle = pt.col;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = pt.col;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(pt.x1, pt.y1);
+      ctx.lineTo(pt.x2, pt.y2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    } else if (pt.type === 'EMP') {
+      ctx.strokeStyle = pt.col;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.r * (1 - pt.life / 0.35), 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (pt.type === 'SPARK') {
+      ctx.fillStyle = pt.col;
+      ctx.fillRect(pt.x - 2, pt.y - 2, 4, 4);
+    }
+  }
+}
+
+function gameLoop(time) {
+  const dt = Math.min(0.08, (time - lastTime) / 1000);
+  lastTime = time;
+
+  update(dt);
+  draw();
+
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
+
+/* ==========================================================================
+   INTERACTIONS & TOUCH HANDLING
+   ========================================================================== */
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const clickX = (e.clientX - rect.left) * (W / rect.width);
+  const clickY = (e.clientY - rect.top) * (H / rect.height);
+
+  let clickedSlot = null;
+  for (const slot of buildSlots) {
+    if (Math.hypot(slot.x - clickX, slot.y - clickY) < 28) {
+      clickedSlot = slot;
+      break;
+    }
+  }
+
+  if (clickedSlot) {
+    if (!clickedSlot.turret) {
+      // Build selected turret
+      buildTurret(clickedSlot, selectedTurretType);
+      selectedSlot = null;
+      upgradeMenu.style.display = 'none';
+    } else {
+      // Show upgrade / sell menu
+      showUpgradeMenu(clickedSlot);
+    }
+  } else {
+    // Clicked outside: close menu
+    selectedSlot = null;
+    upgradeMenu.style.display = 'none';
+  }
+});
+
+// Turret Selector Cards
+document.querySelectorAll('.t-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.t-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedTurretType = card.getAttribute('data-type');
+  });
+});
+
+btnUpgrade.addEventListener('click', () => { if (selectedSlot) upgradeTurret(selectedSlot); });
+btnSell.addEventListener('click', () => { if (selectedSlot) sellTurret(selectedSlot); });
+
+waveActionBtn.addEventListener('click', () => {
+  if (state === 'WAITING_WAVE') startWave();
+});
+
+speedBtn.addEventListener('click', () => {
+  if (gameSpeed === 1) gameSpeed = 2;
+  else if (gameSpeed === 2) gameSpeed = 4;
+  else gameSpeed = 1;
+  speedBtn.textContent = gameSpeed + 'x';
+  speedBtn.classList.toggle('active', gameSpeed > 1);
+});
+
+function togglePause() {
+  if (state === 'WAVE_RUNNING' || state === 'WAITING_WAVE') {
+    state = 'PAUSED';
+    pauseBtn.textContent = '▶';
+  } else if (state === 'PAUSED') {
+    state = 'WAITING_WAVE';
+    pauseBtn.textContent = '⏸';
+  }
+}
+
+function toggleAudio() {
+  soundEnabled = !soundEnabled;
+  audioBtn.textContent = soundEnabled ? '🔊' : '🔇';
+}
+
+function startGame() {
+  initGame();
+  state = 'WAITING_WAVE';
+  startOverlay.style.display = 'none';
+  endOverlay.style.display = 'none';
+  pauseBtn.textContent = '⏸';
+}
+
+startBtn.addEventListener('click', startGame);
+retryBtn.addEventListener('click', startGame);
+pauseBtn.addEventListener('click', togglePause);
+audioBtn.addEventListener('click', toggleAudio);
+
+/* ==========================================================================
+   GOETSCHI AI PILOT REGISTRATION
+   ========================================================================== */
+if (window.GoetschiAIPilot) {
+  window.GoetschiAIPilot.register({
+    interval: 500,
+    getObs: function() {
+      if (state !== 'WAVE_RUNNING' && state !== 'WAITING_WAVE') return null;
+
+      let counts = { LASER: 0, GATLING: 0, CRYO: 0, PLASMA: 0 };
+      for (const s of buildSlots) {
+        if (s.turret) counts[s.turret.type]++;
+      }
+
+      let minProgress = 0;
+      for (const e of enemies) {
+        const prog = e.wpIndex / waypoints.length;
+        if (prog > minProgress) minProgress = prog;
+      }
+
+      return [
+        coreHp / 100.0,
+        Math.min(1.0, credits / 500.0),
+        wave / 20.0,
+        Math.min(1.0, enemies.length / 25.0),
+        minProgress,
+        counts.LASER / 8.0,
+        counts.GATLING / 8.0,
+        counts.CRYO / 8.0,
+        counts.PLASMA / 8.0,
+        state === 'WAVE_RUNNING' ? 1.0 : 0.0
+      ];
+    },
+    applyAction: function(act) {
+      if (state === 'START' || state === 'GAMEOVER' || state === 'VICTORY') {
+        startGame();
+        return;
+      }
+
+      // Auto start next wave if idle
+      if (state === 'WAITING_WAVE' && act === 0) {
+        startWave();
+        return;
+      }
+
+      // Find first empty build slot
+      const emptySlot = buildSlots.find(s => !s.turret);
+      if (emptySlot) {
+        if (act === 1) buildTurret(emptySlot, 'LASER');
+        else if (act === 2) buildTurret(emptySlot, 'GATLING');
+        else if (act === 3) buildTurret(emptySlot, 'CRYO');
+        else if (act === 4) buildTurret(emptySlot, 'PLASMA');
+      } else if (act === 5) {
+        // Upgrade lowest level turret
+        const upgradable = buildSlots.filter(s => s.turret && s.turret.level < 3);
+        if (upgradable.length > 0) {
+          upgradeTurret(upgradable[0]);
+        }
+      }
+    },
+    isDead: function() {
+      return state === 'GAMEOVER' || state === 'VICTORY' || state === 'START';
+    },
+    restart: function() {
+      startGame();
+    }
+  });
+}
+
+})();
+</script>
+</body>
+</html>

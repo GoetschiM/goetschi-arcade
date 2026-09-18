@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Neon Runner - Goetschi Arcade</title>
+<meta name="theme-color" content="#06020c">
+<meta name="description" content="Neon Runner - Der rasante 3-Lane Synthwave Endless Runner mit Jump & Slide, Power-Ups und Retro-Audio.">
+<style>
+:root{
+  --pink:#ff007f;
+  --cyan:#00f0ff;
+  --gold:#ffe600;
+  --purple:#9d4edd;
+  --bg:#06020c;
+  --card:rgba(18,6,32,0.88);
+  --line:rgba(255,0,127,0.3);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;
+  background:var(--bg);color:#fff;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  touch-action:none;user-select:none;-webkit-user-select:none;
+}
+#game-wrap{
+  position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+#canvas{
+  display:block;width:100%;height:100%;max-width:540px;max-height:920px;
+  background:#05010a;box-shadow:0 0 40px rgba(255,0,127,0.15);
+}
+/* HUD */
+.hud{
+  position:fixed;top:max(12px,env(safe-area-inset-top));left:16px;right:16px;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;pointer-events:none;
+}
+.score-box{
+  background:var(--card);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:12px;padding:6px 14px;
+  display:flex;flex-direction:column;box-shadow:0 4px 16px rgba(0,0,0,0.6);
+}
+.score-box .label{font-size:9px;color:var(--cyan);letter-spacing:0.14em;text-transform:uppercase;font-weight:700}
+.score-box .val{font-size:24px;font-weight:900;color:#fff;letter-spacing:0.02em;line-height:1.1}
+.hud-right{display:flex;align-items:center;gap:8px;pointer-events:auto}
+.hud-btn{
+  background:var(--card);backdrop-filter:blur(8px);border:1px solid var(--line);
+  color:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all 0.15s ease;display:flex;align-items:center;gap:4px;
+}
+.hud-btn:active{transform:scale(0.94);border-color:var(--cyan)}
+
+/* Power-Up Status Pill */
+.power-pill{
+  position:fixed;top:calc(max(12px,env(safe-area-inset-top)) + 58px);left:50%;transform:translateX(-50%);
+  z-index:9;background:rgba(12,2,24,0.85);border:1px solid var(--cyan);border-radius:99px;
+  padding:4px 14px;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;
+  display:none;align-items:center;gap:6px;box-shadow:0 0 16px rgba(0,240,255,0.4);
+}
+
+/* Touch Controls Overlay for Mobile */
+.touch-bar{
+  position:fixed;bottom:max(16px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  z-index:15;display:flex;gap:12px;pointer-events:auto;
+}
+.tbtn{
+  width:62px;height:62px;border-radius:16px;background:rgba(25,8,42,0.7);
+  border:1.5px solid rgba(255,0,127,0.4);color:#fff;font-size:22px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);
+  touch-action:none;transition:all 0.08s;
+}
+.tbtn:active,.tbtn.active{
+  background:rgba(255,0,127,0.4);border-color:var(--cyan);color:var(--cyan);
+  transform:scale(0.92);box-shadow:0 0 16px rgba(0,240,255,0.5);
+}
+@media(min-width:768px){
+  .touch-bar{opacity:0.3;transition:opacity 0.2s}
+  .touch-bar:hover{opacity:1}
+}
+
+/* Modals & Overlays */
+.overlay{
+  position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 45%,rgba(35,8,60,0.92),rgba(5,1,10,0.98));
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:20px;
+}
+.panel{
+  width:min(440px,100%);text-align:center;background:var(--card);border:1px solid var(--line);
+  border-radius:22px;padding:28px 24px;box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(255,0,127,0.2);
+}
+.logo{
+  margin:0 0 6px 0;font-size:clamp(32px,8vw,44px);font-weight:950;letter-spacing:2px;
+  text-transform:uppercase;color:#fff;line-height:1;font-family:'Impact',sans-serif;
+}
+.logo span{color:var(--pink);text-shadow:0 0 20px rgba(255,0,127,0.7)}
+.subtitle{font-size:12px;color:var(--cyan);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:20px;font-weight:700}
+.panel p{font-size:13.5px;color:#d0bfe0;line-height:1.55;margin:0 0 20px 0}
+.play-btn{
+  width:100%;border:none;background:linear-gradient(135deg,var(--pink),#7b2cbf);
+  color:#fff;font-size:16px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
+  padding:15px;border-radius:99px;cursor:pointer;box-shadow:0 6px 24px rgba(255,0,127,0.4);
+  transition:all 0.15s ease;
+}
+.play-btn:active{transform:scale(0.97)}
+.stat-box{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.stat-item{background:rgba(0,0,0,0.4);border:1px solid var(--line);border-radius:12px;padding:10px}
+.stat-item .l{font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:0.1em}
+.stat-item .v{font-size:22px;font-weight:900;color:#fff;margin-top:2px}
+</style>
+<script src="/js/goetschi-ai-pilot.js"></script>
+</head>
+<body>
+
+<div id="game-wrap">
+  <canvas id="canvas"></canvas>
+</div>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="score-box">
+    <span class="label">Distanz</span>
+    <span class="val" id="scoreEl">0m</span>
+  </div>
+  <div class="hud-right">
+    <div class="score-box" style="padding:6px 10px;">
+      <span class="label">Kerne</span>
+      <span class="val" id="coinsEl" style="color:var(--gold)">🪙 0</span>
+    </div>
+    <button class="hud-btn" id="audioBtn">🔊</button>
+    <button class="hud-btn" id="pauseBtn">⏸</button>
+  </div>
+</div>
+
+<div class="power-pill" id="powerPill">⚡ MAGNET AKTIV</div>
+
+<!-- Touch Controls -->
+<div class="touch-bar">
+  <button class="tbtn" id="btnLeft">◀</button>
+  <button class="tbtn" id="btnJump">▲</button>
+  <button class="tbtn" id="btnSlide">▼</button>
+  <button class="tbtn" id="btnRight">▶</button>
+</div>
+
+<!-- Start Overlay -->
+<div class="overlay" id="startOverlay">
+  <div class="panel">
+    <h1 class="logo">NEON <span>RUNNER</span></h1>
+    <div class="subtitle">Cyber Synthwave Endless Dash</div>
+    <p>Wechsle blitzschnell zwischen 3 Spuren, springe über Barrieren und slide unter Laser-Gittern durch! Sammle Energiezellen und aktiviere Schilde.</p>
+    <div class="stat-box">
+      <div class="stat-item"><div class="l">Rekord</div><div class="v" id="bestDistStart">0m</div></div>
+      <div class="stat-item"><div class="l">Kerne</div><div class="v" id="bestCoinsStart">0</div></div>
+    </div>
+    <button class="play-btn" id="startBtn">Highway Betreten</button>
+  </div>
+</div>
+
+<!-- Game Over Overlay -->
+<div class="overlay" id="overOverlay" style="display:none">
+  <div class="panel">
+    <h1 class="logo" style="color:#ff2a55">CRASH<span>!</span></h1>
+    <div class="subtitle">System Überlastet</div>
+    <div class="stat-box">
+      <div class="stat-item"><div class="l">Distanz</div><div class="v" id="finalDist">0m</div></div>
+      <div class="stat-item"><div class="l">Kerne</div><div class="v" id="finalCoins" style="color:var(--gold)">0</div></div>
+    </div>
+    <button class="play-btn" id="retryBtn">Nochmal Starten</button>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+
+/* ==========================================================================
+   WEB AUDIO SYNTHESIZER
+   ========================================================================== */
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, type='sawtooth', duration=0.1, gainVal=0.15, slide=null) {
+  if (!soundEnabled || !audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slide), now + duration);
+    gain.gain.setValueAtTime(gainVal, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + duration);
+  } catch(e){}
+}
+
+const sfx = {
+  jump() { playTone(240, 'sine', 0.18, 0.2, 600); },
+  slide() { playTone(400, 'sawtooth', 0.15, 0.18, 120); },
+  switchLane() { playTone(300, 'triangle', 0.08, 0.12, 450); },
+  coin() { playTone(880, 'sine', 0.08, 0.15, 1200); },
+  powerup() {
+    [350, 520, 700, 880].forEach((f, i) => setTimeout(() => playTone(f, 'sine', 0.08, 0.12), i * 40));
+  },
+  shieldShatter() { playTone(200, 'sawtooth', 0.25, 0.25, 50); },
+  crash() { playTone(120, 'square', 0.35, 0.3, 30); }
+};
+
+/* ==========================================================================
+   CANVAS & RESIZING
+   ========================================================================== */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('scoreEl');
+const coinsEl = document.getElementById('coinsEl');
+const powerPill = document.getElementById('powerPill');
+const startOverlay = document.getElementById('startOverlay');
+const overOverlay = document.getElementById('overOverlay');
+const finalDist = document.getElementById('finalDist');
+const finalCoins = document.getElementById('finalCoins');
+const bestDistStart = document.getElementById('bestDistStart');
+const bestCoinsStart = document.getElementById('bestCoinsStart');
+const startBtn = document.getElementById('startBtn');
+const retryBtn = document.getElementById('retryBtn');
+const audioBtn = document.getElementById('audioBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+
+let W = 0, H = 0;
+function resize() {
+  const wrap = document.getElementById('game-wrap');
+  W = canvas.width = Math.min(wrap.clientWidth, 540);
+  H = canvas.height = wrap.clientHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ==========================================================================
+   GAME STATE & LOGIC
+   ========================================================================== */
+let state = 'START'; // START, PLAYING, PAUSED, GAMEOVER
+let distance = 0;
+let coins = 0;
+let bestDistance = parseInt(localStorage.getItem('neon_runner_best') || '0', 10) || 0;
+let speed = 280; // pixels per second in z-space
+let roadZ = 0;
+
+bestDistStart.textContent = bestDistance + 'm';
+
+// Lanes: -1 (Left), 0 (Center), 1 (Right)
+const player = {
+  lane: 0,
+  targetLane: 0,
+  x: 0,
+  y: 0,
+  jumpY: 0,
+  jumpVy: 0,
+  isJumping: false,
+  isSliding: false,
+  slideTimer: 0,
+  hasShield: false,
+  hasMagnet: false,
+  magnetTimer: 0
+};
+
+let obstacles = [];
+let pickups = [];
+let particles = [];
+let nextSpawnZ = 300;
+
+function resetGame() {
+  distance = 0;
+  coins = 0;
+  speed = 300;
+  roadZ = 0;
+  player.lane = 0;
+  player.targetLane = 0;
+  player.x = 0;
+  player.jumpY = 0;
+  player.jumpVy = 0;
+  player.isJumping = false;
+  player.isSliding = false;
+  player.slideTimer = 0;
+  player.hasShield = false;
+  player.hasMagnet = false;
+  player.magnetTimer = 0;
+  obstacles = [];
+  pickups = [];
+  particles = [];
+  nextSpawnZ = 400;
+  scoreEl.textContent = '0m';
+  coinsEl.textContent = '🪙 0';
+  powerPill.style.display = 'none';
+}
+
+function startGame() {
+  initAudio();
+  resetGame();
+  state = 'PLAYING';
+  startOverlay.style.display = 'none';
+  overOverlay.style.display = 'none';
+  pauseBtn.textContent = '⏸';
+}
+
+function gameOver() {
+  state = 'GAMEOVER';
+  sfx.crash();
+  if (distance > bestDistance) {
+    bestDistance = distance;
+    localStorage.setItem('neon_runner_best', bestDistance);
+  }
+  finalDist.textContent = distance + 'm';
+  finalCoins.textContent = coins;
+  overOverlay.style.display = 'flex';
+}
+
+function switchLane(dir) {
+  if (state !== 'PLAYING') return;
+  const next = Math.max(-1, Math.min(1, player.targetLane + dir));
+  if (next !== player.targetLane) {
+    player.targetLane = next;
+    sfx.switchLane();
+  }
+}
+
+function jump() {
+  if (state !== 'PLAYING') return;
+  if (!player.isJumping && !player.isSliding) {
+    player.isJumping = true;
+    player.jumpVy = -650;
+    sfx.jump();
+  }
+}
+
+function slide() {
+  if (state !== 'PLAYING') return;
+  if (player.isJumping) {
+    // Fast dive down
+    player.jumpVy = 800;
+  } else if (!player.isSliding) {
+    player.isSliding = true;
+    player.slideTimer = 0.55;
+    sfx.slide();
+  }
+}
+
+/* ==========================================================================
+   PROJECTION & PERSPECTIVE
+   ========================================================================== */
+const FOV = 280;
+const HORIZON_Y_FRAC = 0.38;
+const LANE_WIDTH_3D = 120;
+
+function project(lane, z, height=0) {
+  const horizonY = H * HORIZON_Y_FRAC;
+  const depth = Math.max(10, z);
+  const scale = FOV / depth;
+  const screenX = W / 2 + (lane * LANE_WIDTH_3D) * scale;
+  const screenY = horizonY + (320 - height) * scale;
+  return { x: screenX, y: screenY, scale };
+}
+
+/* ==========================================================================
+   SPAWN LOGIC
+   ========================================================================== */
+function spawnPattern() {
+  const z = nextSpawnZ;
+  const rand = Math.random();
+  const lane = Math.floor(Math.random() * 3) - 1;
+
+  if (rand < 0.35) {
+    // Low Hurdle (must JUMP)
+    obstacles.push({ lane, z, type: 'HURDLE', w: 70, h: 25 });
+  } else if (rand < 0.65) {
+    // High Laser Barrier (must SLIDE)
+    obstacles.push({ lane, z, type: 'LASER', w: 90, h: 60 });
+  } else {
+    // Solid Tall Barrier (must SWITCH LANE)
+    obstacles.push({ lane, z, type: 'WALL', w: 80, h: 100 });
+    // Maybe an extra wall leaving only 1 open lane
+    if (Math.random() < 0.4 && distance > 150) {
+      const otherLane = (lane === 0) ? (Math.random() < 0.5 ? -1 : 1) : 0;
+      obstacles.push({ lane: otherLane, z, type: 'WALL', w: 80, h: 100 });
+    }
+  }
+
+  // Energy Cells (Coins)
+  const coinLane = (lane === 0) ? 1 : 0;
+  for (let i = 0; i < 4; i++) {
+    pickups.push({ lane: coinLane, z: z + i * 40, type: 'COIN' });
+  }
+
+  // Rare Power-Up
+  if (Math.random() < 0.15) {
+    const powerLane = Math.floor(Math.random() * 3) - 1;
+    const pType = Math.random() < 0.5 ? 'SHIELD' : 'MAGNET';
+    pickups.push({ lane: powerLane, z: z + 200, type: pType });
+  }
+
+  nextSpawnZ += Math.max(160, 320 - (distance * 0.15));
+}
+
+/* ==========================================================================
+   UPDATE LOOP
+   ========================================================================== */
+let lastTime = performance.now();
+
+function update(dt) {
+  if (state !== 'PLAYING') return;
+
+  // Accelerate gradually
+  speed = Math.min(850, 300 + distance * 0.4);
+  distance += Math.round(speed * dt * 0.08);
+  scoreEl.textContent = distance + 'm';
+
+  roadZ = (roadZ + speed * dt) % 100;
+
+  // Smooth lane change
+  const targetX = player.targetLane * LANE_WIDTH_3D;
+  player.x += (targetX - player.x) * Math.min(1, 14 * dt);
+
+  // Jump physics
+  if (player.isJumping) {
+    player.jumpY += player.jumpVy * dt;
+    player.jumpVy += 1800 * dt;
+    if (player.jumpY >= 0) {
+      player.jumpY = 0;
+      player.jumpVy = 0;
+      player.isJumping = false;
+    }
+  }
+
+  // Slide timer
+  if (player.isSliding) {
+    player.slideTimer -= dt;
+    if (player.slideTimer <= 0) player.isSliding = false;
+  }
+
+  // Magnet powerup
+  if (player.hasMagnet) {
+    player.magnetTimer -= dt;
+    if (player.magnetTimer <= 0) {
+      player.hasMagnet = false;
+      powerPill.style.display = 'none';
+    }
+  }
+
+  // Spawn obstacles
+  if (nextSpawnZ - roadZ < 1200) {
+    spawnPattern();
+  }
+
+  // Update obstacles
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
+    o.z -= speed * dt;
+
+    // Collision check near player (z ≈ 50 to 90)
+    if (o.z > 40 && o.z < 95) {
+      const laneDist = Math.abs(player.x - o.lane * LANE_WIDTH_3D);
+      if (laneDist < 50) {
+        let hit = false;
+        if (o.type === 'HURDLE' && player.jumpY > -35) hit = true;
+        else if (o.type === 'LASER' && !player.isSliding) hit = true;
+        else if (o.type === 'WALL') hit = true;
+
+        if (hit) {
+          if (player.hasShield) {
+            player.hasShield = false;
+            sfx.shieldShatter();
+            powerPill.style.display = 'none';
+            // destroy obstacle
+            obstacles.splice(i, 1);
+            continue;
+          } else {
+            gameOver();
+            return;
+          }
+        }
+      }
+    }
+
+    if (o.z < 20) obstacles.splice(i, 1);
+  }
+
+  // Update Pickups
+  for (let i = pickups.length - 1; i >= 0; i--) {
+    const p = pickups[i];
+    p.z -= speed * dt;
+
+    // Magnet drag
+    if (player.hasMagnet && p.z > 30 && p.z < 350) {
+      p.lane += ((player.x / LANE_WIDTH_3D) - p.lane) * 0.15;
+    }
+
+    // Collect check
+    if (p.z > 30 && p.z < 85) {
+      const laneDist = Math.abs(player.x - p.lane * LANE_WIDTH_3D);
+      if (laneDist < 55) {
+        if (p.type === 'COIN') {
+          coins++;
+          coinsEl.textContent = '🪙 ' + coins;
+          sfx.coin();
+        } else if (p.type === 'SHIELD') {
+          player.hasShield = true;
+          powerPill.textContent = '🛡️ SCHILD AKTIV';
+          powerPill.style.display = 'flex';
+          sfx.powerup();
+        } else if (p.type === 'MAGNET') {
+          player.hasMagnet = true;
+          player.magnetTimer = 10.0;
+          powerPill.textContent = '🧲 MAGNET AKTIV';
+          powerPill.style.display = 'flex';
+          sfx.powerup();
+        }
+        pickups.splice(i, 1);
+        continue;
+      }
+    }
+
+    if (p.z < 20) pickups.splice(i, 1);
+  }
+
+  // Particle emission
+  if (Math.random() < 0.6) {
+    particles.push({
+      x: W / 2 + (player.x) * (FOV / 70),
+      y: (H * HORIZON_Y_FRAC) + (320 - player.jumpY) * (FOV / 70),
+      vx: (Math.random() - 0.5) * 40,
+      vy: Math.random() * -20 - 10,
+      life: 0.35,
+      col: player.isSliding ? '#ff00bb' : '#00f0ff'
+    });
+  }
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const pt = particles[i];
+    pt.life -= dt;
+    pt.x += pt.vx * dt;
+    pt.y += pt.vy * dt;
+    if (pt.life <= 0) particles.splice(i, 1);
+  }
+}
+
+/* ==========================================================================
+   RENDER LOOP
+   ========================================================================== */
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Synthwave Sky gradient
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H * HORIZON_Y_FRAC);
+  skyGrad.addColorStop(0, '#120424');
+  skyGrad.addColorStop(1, '#3a084c');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, H * HORIZON_Y_FRAC);
+
+  // Glowing Sun on horizon
+  const horizonY = H * HORIZON_Y_FRAC;
+  const sunR = Math.min(W * 0.22, 90);
+  const sunGrad = ctx.createLinearGradient(W/2, horizonY - sunR, W/2, horizonY);
+  sunGrad.addColorStop(0, '#ff007f');
+  sunGrad.addColorStop(0.6, '#ff00bb');
+  sunGrad.addColorStop(1, '#ffe600');
+  ctx.fillStyle = sunGrad;
+  ctx.beginPath();
+  ctx.arc(W / 2, horizonY, sunR, Math.PI, 0);
+  ctx.fill();
+
+  // Sun stripes
+  ctx.fillStyle = '#120424';
+  for (let i = 1; i <= 5; i++) {
+    const sy = horizonY - (sunR * 0.16 * i);
+    ctx.fillRect(W / 2 - sunR, sy, sunR * 2, 2 + i);
+  }
+
+  // Horizon line
+  ctx.strokeStyle = '#ff007f';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, horizonY);
+  ctx.lineTo(W, horizonY);
+  ctx.stroke();
+
+  // Road floor
+  ctx.fillStyle = '#07020e';
+  ctx.fillRect(0, horizonY, W, H - horizonY);
+
+  // 3D Perspective Grid
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+  ctx.lineWidth = 2;
+
+  // Road edges and lane dividers
+  const laneCoords = [-1.5, -0.5, 0.5, 1.5];
+  laneCoords.forEach((l, idx) => {
+    const pFar = project(l, 800);
+    const pNear = project(l, 40);
+    ctx.strokeStyle = (idx === 0 || idx === 3) ? '#ff007f' : 'rgba(0,240,255,0.4)';
+    ctx.beginPath();
+    ctx.moveTo(pFar.x, pFar.y);
+    ctx.lineTo(pNear.x, pNear.y);
+    ctx.stroke();
+  });
+
+  // Moving horizontal grid bars
+  for (let z = 50 + (roadZ % 40); z < 800; z += 40) {
+    const pL = project(-1.5, z);
+    const pR = project(1.5, z);
+    const alpha = Math.max(0, 1 - (z / 800));
+    ctx.strokeStyle = `rgba(255, 0, 187, ${alpha * 0.6})`;
+    ctx.lineWidth = Math.max(1, 4 * (FOV / z));
+    ctx.beginPath();
+    ctx.moveTo(pL.x, pL.y);
+    ctx.lineTo(pR.x, pR.y);
+    ctx.stroke();
+  }
+
+  // Render Pickups & Obstacles (sorted back to front)
+  const entities = [
+    ...pickups.map(p => ({ ...p, isPickup: true })),
+    ...obstacles.map(o => ({ ...o, isPickup: false }))
+  ].sort((a, b) => b.z - a.z);
+
+  for (const ent of entities) {
+    const p = project(ent.lane, ent.z);
+    if (p.scale <= 0) continue;
+
+    if (ent.isPickup) {
+      // Pickups
+      const r = 14 * p.scale;
+      if (ent.type === 'COIN') {
+        ctx.fillStyle = '#ffe600';
+        ctx.shadowColor = '#ffe600';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y - 20 * p.scale, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else if (ent.type === 'SHIELD') {
+        ctx.fillStyle = '#00f0ff';
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(p.x - r, p.y - 25 * p.scale, r * 2, r * 2);
+        ctx.shadowBlur = 0;
+      } else if (ent.type === 'MAGNET') {
+        ctx.fillStyle = '#ff00bb';
+        ctx.shadowColor = '#ff00bb';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(p.x - r, p.y - 25 * p.scale, r * 2, r * 2);
+        ctx.shadowBlur = 0;
+      }
+    } else {
+      // Obstacles
+      const w = ent.w * p.scale;
+      const h = ent.h * p.scale;
+
+      if (ent.type === 'HURDLE') {
+        // Low hurdle
+        ctx.fillStyle = '#ff0055';
+        ctx.shadowColor = '#ff0055';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(p.x - w / 2, p.y - h, w, h);
+        ctx.strokeStyle = '#ffe600';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(p.x - w / 2, p.y - h, w, h);
+        ctx.shadowBlur = 0;
+      } else if (ent.type === 'LASER') {
+        // High laser fence
+        ctx.fillStyle = '#00f0ff';
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 16;
+        // Posts on sides
+        ctx.fillRect(p.x - w / 2, p.y - h - 15 * p.scale, 8 * p.scale, h + 15 * p.scale);
+        ctx.fillRect(p.x + w / 2 - 8 * p.scale, p.y - h - 15 * p.scale, 8 * p.scale, h + 15 * p.scale);
+        // Laser beam up high
+        ctx.fillStyle = '#ff00bb';
+        ctx.fillRect(p.x - w / 2, p.y - h - 10 * p.scale, w, 12 * p.scale);
+        ctx.shadowBlur = 0;
+      } else if (ent.type === 'WALL') {
+        // Solid Tall Cyber Block
+        ctx.fillStyle = '#7b2cbf';
+        ctx.shadowColor = '#ff00bb';
+        ctx.shadowBlur = 14;
+        ctx.fillRect(p.x - w / 2, p.y - h, w, h);
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(p.x - w / 2, p.y - h, w, h);
+        ctx.shadowBlur = 0;
+      }
+    }
+  }
+
+  // Draw Particles
+  for (const pt of particles) {
+    ctx.fillStyle = pt.col;
+    ctx.globalAlpha = Math.max(0, pt.life / 0.35);
+    ctx.fillRect(pt.x - 2, pt.y - 2, 4, 4);
+  }
+  ctx.globalAlpha = 1.0;
+
+  // Draw Player Character (at z = 70)
+  const pp = project(player.x / LANE_WIDTH_3D, 70, player.jumpY);
+  const pw = 42 * pp.scale;
+  const ph = (player.isSliding ? 24 : 52) * pp.scale;
+
+  ctx.save();
+  ctx.translate(pp.x, pp.y);
+
+  // Shield aura
+  if (player.hasShield) {
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(0, -ph / 2, pw * 0.9, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // Character body
+  ctx.fillStyle = '#00f0ff';
+  ctx.shadowColor = '#00f0ff';
+  ctx.shadowBlur = 12;
+
+  if (player.isSliding) {
+    // Sliders low body
+    ctx.fillRect(-pw / 2, -ph, pw, ph);
+    ctx.fillStyle = '#ff00bb';
+    ctx.fillRect(-pw / 2 + 4, -ph + 4, pw - 8, ph - 8);
+  } else {
+    // Standing / Jumping runner
+    ctx.beginPath();
+    ctx.arc(0, -ph + 10 * pp.scale, 8 * pp.scale, 0, Math.PI * 2); // head
+    ctx.fill();
+    ctx.fillRect(-pw / 4, -ph + 18 * pp.scale, pw / 2, ph * 0.5); // torso
+    ctx.fillStyle = '#ff00bb';
+    // Legs running
+    const legOffset = Math.sin(performance.now() * 0.02) * 8 * pp.scale;
+    ctx.fillRect(-pw / 4, -ph * 0.5 + 18 * pp.scale, 6 * pp.scale, ph * 0.45 + legOffset);
+    ctx.fillRect(pw / 4 - 6 * pp.scale, -ph * 0.5 + 18 * pp.scale, 6 * pp.scale, ph * 0.45 - legOffset);
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+function gameLoop(time) {
+  const dt = Math.min(0.08, (time - lastTime) / 1000);
+  lastTime = time;
+
+  update(dt);
+  draw();
+
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
+
+/* ==========================================================================
+   INPUTS & EVENT LISTENERS
+   ========================================================================== */
+window.addEventListener('keydown', e => {
+  initAudio();
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') { e.preventDefault(); switchLane(-1); }
+  else if (e.code === 'ArrowRight' || e.code === 'KeyD') { e.preventDefault(); switchLane(1); }
+  else if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') { e.preventDefault(); jump(); }
+  else if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); slide(); }
+  else if (e.code === 'KeyP') { togglePause(); }
+  else if (e.code === 'KeyM') { toggleAudio(); }
+});
+
+// Touch Swipes
+let touchStartX = 0, touchStartY = 0;
+window.addEventListener('touchstart', e => {
+  initAudio();
+  if (e.touches.length > 0) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+window.addEventListener('touchend', e => {
+  if (e.changedTouches.length > 0) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const absX = Math.abs(dx), absY = Math.abs(dy);
+
+    if (Math.max(absX, absY) > 28) {
+      if (absX > absY) {
+        switchLane(dx > 0 ? 1 : -1);
+      } else {
+        if (dy < 0) jump();
+        else slide();
+      }
+    }
+  }
+}, { passive: true });
+
+// Touch Buttons
+document.getElementById('btnLeft').addEventListener('click', () => switchLane(-1));
+document.getElementById('btnRight').addEventListener('click', () => switchLane(1));
+document.getElementById('btnJump').addEventListener('click', jump);
+document.getElementById('btnSlide').addEventListener('click', slide);
+
+function togglePause() {
+  if (state === 'PLAYING') state = 'PAUSED';
+  else if (state === 'PAUSED') state = 'PLAYING';
+  pauseBtn.textContent = (state === 'PAUSED') ? '▶' : '⏸';
+}
+
+function toggleAudio() {
+  soundEnabled = !soundEnabled;
+  audioBtn.textContent = soundEnabled ? '🔊' : '🔇';
+}
+
+startBtn.addEventListener('click', startGame);
+retryBtn.addEventListener('click', startGame);
+pauseBtn.addEventListener('click', togglePause);
+audioBtn.addEventListener('click', toggleAudio);
+
+/* ==========================================================================
+   GOETSCHI AI PILOT REGISTRATION
+   ========================================================================== */
+if (window.GoetschiAIPilot) {
+  window.GoetschiAIPilot.register({
+    interval: 50,
+    getObs: function() {
+      if (state !== 'PLAYING') return null;
+      // Closest obstacle ahead
+      let closest = null;
+      let minDist = 9999;
+      for (const o of obstacles) {
+        if (o.z > 60 && o.z < minDist) {
+          minDist = o.z;
+          closest = o;
+        }
+      }
+
+      const typeCode = closest ? (closest.type === 'HURDLE' ? 0.0 : (closest.type === 'LASER' ? 0.5 : 1.0)) : 0.0;
+      const obsLane = closest ? closest.lane : 0;
+      const obsDistNorm = closest ? Math.min(1.0, (closest.z - 60) / 400.0) : 1.0;
+
+      return [
+        player.targetLane,
+        player.isJumping ? 1.0 : 0.0,
+        player.isSliding ? 1.0 : 0.0,
+        obsDistNorm,
+        obsLane,
+        typeCode,
+        Math.min(1.0, speed / 800.0),
+        player.hasShield ? 1.0 : 0.0
+      ];
+    },
+    applyAction: function(act) {
+      if (state !== 'PLAYING') {
+        startGame();
+        return;
+      }
+      // 0: Stay, 1: Left, 2: Right, 3: Jump, 4: Slide
+      if (act === 1) switchLane(-1);
+      else if (act === 2) switchLane(1);
+      else if (act === 3) jump();
+      else if (act === 4) slide();
+    },
+    isDead: function() {
+      return state === 'GAMEOVER' || state === 'START';
+    },
+    restart: function() {
+      startGame();
+    }
+  });
+}
+
+})();
+</script>
+</body>
+</html>

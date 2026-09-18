@@ -108,6 +108,28 @@
       "tags": ["Strategie", "RTS", "Basisbau", "Solo vs. KI"],
       "controls": "Maus (Links = Auswahl, Rechts = Befehl) & Tastatur",
       "added": "2026-09-06"
+    },
+    {
+      "slug": "neon-runner",
+      "title": "Neon Runner",
+      "subtitle": "Synthwave Endless Dash",
+      "description": "3-Lane Cyber Runner mit High-Speed Sprüngen und Slides. Weiche Hindernissen aus, sammle Energiezellen und aktiviere Schilde.",
+      "cover": "games/neon-runner/cover.svg",
+      "accent": "#ff007f",
+      "tags": ["Arcade", "Runner", "Cyberpunk", "Solo"],
+      "controls": "Touch / Swipe / Pfeiltasten / WASD / Leertaste",
+      "added": "2026-09-18"
+    },
+    {
+      "slug": "cyber-citadel",
+      "title": "Cyber Citadel TD",
+      "subtitle": "Grid Protocol Defense",
+      "description": "Taktisches Neon Tower Defense: Errichte Laser-, Gatling-, Cryo- und Plasma-Türme, schütze den Kern und wehre 20 Wellen ab.",
+      "cover": "games/cyber-citadel/cover.svg",
+      "accent": "#00f0ff",
+      "tags": ["Strategie", "Tower Defense", "Sci-Fi", "Solo"],
+      "controls": "Touch / Maus / Tap-to-Build",
+      "added": "2026-09-18"
     }
   ]
 }

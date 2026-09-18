@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Cyber Citadel TD">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#071b26"/>
+      <stop offset="60%" stop-color="#030b12"/>
+      <stop offset="100%" stop-color="#010408"/>
+    </radialGradient>
+    <linearGradient id="cyanBeam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="100%" stop-color="#0055ff"/>
+    </linearGradient>
+    <linearGradient id="goldBeam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffe600"/>
+      <stop offset="100%" stop-color="#ff7700"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Dark Grid Background -->
+  <rect width="800" height="500" fill="url(#bg)"/>
+
+  <!-- Circuit Pathways -->
+  <g stroke="#00f0ff" stroke-width="2" opacity="0.25" fill="none">
+    <path d="M0 120 L240 120 L240 340 L520 340 L520 160 L800 160"/>
+    <path d="M0 150 L210 150 L210 370 L550 370 L550 190 L800 190"/>
+    <path d="M100 0 L100 80 L350 80 L350 0"/>
+    <path d="M680 500 L680 400 L420 400 L420 500"/>
+  </g>
+
+  <!-- Active Neon Path (Winding Road) -->
+  <path d="M0 250 L180 250 L180 130 L450 130 L450 350 L700 350 L700 250 L800 250" stroke="#00f0ff" stroke-width="36" fill="none" opacity="0.15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M0 250 L180 250 L180 130 L450 130 L450 350 L700 350 L700 250 L800 250" stroke="#00f0ff" stroke-width="4" fill="none" stroke-dasharray="14,10" opacity="0.8" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Citadel Core (Target Base) -->
+  <g transform="translate(730, 250)" filter="url(#glow)">
+    <circle cx="0" cy="0" r="38" fill="#031520" stroke="#00f0ff" stroke-width="4"/>
+    <circle cx="0" cy="0" r="22" fill="#00f0ff" opacity="0.8"/>
+    <circle cx="0" cy="0" r="10" fill="#fff"/>
+    <!-- Defense Ring -->
+    <circle cx="0" cy="0" r="48" fill="none" stroke="#00f0ff" stroke-width="2" stroke-dasharray="6,8" opacity="0.6"/>
+  </g>
+
+  <!-- Turret 1: Heavy Gatling / Pulse Cannon -->
+  <g transform="translate(260, 210)" filter="url(#glow)">
+    <circle cx="0" cy="0" r="28" fill="#08201a" stroke="#00ff88" stroke-width="3"/>
+    <rect x="-12" y="-12" width="24" height="24" rx="4" fill="#00ff88"/>
+    <!-- Double Barrels -->
+    <rect x="-8" y="-30" width="6" height="22" rx="2" fill="#00ff88"/>
+    <rect x="2" y="-30" width="6" height="22" rx="2" fill="#00ff88"/>
+    <!-- Target laser -->
+    <line x1="-1" y1="-30" x2="-80" y2="-120" stroke="#00ff88" stroke-width="2" opacity="0.7"/>
+  </g>
+
+  <!-- Turret 2: Nova Plasma Missile Launcher -->
+  <g transform="translate(380, 240)" filter="url(#glow)">
+    <circle cx="0" cy="0" r="32" fill="#281008" stroke="#ff7700" stroke-width="3"/>
+    <circle cx="0" cy="0" r="16" fill="#ffe600"/>
+    <line x1="0" y1="0" x2="80" y2="-90" stroke="#ffe600" stroke-width="4"/>
+    <circle cx="80" cy="-90" r="6" fill="#ff0055"/>
+  </g>
+
+  <!-- Turret 3: Cryo EMP Freeze Emitter -->
+  <g transform="translate(540, 260)" filter="url(#glow)">
+    <circle cx="0" cy="0" r="26" fill="#140828" stroke="#c74dff" stroke-width="3"/>
+    <polygon points="0,-18 16,12 -16,12" fill="#c74dff"/>
+    <!-- Cryo pulse waves -->
+    <circle cx="0" cy="0" r="42" fill="none" stroke="#00f0ff" stroke-width="2" opacity="0.5"/>
+    <circle cx="0" cy="0" r="60" fill="none" stroke="#c74dff" stroke-width="1.5" opacity="0.3"/>
+  </g>
+
+  <!-- Enemies (Invading Cyberswarm) -->
+  <g transform="translate(140, 130)" filter="url(#glow)">
+    <!-- Glitch Tank -->
+    <rect x="-16" y="-16" width="32" height="32" rx="6" fill="#ff0055" stroke="#fff" stroke-width="2"/>
+    <line x1="-20" y1="-26" x2="20" y2="-26" stroke="#ff0055" stroke-width="4"/>
+  </g>
+  <g transform="translate(80, 130)" filter="url(#glow)">
+    <circle cx="0" cy="0" r="12" fill="#ff2a55"/>
+  </g>
+  <g transform="translate(30, 130)" filter="url(#glow)">
+    <circle cx="0" cy="0" r="10" fill="#ff5588"/>
+  </g>
+
+  <!-- Title Text -->
+  <text x="400" y="465" text-anchor="middle" fill="#fff" font-family="'Impact', 'Segoe UI', sans-serif" font-weight="900" font-size="46" letter-spacing="8" filter="url(#glow)">CYBER CITADEL TD</text>
+</svg>
