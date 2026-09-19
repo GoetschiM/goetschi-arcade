@@ -17,6 +17,7 @@
     html, body {
       width: 100%;
       height: 100%;
+      height: -webkit-fill-available;
       overflow: hidden;
       background-color: #050507;
       color: #e0e0e0;
@@ -25,29 +26,33 @@
     }
 
     #game-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
       display: flex;
       justify-content: center;
       align-items: center;
       background: #000;
+      overflow: hidden;
     }
 
     canvas {
-      display: block;
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      display: block;
       image-rendering: auto;
     }
 
-    /* Minimalist Film-Grain / Atmospheric Overlay */
+    /* Minimalist Film-Grain / Atmospheric Noise */
     .film-grain {
       position: absolute;
       inset: 0;
       pointer-events: none;
-      opacity: 0.08;
+      opacity: 0.09;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
       z-index: 5;
     }
@@ -57,14 +62,14 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, 0.85), inset 0 0 300px 120px rgba(0, 0, 0, 0.65);
+      box-shadow: inset 0 0 100px 30px rgba(0, 0, 0, 0.85), inset 0 0 240px 100px rgba(0, 0, 0, 0.6);
       z-index: 6;
     }
 
     /* Top HUD / Controls Info */
     .hud {
       position: absolute;
-      top: max(16px, env(safe-area-inset-top));
+      top: max(12px, env(safe-area-inset-top));
       left: max(16px, env(safe-area-inset-left));
       right: max(16px, env(safe-area-inset-right));
       display: flex;
@@ -75,39 +80,41 @@
     }
 
     .chapter-tag {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 400;
       letter-spacing: 0.25em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.45);
+      color: rgba(255, 255, 255, 0.5);
       font-family: 'Courier New', monospace;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
     }
 
     .hud-actions {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       pointer-events: auto;
     }
 
     .icon-btn {
-      background: rgba(20, 20, 24, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(20, 20, 24, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.22);
       border-radius: 50%;
-      width: 38px;
-      height: 38px;
-      color: rgba(255, 255, 255, 0.7);
+      width: 40px;
+      height: 40px;
+      color: rgba(255, 255, 255, 0.75);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       backdrop-filter: blur(8px);
       transition: all 0.2s ease;
-      font-size: 14px;
+      font-size: 15px;
     }
 
-    .icon-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
+    .icon-btn:hover, .icon-btn:active {
+      background: rgba(255, 255, 255, 0.2);
       color: #fff;
+      border-color: rgba(255, 255, 255, 0.5);
     }
 
     /* Floating Touch Controls (Mobile) */
@@ -123,20 +130,20 @@
       top: 0;
       bottom: 0;
       left: 0;
-      width: 50%;
+      width: 48%;
       pointer-events: auto;
       touch-action: none;
     }
 
     .virtual-stick {
       position: absolute;
-      width: 110px;
-      height: 110px;
-      margin-left: -55px;
-      margin-top: -55px;
+      width: 120px;
+      height: 120px;
+      margin-left: -60px;
+      margin-top: -60px;
       border: 2px solid rgba(255, 255, 255, 0.25);
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.4) 80%);
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.45) 80%);
       backdrop-filter: blur(4px);
       pointer-events: none;
       display: none;
@@ -146,33 +153,33 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 44px;
-      height: 44px;
-      border: 2px solid rgba(255, 255, 255, 0.85);
+      width: 48px;
+      height: 48px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.3);
       transform: translate(-50%, -50%);
-      box-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.45);
     }
 
     /* Right Action Touch Buttons */
     .action-buttons {
       position: absolute;
-      right: max(24px, env(safe-area-inset-right));
-      bottom: max(24px, env(safe-area-inset-bottom));
+      right: max(20px, env(safe-area-inset-right));
+      bottom: max(20px, env(safe-area-inset-bottom));
       display: flex;
-      gap: 18px;
+      gap: 16px;
       pointer-events: auto;
       align-items: flex-end;
     }
 
     .touch-btn {
-      width: 72px;
-      height: 72px;
+      width: 74px;
+      height: 74px;
       border: 2px solid rgba(255, 255, 255, 0.35);
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(30, 30, 35, 0.75) 0%, rgba(10, 10, 12, 0.9) 100%);
-      color: rgba(255, 255, 255, 0.85);
+      background: radial-gradient(circle, rgba(32, 32, 38, 0.8) 0%, rgba(10, 10, 12, 0.92) 100%);
+      color: rgba(255, 255, 255, 0.9);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -191,67 +198,72 @@
     .touch-btn:active, .touch-btn.active {
       transform: scale(0.92);
       border-color: #ffffff;
-      background: rgba(255, 255, 255, 0.2);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 0 22px rgba(255, 255, 255, 0.5);
     }
 
     .touch-btn .btn-icon {
-      font-size: 20px;
+      font-size: 22px;
       line-height: 1;
     }
 
     .touch-btn--grab {
-      width: 62px;
-      height: 62px;
-      margin-bottom: 24px;
+      width: 66px;
+      height: 66px;
+      margin-bottom: 20px;
     }
 
     /* In-Game Cinematic Story Subtitles / Prompts */
     .prompt-banner {
       position: absolute;
-      bottom: max(32px, calc(env(safe-area-inset-bottom) + 24px));
+      bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px));
       left: 50%;
       transform: translateX(-50%);
       font-family: 'Courier New', monospace;
       font-size: 13px;
-      letter-spacing: 0.2em;
-      color: rgba(255, 255, 255, 0.65);
+      letter-spacing: 0.18em;
+      color: rgba(255, 255, 255, 0.75);
       text-transform: uppercase;
-      text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.95);
       pointer-events: none;
       z-index: 15;
       text-align: center;
       transition: opacity 0.5s ease;
-      max-width: 80%;
+      max-width: 85%;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 16px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     /* Start / Death / Chapter Modal Overlay */
     .cinematic-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.88);
+      background: rgba(0, 0, 0, 0.92);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 25;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       transition: opacity 0.6s ease;
     }
 
     .title-box {
       text-align: center;
-      max-width: 480px;
+      max-width: 520px;
       padding: 24px;
     }
 
     .title-logo {
-      font-size: clamp(44px, 8vw, 68px);
+      font-size: clamp(48px, 9vw, 76px);
       font-weight: 700;
       letter-spacing: 0.35em;
       color: #f2f2f2;
-      margin-bottom: 8px;
-      text-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+      margin-bottom: 6px;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.35);
     }
 
     .subtitle {
@@ -259,7 +271,7 @@
       letter-spacing: 0.3em;
       color: #7d828a;
       text-transform: uppercase;
-      margin-bottom: 36px;
+      margin-bottom: 30px;
       font-family: 'Courier New', monospace;
     }
 
@@ -267,27 +279,28 @@
       font-size: 15px;
       line-height: 1.7;
       color: #9ea3ab;
-      margin-bottom: 40px;
+      margin-bottom: 36px;
       font-style: italic;
     }
 
     .start-btn {
       background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.45);
       color: #ffffff;
-      padding: 14px 38px;
+      padding: 14px 42px;
       font-family: 'Courier New', monospace;
       font-size: 13px;
       letter-spacing: 0.3em;
       text-transform: uppercase;
       cursor: pointer;
       transition: all 0.25s ease;
+      border-radius: 4px;
     }
 
-    .start-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
+    .start-btn:hover, .start-btn:active {
+      background: rgba(255, 255, 255, 0.15);
       border-color: #ffffff;
-      box-shadow: 0 0 25px rgba(255, 255, 255, 0.35);
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
       transform: translateY(-2px);
     }
   </style>
@@ -301,6 +314,7 @@
     <div class="hud">
       <div class="chapter-tag" id="chapterTag">KAPITEL I · IM SCHATTENWALD</div>
       <div class="hud-actions">
+        <button class="icon-btn" id="fsToggle" title="Vollbild">⛶</button>
         <button class="icon-btn" id="audioToggle" title="Audio ein/aus">🔊</button>
         <button class="icon-btn" id="restartBtn" title="Kapitel neu starten">↺</button>
       </div>
@@ -334,9 +348,9 @@
         <div class="title-logo">LIMBO</div>
         <div class="subtitle">Schattenwelt der Stille</div>
         <p class="story-desc">
-          Ein Junge erwacht im kalten Gras eines finsteren Waldes, unwissend über das Schicksal seiner Schwester. Nur zwei leuchtende Augen durchdringen das dichte Grau …
+          Ein Junge erwacht im kalten Moos eines düsteren Waldes. Versteckte Fallen lauern in den Baumkronen, gigantische Schatten spionieren aus der Finsternis …
         </p>
-        <button class="start-btn" id="startBtn">In die Finsternis</button>
+        <button class="start-btn" id="startBtn">In die Finsternis ⛶</button>
       </div>
     </div>
   </div>
@@ -354,6 +368,7 @@
       const promptBanner = document.getElementById('promptBanner');
       const cinematicOverlay = document.getElementById('cinematicOverlay');
       const startBtn = document.getElementById('startBtn');
+      const fsToggle = document.getElementById('fsToggle');
       const audioToggle = document.getElementById('audioToggle');
       const restartBtn = document.getElementById('restartBtn');
       const chapterTag = document.getElementById('chapterTag');
@@ -365,24 +380,39 @@
       const jumpBtn = document.getElementById('jumpBtn');
       const grabBtn = document.getElementById('grabBtn');
 
-      // Internal Virtual Resolution (16:9 cinematic frame)
-      const VW = 1280;
-      const VH = 720;
+      /* ==========================================================================
+         RESPONSIVE FULLSCREEN VIEWPORT SYSTEM (EDGE-TO-EDGE, NO BLACK BARS)
+         ========================================================================== */
+      const VH = 720; // Fixed virtual height for physics consistency
+      let VW = 1280;  // Dynamically expands with screen aspect ratio
       let scale = 1;
-      let offsetX = 0;
-      let offsetY = 0;
 
       function resize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
-        canvas.width = w * window.devicePixelRatio;
-        canvas.height = h * window.devicePixelRatio;
-        scale = Math.min(canvas.width / VW, canvas.height / VH);
-        offsetX = (canvas.width - VW * scale) / 2;
-        offsetY = (canvas.height - VH * scale) / 2;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        scale = canvas.height / VH;
+        VW = canvas.width / scale; // Screen-edge to screen-edge without any letterboxing
       }
       window.addEventListener('resize', resize);
+      window.addEventListener('orientationchange', () => setTimeout(resize, 100));
       resize();
+
+      function toggleFullscreen() {
+        const doc = document;
+        const elem = document.documentElement;
+        if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement) {
+          if (elem.requestFullscreen) elem.requestFullscreen();
+          else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+          else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+        } else {
+          if (doc.exitFullscreen) doc.exitFullscreen();
+          else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+        }
+      }
+      fsToggle.addEventListener('click', toggleFullscreen);
 
       /* ==========================================================================
          WEB AUDIO PROCEDURAL SYNTHESIZER (DARK AMBIENT & FOLEY)
@@ -407,10 +437,10 @@
       function startAmbientDrone() {
         if (!audioCtx) return;
         ambientGain = audioCtx.createGain();
-        ambientGain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+        ambientGain.gain.setValueAtTime(0.24, audioCtx.currentTime);
         ambientGain.connect(audioCtx.destination);
 
-        // Sub-bass drone 1 (55Hz)
+        // Sub-bass drone 1 (55Hz low sine)
         const osc1 = audioCtx.createOscillator();
         osc1.type = 'sine';
         osc1.frequency.setValueAtTime(55, audioCtx.currentTime);
@@ -420,7 +450,7 @@
         osc1Gain.connect(ambientGain);
         osc1.start();
 
-        // Dark hollow wind (White noise + bandpass)
+        // Hollow howling wind (White noise + bandpass)
         const bufferSize = audioCtx.sampleRate * 2;
         const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const output = noiseBuffer.getChannelData(0);
@@ -438,7 +468,7 @@
         filter.Q.setValueAtTime(2.2, audioCtx.currentTime);
 
         const noiseGain = audioCtx.createGain();
-        noiseGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        noiseGain.gain.setValueAtTime(0.065, audioCtx.currentTime);
 
         whiteNoise.connect(filter);
         filter.connect(noiseGain);
@@ -454,7 +484,7 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(70 + Math.random() * 25, now);
+            osc.frequency.setValueAtTime(65 + Math.random() * 20, now);
             osc.frequency.exponentialRampToValueAtTime(30, now + 0.08);
             gain.gain.setValueAtTime(0.12, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
@@ -470,15 +500,15 @@
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(120, now);
-            osc.frequency.exponentialRampToValueAtTime(240, now + 0.14);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(110, now);
+            osc.frequency.exponentialRampToValueAtTime(240, now + 0.12);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start(now);
-            osc.stop(now + 0.14);
+            osc.stop(now + 0.12);
           } catch(e){}
         },
         land() {
@@ -488,14 +518,31 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(95, now);
-            osc.frequency.exponentialRampToValueAtTime(32, now + 0.18);
-            gain.gain.setValueAtTime(0.25, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            osc.frequency.setValueAtTime(90, now);
+            osc.frequency.exponentialRampToValueAtTime(20, now + 0.16);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start(now);
-            osc.stop(now + 0.18);
+            osc.stop(now + 0.16);
+          } catch(e){}
+        },
+        grab() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(140, now);
+            osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.1);
           } catch(e){}
         },
         dragCrate() {
@@ -518,23 +565,22 @@
           if (!soundEnabled || !audioCtx) return;
           try {
             const now = audioCtx.currentTime;
-            // Metallic CLANG
             const osc1 = audioCtx.createOscillator();
             const osc2 = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc1.type = 'sawtooth';
             osc2.type = 'square';
-            osc1.frequency.setValueAtTime(840, now);
-            osc1.frequency.exponentialRampToValueAtTime(60, now + 0.25);
-            osc2.frequency.setValueAtTime(360, now);
-            osc2.frequency.exponentialRampToValueAtTime(40, now + 0.28);
-            gain.gain.setValueAtTime(0.4, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+            osc1.frequency.setValueAtTime(860, now);
+            osc1.frequency.exponentialRampToValueAtTime(60, now + 0.28);
+            osc2.frequency.setValueAtTime(420, now);
+            osc2.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+            gain.gain.setValueAtTime(0.48, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
             osc1.connect(gain);
             osc2.connect(gain);
             gain.connect(audioCtx.destination);
             osc1.start(now); osc2.start(now);
-            osc1.stop(now + 0.28); osc2.stop(now + 0.28);
+            osc1.stop(now + 0.3); osc2.stop(now + 0.3);
           } catch(e){}
         },
         spiderStomp() {
@@ -544,14 +590,82 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(75, now);
-            osc.frequency.exponentialRampToValueAtTime(25, now + 0.35);
-            gain.gain.setValueAtTime(0.45, now);
+            osc.frequency.setValueAtTime(80, now);
+            osc.frequency.exponentialRampToValueAtTime(24, now + 0.35);
+            gain.gain.setValueAtTime(0.5, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start(now);
             osc.stop(now + 0.35);
+          } catch(e){}
+        },
+        spiderScreech() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(540, now);
+            osc.frequency.linearRampToValueAtTime(880, now + 0.2);
+            osc.frequency.exponentialRampToValueAtTime(140, now + 0.6);
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.6);
+          } catch(e){}
+        },
+        boulderRumble() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(38 + Math.random() * 8, now);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.12);
+          } catch(e){}
+        },
+        boulderCrash() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(120, now);
+            osc.frequency.exponentialRampToValueAtTime(18, now + 0.7);
+            gain.gain.setValueAtTime(0.65, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.7);
+          } catch(e){}
+        },
+        crowCaw() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(420, now);
+            osc.frequency.linearRampToValueAtTime(320, now + 0.15);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.18);
           } catch(e){}
         },
         death() {
@@ -563,7 +677,7 @@
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(110, now);
             osc.frequency.exponentialRampToValueAtTime(18, now + 0.6);
-            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.setValueAtTime(0.45, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -576,11 +690,11 @@
       audioToggle.addEventListener('click', () => {
         soundEnabled = !soundEnabled;
         audioToggle.textContent = soundEnabled ? '🔊' : '🔇';
-        if (ambientGain) ambientGain.gain.setValueAtTime(soundEnabled ? 0.22 : 0, audioCtx.currentTime);
+        if (ambientGain) ambientGain.gain.setValueAtTime(soundEnabled ? 0.24 : 0, audioCtx.currentTime);
       });
 
       /* ==========================================================================
-         INPUT CONTROLLER (DUAL WEB & MOBILE WITH FLOATING JOYSTICK)
+         INPUT CONTROLLER (DUAL KEYBOARD & FLOATING TOUCH JOYSTICK)
          ========================================================================== */
       const input = {
         left: false,
@@ -642,6 +756,8 @@
           input.analogX = 0;
           input.left = false;
           input.right = false;
+          input.up = false;
+          input.down = false;
           virtualStick.style.display = 'none';
           virtualKnob.style.transform = 'translate(-50%, -50%)';
         }
@@ -650,7 +766,7 @@
       stickArea.addEventListener('pointercancel', endStick);
 
       function updateStick(cx, cy) {
-        const maxR = 48;
+        const maxR = 50;
         let dx = cx - stickStartX;
         let dy = cy - stickStartY;
         const dist = Math.hypot(dx, dy);
@@ -661,25 +777,31 @@
         virtualKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
 
         const normX = dx / maxR;
+        const normY = dy / maxR;
         input.analogX = normX;
-        input.left = normX < -0.25;
-        input.right = normX > 0.25;
+        input.left = normX < -0.22;
+        input.right = normX > 0.22;
+        input.up = normY < -0.45;
+        input.down = normY > 0.45;
       }
 
-      // Mobile Touch Action Buttons
+      // Mobile Action Buttons
       jumpBtn.addEventListener('pointerdown', (e) => {
         initAudio();
         e.preventDefault();
         input.jump = true;
+        input.up = true;
         jumpBtn.classList.add('active');
       });
       jumpBtn.addEventListener('pointerup', (e) => {
         e.preventDefault();
         input.jump = false;
+        input.up = false;
         jumpBtn.classList.remove('active');
       });
       jumpBtn.addEventListener('pointercancel', (e) => {
         input.jump = false;
+        input.up = false;
         jumpBtn.classList.remove('active');
       });
 
@@ -700,10 +822,23 @@
       });
 
       /* ==========================================================================
-         WORLD GEOMETRY & PUZZLE ENTITIES
+         CAMERA SHAKE & CINEMATICS
+         ========================================================================== */
+      let camX = 0;
+      let camY = 0;
+      let shakeTrauma = 0;
+
+      function addTrauma(amount) {
+        shakeTrauma = Math.min(1.0, shakeTrauma + amount);
+      }
+
+      /* ==========================================================================
+         WORLD PROPS & PUZZLE ENTITIES
          ========================================================================== */
       class BoxProp {
         constructor(x, y, w, h, mass = 1.0) {
+          this.initialX = x;
+          this.initialY = y;
           this.x = x;
           this.y = y;
           this.w = w;
@@ -712,30 +847,32 @@
           this.vy = 0;
           this.mass = mass;
           this.isGrounded = false;
-          this.grabbed = false;
+        }
+
+        reset() {
+          this.x = this.initialX;
+          this.y = this.initialY;
+          this.vx = 0;
+          this.vy = 0;
         }
 
         update(dt, solids) {
-          // Gravity
-          this.vy += 1800 * dt;
+          this.vy += 1750 * dt;
           this.x += this.vx * dt;
           this.y += this.vy * dt;
-
-          // Friction
           this.vx *= Math.pow(0.001, dt);
 
-          // Solid floor & wall collisions
           this.isGrounded = false;
           for (const s of solids) {
             if (this.x + this.w > s.x && this.x < s.x + s.w) {
               // Floor
-              if (this.y + this.h >= s.y && this.y + this.h - this.vy * dt <= s.y + 12) {
+              if (this.y + this.h >= s.y && this.y + this.h - this.vy * dt <= s.y + 14) {
                 this.y = s.y - this.h;
                 this.vy = 0;
                 this.isGrounded = true;
               }
               // Ceiling
-              else if (this.y <= s.y + s.h && this.y - this.vy * dt >= s.y + s.h - 12) {
+              else if (this.y <= s.y + s.h && this.y - this.vy * dt >= s.y + s.h - 14) {
                 this.y = s.y + s.h;
                 this.vy = 0;
               }
@@ -747,23 +884,29 @@
           const rx = this.x - camX;
           const ry = this.y;
 
-          // Pitch-black silhouette of wooden crate with iron corner brackets
           ctx.fillStyle = '#000000';
           ctx.fillRect(rx, ry, this.w, this.h);
 
-          // Subtle internal plank cuts
-          ctx.strokeStyle = '#18191c';
+          // Subtle wood plank detailing
+          ctx.strokeStyle = '#181a1d';
           ctx.lineWidth = 2;
           ctx.strokeRect(rx + 2, ry + 2, this.w - 4, this.h - 4);
           ctx.beginPath();
-          ctx.moveTo(rx + 4, ry + 4); ctx.lineTo(rx + this.w - 4, ry + this.h - 4);
-          ctx.moveTo(rx + this.w - 4, ry + 4); ctx.lineTo(rx + 4, ry + this.h - 4);
+          ctx.moveTo(rx + 3, ry + 3); ctx.lineTo(rx + this.w - 3, ry + this.h - 3);
+          ctx.moveTo(rx + this.w - 3, ry + 3); ctx.lineTo(rx + 3, ry + this.h - 3);
           ctx.stroke();
+
+          // Small iron wheels on the cart
+          ctx.fillStyle = '#0a0a0c';
+          ctx.beginPath();
+          ctx.arc(rx + 10, ry + this.h, 6, 0, Math.PI * 2);
+          ctx.arc(rx + this.w - 10, ry + this.h, 6, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
       class RopeProp {
-        constructor(anchorX, anchorY, length = 180) {
+        constructor(anchorX, anchorY, length = 260) {
           this.anchorX = anchorX;
           this.anchorY = anchorY;
           this.length = length;
@@ -772,11 +915,10 @@
         }
 
         update(dt) {
-          // Pendulum physics
-          const gravity = 9.81 * 80;
+          const gravity = 9.81 * 85;
           const angularAcc = (-gravity / this.length) * Math.sin(this.angle);
           this.angularVelocity += angularAcc * dt;
-          this.angularVelocity *= Math.pow(0.985, dt * 60); // Damping
+          this.angularVelocity *= Math.pow(0.985, dt * 60);
           this.angle += this.angularVelocity * dt;
         }
 
@@ -796,20 +938,31 @@
           ctx.lineTo(tip.x - camX, tip.y);
           ctx.stroke();
 
-          // Knot at bottom
           ctx.fillStyle = '#000000';
           ctx.beginPath();
-          ctx.arc(tip.x - camX, tip.y, 6, 0, Math.PI * 2);
+          ctx.arc(tip.x - camX, tip.y, 6.5, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
       class BearTrapProp {
         constructor(x, y) {
+          this.initialX = x;
+          this.initialY = y;
           this.x = x;
           this.y = y;
-          this.w = 54;
+          this.w = 58;
           this.h = 24;
+          this.vx = 0;
+          this.vy = 0;
+          this.sprung = false;
+        }
+
+        reset() {
+          this.x = this.initialX;
+          this.y = this.initialY;
+          this.vx = 0;
+          this.vy = 0;
           this.sprung = false;
         }
 
@@ -817,6 +970,23 @@
           if (!this.sprung) {
             this.sprung = true;
             sfx.trapSnap();
+            addTrauma(0.4);
+          }
+        }
+
+        update(dt, solids) {
+          this.vy += 1750 * dt;
+          this.x += this.vx * dt;
+          this.y += this.vy * dt;
+          this.vx *= Math.pow(0.001, dt);
+
+          for (const s of solids) {
+            if (this.x + this.w > s.x && this.x < s.x + s.w) {
+              if (this.y + this.h >= s.y && this.y + this.h - this.vy * dt <= s.y + 14) {
+                this.y = s.y - this.h;
+                this.vy = 0;
+              }
+            }
           }
         }
 
@@ -826,44 +996,304 @@
 
           ctx.fillStyle = '#000000';
           if (!this.sprung) {
-            // Open trap with jagged steel teeth lying flat
-            ctx.fillRect(rx, ry + 16, this.w, 6);
+            // Open heavy jagged steel teeth
+            ctx.fillRect(rx, ry + 16, this.w, 8);
             ctx.beginPath();
-            for (let i = 0; i < 6; i++) {
-              ctx.lineTo(rx + i * 9, ry + 16);
-              ctx.lineTo(rx + i * 9 + 4.5, ry + 5);
+            for (let i = 0; i < 7; i++) {
+              ctx.lineTo(rx + i * 8.2, ry + 16);
+              ctx.lineTo(rx + i * 8.2 + 4.1, ry + 4);
             }
             ctx.lineTo(rx + this.w, ry + 16);
             ctx.fill();
           } else {
-            // Snapped shut vertical jaws
-            ctx.fillRect(rx + 16, ry - 6, 22, 28);
+            // Snapped shut upright bloody jaws
+            ctx.fillRect(rx + 18, ry - 8, 22, 32);
             ctx.beginPath();
             ctx.moveTo(rx + 12, ry + 22);
-            ctx.lineTo(rx + 27, ry - 14);
-            ctx.lineTo(rx + 42, ry + 22);
+            ctx.lineTo(rx + 29, ry - 16);
+            ctx.lineTo(rx + 46, ry + 22);
             ctx.fill();
+          }
+        }
+      }
+
+      class RollingBoulder {
+        constructor(x, y, radius = 48) {
+          this.initialX = x;
+          this.initialY = y;
+          this.x = x;
+          this.y = y;
+          this.r = radius;
+          this.vx = 0;
+          this.vy = 0;
+          this.angle = 0;
+          this.active = false;
+          this.destroyed = false;
+          this.soundTimer = 0;
+        }
+
+        reset() {
+          this.x = this.initialX;
+          this.y = this.initialY;
+          this.vx = 0;
+          this.vy = 0;
+          this.angle = 0;
+          this.active = false;
+          this.destroyed = false;
+        }
+
+        trigger() {
+          if (!this.active && !this.destroyed) {
+            this.active = true;
+            this.vx = 140;
+            addTrauma(0.5);
+            sfx.boulderCrash();
+          }
+        }
+
+        update(dt, solids, player) {
+          if (!this.active || this.destroyed) return;
+
+          // Rolling physics down the hill
+          this.vy += 1600 * dt;
+          this.vx += 160 * dt; // Accelerating boulder!
+          this.vx = Math.min(380, this.vx);
+          this.x += this.vx * dt;
+          this.y += this.vy * dt;
+          this.angle += (this.vx / this.r) * dt;
+
+          this.soundTimer += dt;
+          if (this.soundTimer > 0.08) {
+            this.soundTimer = 0;
+            sfx.boulderRumble();
+            addTrauma(0.04);
+          }
+
+          // Collisions with terrain
+          for (const s of solids) {
+            if (this.x + this.r > s.x && this.x - this.r < s.x + s.w) {
+              if (this.y + this.r >= s.y && this.y + this.r - this.vy * dt <= s.y + 20) {
+                this.y = s.y - this.r;
+                this.vy = 0;
+              }
+            }
+          }
+
+          // Boulder crashes into the ravine wall at x = 1840
+          if (this.x > 1820) {
+            this.destroyed = true;
+            this.active = false;
+            addTrauma(0.75);
+            sfx.boulderCrash();
+          }
+
+          // Crushes the player
+          if (player.state !== 'DEAD') {
+            const dist = Math.hypot((player.x + player.w / 2) - this.x, (player.y + player.h / 2) - this.y);
+            if (dist < this.r + 14) {
+              killPlayer('Vom herabrollenden Felsen zermalmt …');
+            }
+          }
+        }
+
+        draw(ctx, camX) {
+          if (this.destroyed) return;
+          const rx = this.x - camX;
+          const ry = this.y;
+
+          ctx.save();
+          ctx.translate(rx, ry);
+          ctx.rotate(this.angle);
+
+          // Jagged mossy silhouette boulder
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          const points = 14;
+          for (let i = 0; i < points; i++) {
+            const a = (i / points) * Math.PI * 2;
+            const rad = this.r * (0.88 + Math.sin(i * 3.4) * 0.12);
+            const px = Math.cos(a) * rad;
+            const py = Math.sin(a) * rad;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          // Internal rock cracks
+          ctx.strokeStyle = '#121417';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(-16, -10); ctx.lineTo(6, 12); ctx.lineTo(24, -8);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+      }
+
+      class RavenCluster {
+        constructor(x, y, count = 4) {
+          this.x = x;
+          this.y = y;
+          this.crows = [];
+          for (let i = 0; i < count; i++) {
+            this.crows.push({
+              relX: (i - count / 2) * 16,
+              relY: Math.random() * 8,
+              flying: false,
+              vx: 0,
+              vy: 0,
+              wingPhase: Math.random() * Math.PI * 2
+            });
+          }
+          this.triggered = false;
+        }
+
+        reset() {
+          this.triggered = false;
+          for (const c of this.crows) {
+            c.flying = false;
+            c.vx = 0;
+            c.vy = 0;
+          }
+        }
+
+        update(dt, playerX) {
+          if (!this.triggered && playerX > this.x - 220) {
+            this.triggered = true;
+            sfx.crowCaw();
+            for (const c of this.crows) {
+              c.flying = true;
+              c.vx = 80 + Math.random() * 140;
+              c.vy = -120 - Math.random() * 160;
+            }
+          }
+
+          for (const c of this.crows) {
+            if (c.flying) {
+              c.relX += c.vx * dt;
+              c.relY += c.vy * dt;
+              c.wingPhase += dt * 24;
+            }
+          }
+        }
+
+        draw(ctx, camX) {
+          ctx.fillStyle = '#000000';
+          for (const c of this.crows) {
+            const rx = this.x + c.relX - camX;
+            const ry = this.y + c.relY;
+
+            if (!c.flying) {
+              // Perched crow silhouette
+              ctx.beginPath();
+              ctx.ellipse(rx, ry, 5, 3.5, 0.2, 0, Math.PI * 2);
+              ctx.arc(rx + 4, ry - 3, 2.5, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              // Flapping in flight
+              const wingY = Math.sin(c.wingPhase) * 6;
+              ctx.beginPath();
+              ctx.moveTo(rx, ry);
+              ctx.lineTo(rx - 7, ry - wingY);
+              ctx.lineTo(rx, ry - 2);
+              ctx.lineTo(rx + 7, ry - wingY);
+              ctx.fill();
+            }
           }
         }
       }
 
       class GiantSpiderBoss {
         constructor(x, y) {
+          this.initialX = x;
+          this.initialY = y;
           this.x = x;
           this.y = y;
           this.legPhases = [0, 1.2, 2.5, 3.8];
           this.defeated = false;
+          this.retreatX = 0;
+          this.strikeLeg = { x: x - 120, y: y + 360, vy: 0, state: 'IDLE', timer: 0 };
         }
 
-        update(dt, playerX) {
-          if (this.defeated) return;
-          // Stalk player when near
-          if (playerX > this.x - 500 && playerX < this.x + 400) {
-            const dx = playerX - this.x;
-            this.x += Math.sign(dx) * 45 * dt;
+        reset() {
+          this.x = this.initialX;
+          this.y = this.initialY;
+          this.defeated = false;
+          this.retreatX = 0;
+          this.strikeLeg.state = 'IDLE';
+          this.strikeLeg.timer = 0;
+        }
+
+        update(dt, player, bearTrap) {
+          if (this.defeated) {
+            // Spider flees upwards and disappears into canopy
+            this.x += 180 * dt;
+            this.y -= 140 * dt;
+            for (let i = 0; i < this.legPhases.length; i++) {
+              this.legPhases[i] += dt * 8;
+            }
+            return;
           }
+
+          // Leg phase walking cycle
           for (let i = 0; i < this.legPhases.length; i++) {
             this.legPhases[i] += dt * 3.5;
+          }
+
+          // Spider strike behavior
+          const distToPlayer = player.x - (this.x - 120);
+
+          // Check if bear trap is in strike zone
+          const trapInZone = bearTrap.x > this.x - 180 && bearTrap.x < this.x - 60 && !bearTrap.sprung;
+
+          if (this.strikeLeg.state === 'IDLE') {
+            if (player.x > this.x - 340 && player.x < this.x + 200) {
+              this.strikeLeg.state = 'WINDUP';
+              this.strikeLeg.timer = 0;
+            }
+          } else if (this.strikeLeg.state === 'WINDUP') {
+            this.strikeLeg.timer += dt;
+            // Leg raises high menacingly
+            this.strikeLeg.y = (this.y + 360) - Math.min(180, this.strikeLeg.timer * 340);
+
+            if (this.strikeLeg.timer > 0.65) {
+              this.strikeLeg.state = 'STRIKE';
+              this.strikeLeg.timer = 0;
+            }
+          } else if (this.strikeLeg.state === 'STRIKE') {
+            // Searing downward strike!
+            this.strikeLeg.y += 950 * dt;
+
+            // Hits ground / floor
+            if (this.strikeLeg.y >= 430) {
+              this.strikeLeg.y = 430;
+              sfx.spiderStomp();
+              addTrauma(0.4);
+
+              // Check if struck the bear trap!
+              if (trapInZone) {
+                bearTrap.trigger();
+                this.defeated = true;
+                sfx.spiderScreech();
+                addTrauma(0.8);
+                promptBanner.textContent = 'Die Falle schnappt zu! Die Spinne flieht!';
+                return;
+              }
+
+              // Check if struck the player
+              if (player.state !== 'DEAD' && Math.abs(player.x - (this.x - 120)) < 45) {
+                killPlayer('Vom Spinnenstachel durchbohrt …');
+              }
+
+              this.strikeLeg.state = 'RECOVER';
+              this.strikeLeg.timer = 0;
+            }
+          } else if (this.strikeLeg.state === 'RECOVER') {
+            this.strikeLeg.timer += dt;
+            if (this.strikeLeg.timer > 0.6) {
+              this.strikeLeg.state = 'IDLE';
+            }
           }
         }
 
@@ -871,59 +1301,77 @@
           const rx = this.x - camX;
           const ry = this.y;
 
-          // Huge lurking spider body in upper mist
           ctx.save();
-          ctx.fillStyle = '#040405';
+          // Large cephalothorax silhouette
+          ctx.fillStyle = '#020202';
           ctx.beginPath();
-          ctx.ellipse(rx, ry, 75, 52, 0, 0, Math.PI * 2);
+          ctx.ellipse(rx, ry, 85, 60, 0, 0, Math.PI * 2);
           ctx.fill();
 
           ctx.beginPath();
-          ctx.ellipse(rx - 55, ry + 18, 42, 34, -0.2, 0, Math.PI * 2);
+          ctx.ellipse(rx - 65, ry + 22, 48, 38, -0.2, 0, Math.PI * 2);
           ctx.fill();
 
-          // Glowing Eyes
+          // Menacing Glowing Eyes
           ctx.fillStyle = '#ffffff';
           ctx.shadowColor = '#ffffff';
           ctx.shadowBlur = 12;
           ctx.beginPath();
-          ctx.arc(rx - 78, ry + 14, 4.5, 0, Math.PI * 2);
-          ctx.arc(rx - 65, ry + 22, 3.5, 0, Math.PI * 2);
-          ctx.arc(rx - 70, ry + 8, 3.0, 0, Math.PI * 2);
+          ctx.arc(rx - 90, ry + 16, 5, 0, Math.PI * 2);
+          ctx.arc(rx - 76, ry + 26, 4, 0, Math.PI * 2);
+          ctx.arc(rx - 82, ry + 10, 3.5, 0, Math.PI * 2);
+          ctx.arc(rx - 95, ry + 28, 3, 0, Math.PI * 2);
           ctx.fill();
           ctx.shadowBlur = 0;
 
-          // 4 Jointed Stilt Legs reaching down
+          // Chitin stilt legs
           ctx.strokeStyle = '#020202';
           ctx.lineCap = 'round';
           ctx.lineJoin = 'round';
 
-          for (let i = 0; i < 4; i++) {
+          // 3 Back Legs
+          for (let i = 1; i < 4; i++) {
             const phase = this.legPhases[i];
-            const legLift = Math.max(0, Math.sin(phase)) * 65;
-            const footX = rx - 180 + i * 110 + Math.cos(phase) * 35;
+            const legLift = Math.max(0, Math.sin(phase)) * 55;
+            const footX = rx - 80 + i * 110 + Math.cos(phase) * 35;
             const footY = ry + 440 - legLift;
-            const kneeX = (rx + footX) / 2 + (i < 2 ? -85 : 85);
-            const kneeY = ry - 40;
+            const kneeX = (rx + footX) / 2 + (i < 2 ? -70 : 80);
+            const kneeY = ry - 50;
 
             ctx.lineWidth = 14 - i * 1.5;
             ctx.beginPath();
-            ctx.moveTo(rx - 20 + i * 15, ry);
+            ctx.moveTo(rx - 20 + i * 18, ry);
             ctx.lineTo(kneeX, kneeY);
             ctx.lineTo(footX, footY);
             ctx.stroke();
-
-            // Foot impact sound when slamming down
-            if (legLift < 4 && Math.cos(phase) > 0.8 && !this.defeated) {
-              sfx.spiderStomp();
-            }
           }
+
+          // 1 Front Combat Strike Leg
+          const strikeX = rx - 120;
+          const strikeY = this.defeated ? ry + 200 : this.strikeLeg.y;
+          const kneeX = (rx + strikeX) / 2 - 90;
+          const kneeY = ry - 80;
+
+          ctx.lineWidth = 15;
+          ctx.beginPath();
+          ctx.moveTo(rx - 45, ry + 10);
+          ctx.lineTo(kneeX, kneeY);
+          ctx.lineTo(strikeX, strikeY);
+          ctx.stroke();
+
+          // Barbed needle tip
+          ctx.beginPath();
+          ctx.moveTo(strikeX - 6, strikeY - 20);
+          ctx.lineTo(strikeX, strikeY + 12);
+          ctx.lineTo(strikeX + 6, strikeY - 20);
+          ctx.fill();
+
           ctx.restore();
         }
       }
 
       /* ==========================================================================
-         THE BOY (PROTAGONIST STATE MACHINE & SKELETAL RENDERING)
+         THE BOY (PROTAGONIST STATE MACHINE WITH LEDGE HANG & MANTLE)
          ========================================================================== */
       const player = {
         x: 80,
@@ -933,63 +1381,63 @@
         vx: 0,
         vy: 0,
         facing: 1, // 1 = right, -1 = left
-        state: 'WAKEUP', // WAKEUP, IDLE, RUN, JUMP, FALL, LAND, PUSH, ROPE, DEAD
+        state: 'WAKEUP', // WAKEUP, IDLE, RUN, JUMP, FALL, HANG, MANTLE, PUSH, ROPE, DEAD
         stateTimer: 0,
         animFrame: 0,
         isGrounded: false,
-        grabbedProp: null,
+        hangEdge: null,
         rope: null,
-        ropeT: 0,
-        eyeBlinkTimer: 3.5,
+        eyeBlinkTimer: 3.2,
         checkpointX: 80,
         checkpointY: 440,
-        deaths: 0
+        deaths: 0,
+        jumpPrev: false
       };
 
       /* ==========================================================================
-         WORLD GEOMETRY DEFINITION (CHAPTER 1: DIE SCHATTENWELT)
+         WORLD GEOMETRY (PRECISE, BALANCED & REWARDING LEVEL DESIGN)
          ========================================================================== */
       const solids = [
-        // Zone 1: Forest Floor
-        { x: -200, y: 560, w: 750, h: 400 },
-        // Zone 2: The Cliff (requires pushing the wooden cart)
-        { x: 550, y: 420, w: 650, h: 540 },
-        // Zone 3: Flat Clearing with Bear Trap
-        { x: 1200, y: 420, w: 700, h: 540 },
-        // Zone 4: Pit with Hanging Rope
-        { x: 1900, y: 680, w: 420, h: 300 }, // deep water pit
-        { x: 2320, y: 420, w: 800, h: 540 }, // far ledge
+        // Zone 1: Forest Floor (start, awakened boy, crows)
+        { x: -300, y: 560, w: 920, h: 400 },
+
+        // Zone 2: The Cliff (y: 445 -> 115px height, easy mantle & cart boost)
+        { x: 620, y: 445, w: 600, h: 520 },
+
+        // Zone 3: Incline & Boulder Slope
+        { x: 1220, y: 420, w: 460, h: 540 },
+        // Ravine Trench for boulder to smash (spikes at bottom)
+        { x: 1820, y: 420, w: 140, h: 540 },
+
+        // Zone 4: Chasm & Water Pit with Floating Log
+        { x: 2060, y: 550, w: 90, h: 30 }, // Floating mossy log stepping stone!
+        { x: 2340, y: 420, w: 760, h: 540 }, // Far side of the chasm
+
         // Zone 5: Spider Clearing
-        { x: 3120, y: 440, w: 1200, h: 520 },
+        { x: 3100, y: 420, w: 700, h: 540 },
+
+        // Zone 6: Fallen Tree Bridge & Beyond to Chapter 2
+        { x: 3800, y: 420, w: 1200, h: 540 }
       ];
 
-      const crates = [
-        new BoxProp(410, 480, 52, 52, 1.2), // Cart to climb cliff
-        new BoxProp(1320, 340, 48, 48, 1.0), // Crate to disarm trap
-      ];
+      const cart = new BoxProp(460, 500, 58, 56, 1.2);
+      const bearTrap = new BearTrapProp(2700, 396);
+      const boulder = new RollingBoulder(1180, 340, 48);
+      const rope = new RopeProp(2210, 140, 270);
+      const spider = new GiantSpiderBoss(3340, 140);
+      const crowCluster = new RavenCluster(340, 480, 5);
 
-      const traps = [
-        new BearTrapProp(1550, 412),
-      ];
-
-      const rope = new RopeProp(2120, 160, 260);
-      const spider = new GiantSpiderBoss(3380, 160);
-
-      // Ambient Drifting Spores
+      // Ambient Drifting Mist Spores
       const spores = [];
-      for (let i = 0; i < 45; i++) {
+      for (let i = 0; i < 48; i++) {
         spores.push({
-          x: Math.random() * 4000,
-          y: Math.random() * 650,
-          r: 1.2 + Math.random() * 2.0,
-          vx: 8 + Math.random() * 14,
+          x: Math.random() * 4500,
+          y: Math.random() * 660,
+          r: 1.2 + Math.random() * 2.2,
+          vx: 8 + Math.random() * 16,
           phase: Math.random() * Math.PI * 2
         });
       }
-
-      // Camera
-      let camX = 0;
-      let camY = 0;
 
       /* ==========================================================================
          PHYSICS & PLAYER CONTROLLER
@@ -998,6 +1446,9 @@
       let stepTimer = 0;
 
       function update(dt) {
+        // Screen shake decay
+        shakeTrauma = Math.max(0, shakeTrauma - 1.2 * dt);
+
         if (player.state === 'DEAD') {
           player.stateTimer += dt;
           if (player.stateTimer > 1.8) {
@@ -1006,10 +1457,10 @@
           return;
         }
 
-        // 1. Wakeup Intro Animation
+        // 1. Wakeup Intro
         if (player.state === 'WAKEUP') {
           player.stateTimer += dt;
-          if (player.stateTimer > 2.2 || input.left || input.right || input.jump) {
+          if (player.stateTimer > 2.4 || input.left || input.right || input.jump) {
             player.state = 'IDLE';
             promptBanner.textContent = 'Renne vorwärts [A/D] · Springe [W/Leertaste]';
           }
@@ -1025,72 +1476,115 @@
           player.vx = 0;
           player.vy = 0;
 
-          // Swing momentum input
-          if (input.left) rope.angularVelocity -= 1.8 * dt;
-          if (input.right) rope.angularVelocity += 1.8 * dt;
+          // Build swing momentum
+          if (input.left) rope.angularVelocity -= 2.2 * dt;
+          if (input.right) rope.angularVelocity += 2.2 * dt;
 
-          // Jump off rope
+          // Leap off rope
           if (input.jump && !player.jumpPrev) {
             player.state = 'JUMP';
             player.rope = null;
-            player.vy = -540;
-            player.vx = (rope.angularVelocity > 0 ? 1 : -1) * Math.min(480, Math.abs(rope.angularVelocity * rope.length * 1.5));
+            player.vy = -560;
+            // Strong forward momentum boost on launch
+            const swingDir = rope.angularVelocity > 0 ? 1 : -1;
+            player.vx = swingDir * (280 + Math.abs(rope.angularVelocity * rope.length * 1.6));
             sfx.jump();
           }
           player.jumpPrev = input.jump;
           return;
         }
 
-        // Check if player reaches rope
+        // Check if catching rope
         if (input.grab || input.jump) {
           const tip = rope.getTip();
           const distToRope = Math.hypot((player.x + player.w / 2) - tip.x, (player.y + player.h / 2) - tip.y);
-          if (distToRope < 48 && player.y > rope.anchorY + 60) {
+          if (distToRope < 55 && player.y > rope.anchorY + 70) {
             player.state = 'ROPE';
             player.rope = rope;
-            sfx.land();
+            sfx.grab();
             return;
           }
         }
 
-        // 3. Movement & Acceleration
+        // 3. Ledge Hang & Mantle System
+        if (player.state === 'HANG') {
+          player.vx = 0;
+          player.vy = 0;
+          // Pressing UP or JUMP initiates climb up
+          if (input.up || input.jump) {
+            player.state = 'MANTLE';
+            player.stateTimer = 0;
+            sfx.grab();
+          }
+          // Pressing DOWN releases ledge
+          else if (input.down) {
+            player.state = 'FALL';
+            player.y += 18;
+            player.vy = 120;
+          }
+          player.jumpPrev = input.jump;
+          return;
+        }
+
+        if (player.state === 'MANTLE') {
+          player.stateTimer += dt;
+          const prog = Math.min(1, player.stateTimer / 0.28);
+          // Pull up onto ledge top
+          if (prog >= 1.0) {
+            player.y = player.hangEdge.y - player.h;
+            player.x += player.hangEdge.dir * 22;
+            player.vx = 0;
+            player.vy = 0;
+            player.isGrounded = true;
+            player.state = 'IDLE';
+            sfx.land();
+          }
+          player.jumpPrev = input.jump;
+          return;
+        }
+
+        // 4. Horizontal Movement
         const moveAxis = input.analogX !== 0 ? input.analogX : (input.right ? 1 : 0) - (input.left ? 1 : 0);
-        const targetSpeed = moveAxis * 280;
-        const accel = player.isGrounded ? 18 : 6;
+        const targetSpeed = moveAxis * 290;
+        const accel = player.isGrounded ? 18 : 7;
         player.vx += (targetSpeed - player.vx) * Math.min(1, accel * dt);
 
-        if (Math.abs(moveAxis) > 0.1) {
+        if (Math.abs(moveAxis) > 0.08) {
           player.facing = moveAxis > 0 ? 1 : -1;
         }
 
-        // Gravity
+        // Gravity & Position
         player.vy += 1750 * dt;
         player.x += player.vx * dt;
         player.y += player.vy * dt;
 
-        // Footsteps Foley
+        // Footsteps
         if (player.isGrounded && Math.abs(player.vx) > 30) {
-          stepTimer += dt * (Math.abs(player.vx) / 140);
+          stepTimer += dt * (Math.abs(player.vx) / 130);
           if (stepTimer >= 1.0) {
             stepTimer = 0;
             sfx.step();
           }
         }
 
-        // 4. Solid Collisions (World Floor & Walls)
+        // 5. Solid Floor & Wall Collisions
         player.isGrounded = false;
         for (const s of solids) {
           if (player.x + player.w > s.x && player.x < s.x + s.w) {
-            // Landing on ground
-            if (player.y + player.h >= s.y && player.y + player.h - player.vy * dt <= s.y + 16) {
+            // Floor landing
+            if (player.y + player.h >= s.y && player.y + player.h - player.vy * dt <= s.y + 18) {
               player.y = s.y - player.h;
-              if (player.vy > 400) sfx.land();
+              if (player.vy > 380) {
+                sfx.land();
+                addTrauma(0.08);
+              }
               player.vy = 0;
               player.isGrounded = true;
             }
           }
-          // Horizontal Wall block
-          if (player.y + player.h > s.y + 10 && player.y < s.y + s.h) {
+
+          // Wall collisions
+          if (player.y + player.h > s.y + 14 && player.y < s.y + s.h) {
             if (player.vx > 0 && player.x + player.w >= s.x && player.x < s.x) {
               player.x = s.x - player.w;
               player.vx = 0;
@@ -1099,79 +1593,111 @@
               player.vx = 0;
             }
           }
+
+          // 6. Ledge Grab Detection (Airborne near top edge)
+          if (!player.isGrounded && player.vy > -100 && !input.down) {
+            // Left corner of solid (grabbing when moving right)
+            if (player.facing === 1 && Math.abs((player.x + player.w) - s.x) < 14) {
+              if (player.y + 24 >= s.y && player.y <= s.y + 4) {
+                player.state = 'HANG';
+                player.hangEdge = { x: s.x, y: s.y, dir: 1 };
+                player.x = s.x - player.w + 2;
+                player.y = s.y - 14;
+                player.vx = 0;
+                player.vy = 0;
+                sfx.grab();
+                return;
+              }
+            }
+            // Right corner of solid (grabbing when moving left)
+            else if (player.facing === -1 && Math.abs(player.x - (s.x + s.w)) < 14) {
+              if (player.y + 24 >= s.y && player.y <= s.y + 4) {
+                player.state = 'HANG';
+                player.hangEdge = { x: s.x + s.w, y: s.y, dir: -1 };
+                player.x = s.x + s.w - 2;
+                player.y = s.y - 14;
+                player.vx = 0;
+                player.vy = 0;
+                sfx.grab();
+                return;
+              }
+            }
+          }
         }
 
-        // 5. Box Grabbing & Pushing
-        let pushing = false;
-        for (const box of crates) {
-          box.update(dt, solids);
+        // 7. Interactive Pushable Props (Cart & Bear Trap)
+        let isPushing = false;
 
-          // Near box check
-          const nearX = Math.abs((player.x + player.w / 2) - (box.x + box.w / 2)) < (player.w / 2 + box.w / 2 + 14);
-          const sameY = Math.abs((player.y + player.h / 2) - (box.y + box.h / 2)) < 30;
-
-          if (nearX && sameY) {
+        // Wooden Cart
+        cart.update(dt, solids);
+        if (Math.abs((player.x + player.w / 2) - (cart.x + cart.w / 2)) < (player.w / 2 + cart.w / 2 + 14)) {
+          if (Math.abs((player.y + player.h / 2) - (cart.y + cart.h / 2)) < 32) {
+            isPushing = true;
             if (input.grab) {
-              pushing = true;
-              box.vx = player.vx * 0.75;
+              cart.vx = player.vx * 0.75;
               player.vx *= 0.75;
               sfx.dragCrate();
             } else {
-              // Body pushing
-              if (player.vx > 0 && player.x + player.w >= box.x && player.x < box.x) {
-                player.x = box.x - player.w;
-                box.vx = Math.max(box.vx, player.vx * 0.85);
+              if (player.vx > 0 && player.x + player.w >= cart.x && player.x < cart.x) {
+                player.x = cart.x - player.w;
+                cart.vx = Math.max(cart.vx, player.vx * 0.85);
                 sfx.dragCrate();
-              } else if (player.vx < 0 && player.x <= box.x + box.w && player.x > box.x) {
-                player.x = box.x + box.w;
-                box.vx = Math.min(box.vx, player.vx * 0.85);
+              } else if (player.vx < 0 && player.x <= cart.x + cart.w && player.x > cart.x) {
+                player.x = cart.x + cart.w;
+                cart.vx = Math.min(cart.vx, player.vx * 0.85);
                 sfx.dragCrate();
               }
             }
           }
+        }
 
-          // Standing on top of box
-          if (player.x + player.w > box.x && player.x < box.x + box.w) {
-            if (player.y + player.h >= box.y && player.y + player.h - player.vy * dt <= box.y + 14) {
-              player.y = box.y - player.h;
-              player.vy = 0;
-              player.isGrounded = true;
-            }
-          }
-
-          // Box disarms bear traps
-          for (const trap of traps) {
-            if (!trap.sprung && box.x + box.w > trap.x && box.x < trap.x + trap.w) {
-              trap.trigger();
-              promptBanner.textContent = 'Bärenfalle entschärft! Weg ist frei!';
-            }
+        // Standing on Cart
+        if (player.x + player.w > cart.x && player.x < cart.x + cart.w) {
+          if (player.y + player.h >= cart.y && player.y + player.h - player.vy * dt <= cart.y + 16) {
+            player.y = cart.y - player.h;
+            player.vy = 0;
+            player.isGrounded = true;
           }
         }
 
-        // 6. Bear Trap Hazard
-        for (const trap of traps) {
-          if (!trap.sprung) {
-            if (player.x + player.w > trap.x + 8 && player.x < trap.x + trap.w - 8) {
-              if (player.y + player.h >= trap.y) {
-                trap.trigger();
+        // Bear Trap Drag & Push
+        bearTrap.update(dt, solids);
+        if (!bearTrap.sprung) {
+          if (Math.abs((player.x + player.w / 2) - (bearTrap.x + bearTrap.w / 2)) < (player.w / 2 + bearTrap.w / 2 + 12)) {
+            if (Math.abs((player.y + player.h) - (bearTrap.y + bearTrap.h)) < 18) {
+              if (input.grab) {
+                isPushing = true;
+                bearTrap.vx = player.vx * 0.7;
+                player.vx *= 0.7;
+                sfx.dragCrate();
+              } else {
+                // Stepped into open bear trap!
+                bearTrap.trigger();
                 killPlayer('In die Bärenfalle getreten …');
               }
             }
           }
         }
 
-        // 7. Water Drowning Hazard in Pit
-        if (player.y > 660) {
+        // 8. Rolling Boulder Trap
+        if (!boulder.active && player.x > 1350) {
+          boulder.trigger();
+          promptBanner.textContent = 'ACHTUNG! EIN FELS! LAUF!';
+        }
+        boulder.update(dt, solids, player);
+
+        // 9. Crows Flying
+        crowCluster.update(dt, player.x);
+
+        // 10. Water Drowning
+        if (player.y > 640) {
           killPlayer('In den dunklen Abgrund gestürzt …');
         }
 
-        // 8. Spider Encounter
-        spider.update(dt, player.x);
-        if (player.x > spider.x - 60 && player.x < spider.x + 80 && !spider.defeated) {
-          killPlayer('Von der Riesenspinne ergriffen …');
-        }
+        // 11. Spider Update
+        spider.update(dt, player, bearTrap);
 
-        // 9. Jumping
+        // 12. Jumping
         if (input.jump && player.isGrounded && !player.jumpPrev) {
           player.vy = -560;
           player.isGrounded = false;
@@ -1179,8 +1705,8 @@
         }
         player.jumpPrev = input.jump;
 
-        // 10. Update Animation States
-        if (pushing) {
+        // 13. State & Animation
+        if (isPushing) {
           player.state = 'PUSH';
         } else if (!player.isGrounded) {
           player.state = player.vy < 0 ? 'JUMP' : 'FALL';
@@ -1192,34 +1718,34 @@
 
         player.animFrame += dt * (player.state === 'RUN' ? 14 : 4);
 
-        // Blinking
+        // Eye Blink
         player.eyeBlinkTimer -= dt;
         if (player.eyeBlinkTimer <= 0) {
-          player.eyeBlinkTimer = 2.5 + Math.random() * 3.5;
+          player.eyeBlinkTimer = 2.4 + Math.random() * 3.2;
         }
 
-        // Dynamic Camera Tracking with smooth deadzone
-        const targetCamX = player.x - VW * 0.38;
+        // Camera Tracking
+        const targetCamX = player.x - VW * 0.35;
         camX += (targetCamX - camX) * Math.min(1, 4.5 * dt);
 
         // Checkpoints
-        if (player.x > 620 && player.checkpointX < 620) {
-          player.checkpointX = 640;
-          player.checkpointY = 360;
-          promptBanner.textContent = 'Klippe erklommen · Kontrollpunkt';
+        if (player.x > 640 && player.checkpointX < 640) {
+          player.checkpointX = 660;
+          player.checkpointY = 380;
+          promptBanner.textContent = 'Klippe erklommen · Kontrollpunkt erreicht';
         }
-        if (player.x > 1750 && player.checkpointX < 1750) {
-          player.checkpointX = 1760;
+        if (player.x > 1850 && player.checkpointX < 1850) {
+          player.checkpointX = 1860;
           player.checkpointY = 360;
-          promptBanner.textContent = 'Schlucht erreicht · Schwinge über das Seil!';
+          promptBanner.textContent = 'Schlucht erreicht · Schwinge am Seil!';
         }
-        if (player.x > 2500 && player.checkpointX < 2500) {
-          player.checkpointX = 2520;
+        if (player.x > 2600 && player.checkpointX < 2600) {
+          player.checkpointX = 2620;
           player.checkpointY = 360;
           chapterTag.textContent = 'KAPITEL II · DER SCHATTEN DER SPINNE';
-          promptBanner.textContent = 'Vorsicht vor den Spinnenbeinen! Renne darunter durch!';
+          promptBanner.textContent = 'Ziehe die Bärenfalle unter das Spinnenbein!';
         }
-        if (player.x > 3800) {
+        if (player.x > 4000) {
           promptBanner.textContent = 'KAPITEL I GESCHAFFT! In die tiefen Schatten …';
         }
       }
@@ -1230,6 +1756,7 @@
         player.stateTimer = 0;
         player.deaths++;
         sfx.death();
+        addTrauma(0.6);
         promptBanner.textContent = reason;
       }
 
@@ -1240,66 +1767,78 @@
         player.vy = 0;
         player.state = 'IDLE';
         player.stateTimer = 0;
+        boulder.reset();
+        // Reset props if checkpoint was before them
+        if (player.checkpointX < 600) cart.reset();
+        if (player.checkpointX < 2600) {
+          bearTrap.reset();
+          spider.reset();
+        }
       }
 
       /* ==========================================================================
-         CINEMATIC RENDER PIPELINE (PARALLAX, GOD RAYS, SILHOUETTES)
+         CINEMATIC RENDER PIPELINE (PARALLAX, VOLUMETRIC GOD RAYS, SILHOUETTES)
          ========================================================================== */
       function render() {
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.translate(offsetX, offsetY);
+
+        // Screen shake trauma application
+        const shakeMag = shakeTrauma * shakeTrauma * 24;
+        const shakeX = (Math.random() * 2 - 1) * shakeMag;
+        const shakeY = (Math.random() * 2 - 1) * shakeMag;
+
+        ctx.translate(shakeX, shakeY);
         ctx.scale(scale, scale);
 
-        // 1. SKY & DISTANT AMBIENT GLOW
-        const skyGrad = ctx.createRadialGradient(VW * 0.45, VH * 0.25, 60, VW * 0.5, VH * 0.5, VW * 0.8);
-        skyGrad.addColorStop(0, '#4d5158');
-        skyGrad.addColorStop(0.45, '#26282d');
-        skyGrad.addColorStop(0.85, '#101114');
-        skyGrad.addColorStop(1, '#050608');
+        // 1. SKY GRADIENT (DARK AMBIENT GREY TO INKY VOID)
+        const skyGrad = ctx.createRadialGradient(VW * 0.45, VH * 0.25, 60, VW * 0.5, VH * 0.5, VW * 0.85);
+        skyGrad.addColorStop(0, '#4e535c');
+        skyGrad.addColorStop(0.4, '#27292f');
+        skyGrad.addColorStop(0.8, '#101115');
+        skyGrad.addColorStop(1, '#050508');
         ctx.fillStyle = skyGrad;
-        ctx.fillRect(0, 0, VW, VH);
+        ctx.fillRect(-200, 0, VW + 400, VH);
 
-        // 2. LAYER 1: DISTANT MISTY MOUNTAINS & TALL PINES (0.08x Speed)
-        const l1X = camX * 0.08;
-        ctx.fillStyle = '#181a1d';
+        // 2. LAYER 1: DISTANT MISTY MOUNTAIN RIDGES (0.07x Parallax)
+        const l1X = camX * 0.07;
+        ctx.fillStyle = '#17191d';
         ctx.beginPath();
-        ctx.moveTo(-100, VH);
+        ctx.moveTo(-200, VH);
         for (let x = -200; x < VW + 400; x += 180) {
           const mx = x - (l1X % 180);
           ctx.lineTo(mx, 320 + Math.sin(x * 0.005) * 45);
           ctx.lineTo(mx + 90, 240 + Math.cos(x * 0.004) * 35);
         }
-        ctx.lineTo(VW + 200, VH);
+        ctx.lineTo(VW + 400, VH);
         ctx.fill();
 
-        // 3. VOLUMETRIC GOD RAYS (LIGHT SHAFTS STREAMING FROM CANOPY)
+        // 3. VOLUMETRIC GOD RAYS (CINEMATIC LIGHT BEAMS)
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        const rayGrad = ctx.createLinearGradient(0, 0, 400, VH);
-        rayGrad.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
-        rayGrad.addColorStop(0.6, 'rgba(255, 255, 255, 0.03)');
+        const rayGrad = ctx.createLinearGradient(0, 0, 450, VH);
+        rayGrad.addColorStop(0, 'rgba(255, 255, 255, 0.17)');
+        rayGrad.addColorStop(0.55, 'rgba(255, 255, 255, 0.04)');
         rayGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = rayGrad;
 
-        const rayShift = Math.sin(performance.now() * 0.0008) * 20;
+        const rayShift = Math.sin(performance.now() * 0.0007) * 25;
         ctx.beginPath();
-        ctx.moveTo(220 + rayShift, 0); ctx.lineTo(380 + rayShift, 0);
+        ctx.moveTo(200 + rayShift, 0); ctx.lineTo(380 + rayShift, 0);
         ctx.lineTo(580 + rayShift, VH); ctx.lineTo(360 + rayShift, VH);
         ctx.fill();
 
         ctx.beginPath();
-        ctx.moveTo(680 + rayShift * 0.7, 0); ctx.lineTo(820 + rayShift * 0.7, 0);
-        ctx.lineTo(1100 + rayShift * 0.7, VH); ctx.lineTo(920 + rayShift * 0.7, VH);
+        ctx.moveTo(700 + rayShift * 0.6, 0); ctx.lineTo(840 + rayShift * 0.6, 0);
+        ctx.lineTo(1120 + rayShift * 0.6, VH); ctx.lineTo(940 + rayShift * 0.6, VH);
         ctx.fill();
         ctx.restore();
 
-        // 4. LAYER 2: MID-GROUND DEAD GNARLED TREES & WIRES (0.28x Speed)
+        // 4. LAYER 2: MIDGROUND DEAD GNARLED TREES (0.28x Parallax)
         const l2X = camX * 0.28;
         ctx.fillStyle = '#0f1013';
-        for (let x = -300; x < VW + 400; x += 320) {
+        for (let x = -400; x < VW + 400; x += 320) {
           const tx = x - (l2X % 320);
-          // Gnarled Tree Trunk
           ctx.beginPath();
           ctx.moveTo(tx, VH);
           ctx.quadraticCurveTo(tx + 25, 380, tx + 15, 120);
@@ -1307,7 +1846,6 @@
           ctx.quadraticCurveTo(tx + 55, 380, tx + 75, VH);
           ctx.fill();
 
-          // Branches
           ctx.lineWidth = 6;
           ctx.strokeStyle = '#0f1013';
           ctx.beginPath();
@@ -1316,33 +1854,35 @@
           ctx.stroke();
         }
 
-        // 5. DRIFTING MIST CLOUDS
-        ctx.fillStyle = 'rgba(45, 48, 54, 0.25)';
-        for (let i = 0; i < 4; i++) {
-          const mx = ((i * 380 - camX * 0.4 + performance.now() * 0.015) % 1800) - 200;
+        // 5. DRIFTING MIST SHEETS
+        ctx.fillStyle = 'rgba(40, 44, 50, 0.22)';
+        for (let i = 0; i < 5; i++) {
+          const mx = ((i * 400 - camX * 0.4 + performance.now() * 0.015) % 2200) - 300;
           ctx.beginPath();
-          ctx.ellipse(mx, 420 + Math.sin(i * 1.5) * 20, 260, 65, 0, 0, Math.PI * 2);
+          ctx.ellipse(mx, 430 + Math.sin(i * 1.5) * 22, 280, 70, 0, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        // 6. BOSS: GIANT SPIDER
+        // Crows
+        crowCluster.draw(ctx, camX);
+
+        // 6. GIANT SPIDER BOSS
         spider.draw(ctx, camX);
 
-        // 7. LAYER 3: FOREGROUND GAMEPLAY SILHOUETTES (SOLIDS, ROPE, BOXES)
+        // 7. LAYER 3: FOREGROUND GAMEPLAY SILHOUETTES
         ctx.fillStyle = '#000000';
         for (const s of solids) {
           ctx.fillRect(s.x - camX, s.y, s.w, s.h);
         }
 
-        // Grass blades on ledges
+        // Detailed grass blades on tops of solids
         ctx.fillStyle = '#000000';
-        for (let x = -200; x < 4000; x += 22) {
+        for (let x = -200; x < 4400; x += 20) {
           const gx = x - camX;
           if (gx > -40 && gx < VW + 40) {
-            // Find ground Y
             const solid = solids.find(s => x >= s.x && x <= s.x + s.w);
             if (solid && solid.y < 600) {
-              const h = 8 + (Math.sin(x) * 6);
+              const h = 7 + (Math.sin(x) * 5);
               ctx.beginPath();
               ctx.moveTo(gx, solid.y);
               ctx.quadraticCurveTo(gx + 3, solid.y - h, gx + 6, solid.y);
@@ -1351,18 +1891,30 @@
           }
         }
 
-        // Props: Traps, Crate, Rope
-        for (const trap of traps) trap.draw(ctx, camX);
-        rope.draw(ctx, camX);
-        for (const box of crates) box.draw(ctx, camX);
+        // Fallen Tree Trunk Ramp (appears after spider is defeated)
+        if (spider.defeated) {
+          const logX = 3520 - camX;
+          ctx.save();
+          ctx.fillStyle = '#000000';
+          ctx.translate(logX, 415);
+          ctx.rotate(-0.08);
+          ctx.fillRect(0, 0, 320, 26);
+          ctx.restore();
+        }
 
-        // 8. RENDER THE BOY (PROTAGONIST SILHOUETTE)
+        // Props: Cart, Trap, Boulder, Rope
+        cart.draw(ctx, camX);
+        bearTrap.draw(ctx, camX);
+        boulder.draw(ctx, camX);
+        rope.draw(ctx, camX);
+
+        // 8. RENDER THE BOY
         drawTheBoy(ctx, player, camX);
 
         // 9. DRIFTING FOREST SPORES / FIREFLIES
         ctx.fillStyle = '#ffffff';
         for (const p of spores) {
-          const px = ((p.x - camX * 0.9 + performance.now() * 0.02) % 4000);
+          const px = ((p.x - camX * 0.9 + performance.now() * 0.02) % 4500);
           const py = p.y + Math.sin(p.phase + performance.now() * 0.002) * 16;
           if (px > -20 && px < VW + 20) {
             ctx.shadowColor = '#ffffff';
@@ -1374,17 +1926,16 @@
           }
         }
 
-        // 10. LAYER 4: NEAR FOREGROUND BLURRED SILHOUETTES (1.35x Speed)
-        const l4X = camX * 1.35;
+        // 10. LAYER 4: NEAR FOREGROUND BLURRED SILHOUETTES (1.4x Parallax)
+        const l4X = camX * 1.4;
         ctx.fillStyle = '#000000';
-        for (let x = -400; x < VW + 500; x += 650) {
+        for (let x = -400; x < VW + 600; x += 650) {
           const fx = x - (l4X % 650);
-          // Hanging root / foreground branch passing close to lens
           ctx.beginPath();
           ctx.moveTo(fx, 0);
-          ctx.quadraticCurveTo(fx + 25, 140, fx + 15, 240);
-          ctx.lineTo(fx + 35, 235);
-          ctx.quadraticCurveTo(fx + 45, 140, fx + 60, 0);
+          ctx.quadraticCurveTo(fx + 25, 140, fx + 15, 250);
+          ctx.lineTo(fx + 38, 245);
+          ctx.quadraticCurveTo(fx + 48, 140, fx + 65, 0);
           ctx.fill();
         }
 
@@ -1392,7 +1943,7 @@
       }
 
       /* ==========================================================================
-         THE BOY: SILHOUETTE ANATOMY & EYE GLOW
+         THE BOY: SKELETAL SILHOUETTE ANATOMY & EYE GLOW
          ========================================================================== */
       function drawTheBoy(ctx, p, camX) {
         const px = p.x - camX;
@@ -1406,26 +1957,102 @@
         if (p.state === 'WAKEUP') {
           const t = Math.min(1, p.stateTimer / 2.0);
           ctx.fillStyle = '#000000';
-          // Lying in grass -> sitting up
+          // Lying in moss -> sitting up
           ctx.beginPath();
           ctx.ellipse(0, -12 * t, 22, 10, 0, 0, Math.PI * 2);
           ctx.fill();
 
-          // Head
           ctx.beginPath();
           ctx.arc(f * 10 * t, -22 * t - 6, 11, 0, Math.PI * 2);
           ctx.fill();
 
-          // Eyes glowing softly through grass
           if (p.stateTimer > 0.6) {
             ctx.fillStyle = '#ffffff';
             ctx.shadowColor = '#ffffff';
             ctx.shadowBlur = 10;
             ctx.beginPath();
-            ctx.arc(f * 13 * t, -22 * t - 6, 2.5, 0, Math.PI * 2);
+            ctx.arc(f * 13 * t, -22 * t - 6, 2.6, 0, Math.PI * 2);
             ctx.fill();
             ctx.shadowBlur = 0;
           }
+          ctx.restore();
+          return;
+        }
+
+        // HANG State (Dangling from ledge edge)
+        if (p.state === 'HANG') {
+          ctx.fillStyle = '#000000';
+          ctx.lineWidth = 4.5;
+          ctx.strokeStyle = '#000000';
+          ctx.lineCap = 'round';
+
+          // Arms reaching up gripped to the ledge
+          ctx.beginPath();
+          ctx.moveTo(0, -32); ctx.lineTo(f * 8, -48);
+          ctx.stroke();
+
+          // Torso hanging straight
+          ctx.beginPath();
+          ctx.ellipse(0, -26, 7.5, 12, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Dangling legs
+          ctx.beginPath();
+          ctx.moveTo(-3, -16); ctx.lineTo(-2, -4); ctx.lineTo(1, 4);
+          ctx.moveTo(3, -16); ctx.lineTo(4, -3); ctx.lineTo(2, 5);
+          ctx.stroke();
+
+          // Head tilted looking up
+          ctx.beginPath();
+          ctx.arc(f * 2, -40, 10.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Eyes glowing
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = '#ffffff';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(f * 5, -42, 2.4, 0, Math.PI * 2);
+          ctx.arc(f * 8.5, -42, 2.1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.restore();
+          return;
+        }
+
+        // MANTLE State (Hoisting body up onto platform)
+        if (p.state === 'MANTLE') {
+          const prog = Math.min(1, p.stateTimer / 0.28);
+          ctx.fillStyle = '#000000';
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = '#000000';
+          ctx.lineCap = 'round';
+
+          // Bent arms pressing down on surface
+          ctx.beginPath();
+          ctx.moveTo(-6, -34 - prog * 16); ctx.lineTo(f * 10, -42);
+          ctx.stroke();
+
+          // Torso rising
+          ctx.beginPath();
+          ctx.ellipse(f * 6 * prog, -28 - prog * 20, 8, 12, f * 0.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Head
+          ctx.beginPath();
+          ctx.arc(f * 8 * prog, -44 - prog * 18, 10.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Eyes
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = '#ffffff';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(f * 8 * prog + f * 4, -45 - prog * 18, 2.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
           ctx.restore();
           return;
         }
@@ -1439,7 +2066,6 @@
 
         // 1. LEGS
         if (p.state === 'JUMP' || p.state === 'FALL') {
-          // Tucked legs
           ctx.lineWidth = 6;
           ctx.strokeStyle = '#000000';
           ctx.lineCap = 'round';
@@ -1448,7 +2074,6 @@
           ctx.moveTo(4, -26); ctx.lineTo(8, -12); ctx.lineTo(6, -2);
           ctx.stroke();
         } else {
-          // Running / Idle stance legs
           ctx.lineWidth = 5.5;
           ctx.strokeStyle = '#000000';
           ctx.lineCap = 'round';
@@ -1464,7 +2089,7 @@
           ctx.stroke();
         }
 
-        // 2. TORSO (Inquisitive boy silhouette)
+        // 2. TORSO
         ctx.beginPath();
         ctx.ellipse(bodyLean * 0.5, -34, 7.5, 13, bodyLean * 0.05, 0, Math.PI * 2);
         ctx.fill();
@@ -1474,21 +2099,21 @@
         ctx.strokeStyle = '#000000';
         ctx.beginPath();
         if (p.state === 'PUSH') {
-          // Reaching forward straining against crate
+          // Straining forward against crate / trap
           ctx.moveTo(0, -40); ctx.lineTo(f * 18, -34); ctx.lineTo(f * 24, -30);
         } else if (p.state === 'ROPE') {
-          // Reaching overhead holding rope
+          // Overhead holding rope
           ctx.moveTo(0, -40); ctx.lineTo(f * 4, -58);
         } else if (p.state === 'RUN') {
-          // Athletic arm swing in opposition
+          // Athletic opposing arm swing
           ctx.moveTo(0, -40); ctx.lineTo(-f * cycle * 12, -28);
         } else {
-          // Idle hanging arm
+          // Relaxed standing arm
           ctx.moveTo(0, -40); ctx.lineTo(f * 3, -24);
         }
         ctx.stroke();
 
-        // 4. HEAD WITH CHARACTERISTIC MESSY TUFTS OF HAIR
+        // 4. HEAD WITH MESSY SILHOUETTE HAIR TUFTS
         const headY = -48 + (p.state === 'RUN' ? Math.abs(cycle) * 2 : 0);
         ctx.beginPath();
         ctx.arc(bodyLean * 0.8, headY, 11, 0, Math.PI * 2);
@@ -1502,14 +2127,13 @@
         ctx.quadraticCurveTo(bodyLean * 0.8 + 14, headY - 4, bodyLean * 0.8 + 9, headY + 3);
         ctx.fill();
 
-        // 5. THE ICONIC GLOWING WHITE PIN-EYES
+        // 5. GLOWING WHITE PIN-EYES (LIMBO'S SIGNATURE VISUAL)
         const eyeBlink = p.eyeBlinkTimer < 0.15;
         if (!eyeBlink && p.state !== 'DEAD') {
           ctx.fillStyle = '#ffffff';
           ctx.shadowColor = '#ffffff';
           ctx.shadowBlur = 10;
 
-          // Two round glowing dots looking in movement direction
           const eyeX = bodyLean * 0.8 + f * 5.5;
           ctx.beginPath();
           ctx.arc(eyeX, headY - 1, 2.6, 0, Math.PI * 2);
@@ -1536,6 +2160,7 @@
 
       startBtn.addEventListener('click', () => {
         initAudio();
+        toggleFullscreen();
         cinematicOverlay.style.opacity = '0';
         setTimeout(() => {
           cinematicOverlay.style.display = 'none';
@@ -1549,7 +2174,7 @@
       requestAnimationFrame(loop);
 
       /* ==========================================================================
-         GOETSCHI AI PILOT INTEGRATION (AUTOPILOT & TRAINING HOOKS)
+         GOETSCHI AI PILOT INTEGRATION
          ========================================================================== */
       if (typeof GoetschiAiPilot !== 'undefined') {
         GoetschiAiPilot.register({
@@ -1562,7 +2187,7 @@
               player.vy / 600,
               player.isGrounded ? 1 : 0,
               player.state === 'ROPE' ? 1 : 0,
-              (crates[0].x - player.x) / 1000,
+              (cart.x - player.x) / 1000,
               (spider.x - player.x) / 1000
             ];
           },
