@@ -1,6 +1,17 @@
 {
   "games": [
     {
+      "slug": "limbo",
+      "title": "Limbo",
+      "subtitle": "Schattenwelt der Stille",
+      "description": "Ein atmosphärischer Noir-Platformer. Führe den Jungen durch den nebligen Schattenwald, löse physikalische Rätsel mit Kisten und Seilen und entkomme der Riesenspinne.",
+      "cover": "games/limbo/cover.svg",
+      "accent": "#8a8d93",
+      "tags": ["Atmospheric", "Platformer", "Physics", "Adventure"],
+      "controls": "Touch / Analog-Stick / WASD / Pfeiltasten / Leertaste / Shift",
+      "added": "2026-09-20"
+    },
+    {
       "slug": "mario-bros",
       "title": "Super Goetschi Bros",
       "subtitle": "Klassisches Retro Jump 'n' Run",

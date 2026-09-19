@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Limbo — Schattenwelt</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #050507;
+      color: #e0e0e0;
+      font-family: 'Georgia', serif;
+      touch-action: none;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: auto;
+    }
+
+    /* Minimalist Film-Grain / Atmospheric Overlay */
+    .film-grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      z-index: 5;
+    }
+
+    /* Cinematic Vignette */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, 0.85), inset 0 0 300px 120px rgba(0, 0, 0, 0.65);
+      z-index: 6;
+    }
+
+    /* Top HUD / Controls Info */
+    .hud {
+      position: absolute;
+      top: max(16px, env(safe-area-inset-top));
+      left: max(16px, env(safe-area-inset-left));
+      right: max(16px, env(safe-area-inset-right));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .chapter-tag {
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+      font-family: 'Courier New', monospace;
+    }
+
+    .hud-actions {
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
+
+    .icon-btn {
+      background: rgba(20, 20, 24, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    /* Floating Touch Controls (Mobile) */
+    .touch-zone {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 12;
+    }
+
+    .stick-area {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 50%;
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    .virtual-stick {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      margin-left: -55px;
+      margin-top: -55px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.4) 80%);
+      backdrop-filter: blur(4px);
+      pointer-events: none;
+      display: none;
+    }
+
+    .virtual-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 44px;
+      height: 44px;
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+    }
+
+    /* Right Action Touch Buttons */
+    .action-buttons {
+      position: absolute;
+      right: max(24px, env(safe-area-inset-right));
+      bottom: max(24px, env(safe-area-inset-bottom));
+      display: flex;
+      gap: 18px;
+      pointer-events: auto;
+      align-items: flex-end;
+    }
+
+    .touch-btn {
+      width: 72px;
+      height: 72px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(30, 30, 35, 0.75) 0%, rgba(10, 10, 12, 0.9) 100%);
+      color: rgba(255, 255, 255, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      font-weight: bold;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      touch-action: manipulation;
+      transition: transform 0.08s ease, border-color 0.12s ease;
+    }
+
+    .touch-btn:active, .touch-btn.active {
+      transform: scale(0.92);
+      border-color: #ffffff;
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+    }
+
+    .touch-btn .btn-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .touch-btn--grab {
+      width: 62px;
+      height: 62px;
+      margin-bottom: 24px;
+    }
+
+    /* In-Game Cinematic Story Subtitles / Prompts */
+    .prompt-banner {
+      position: absolute;
+      bottom: max(32px, calc(env(safe-area-inset-bottom) + 24px));
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      color: rgba(255, 255, 255, 0.65);
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+      pointer-events: none;
+      z-index: 15;
+      text-align: center;
+      transition: opacity 0.5s ease;
+      max-width: 80%;
+    }
+
+    /* Start / Death / Chapter Modal Overlay */
+    .cinematic-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 25;
+      backdrop-filter: blur(10px);
+      transition: opacity 0.6s ease;
+    }
+
+    .title-box {
+      text-align: center;
+      max-width: 480px;
+      padding: 24px;
+    }
+
+    .title-logo {
+      font-size: clamp(44px, 8vw, 68px);
+      font-weight: 700;
+      letter-spacing: 0.35em;
+      color: #f2f2f2;
+      margin-bottom: 8px;
+      text-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+    }
+
+    .subtitle {
+      font-size: 13px;
+      letter-spacing: 0.3em;
+      color: #7d828a;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .story-desc {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #9ea3ab;
+      margin-bottom: 40px;
+      font-style: italic;
+    }
+
+    .start-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+      padding: 14px 38px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .start-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #ffffff;
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.35);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="film-grain"></div>
+    <div class="vignette"></div>
+
+    <div class="hud">
+      <div class="chapter-tag" id="chapterTag">KAPITEL I · IM SCHATTENWALD</div>
+      <div class="hud-actions">
+        <button class="icon-btn" id="audioToggle" title="Audio ein/aus">🔊</button>
+        <button class="icon-btn" id="restartBtn" title="Kapitel neu starten">↺</button>
+      </div>
+    </div>
+
+    <!-- Mobile Virtual Touch Controls -->
+    <div class="touch-zone" id="touchControls">
+      <div class="stick-area" id="stickArea">
+        <div class="virtual-stick" id="virtualStick">
+          <div class="virtual-knob" id="virtualKnob"></div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="touch-btn touch-btn--grab" id="grabBtn">
+          <span class="btn-icon">✊</span>
+          <span>GREIFEN</span>
+        </button>
+        <button class="touch-btn" id="jumpBtn">
+          <span class="btn-icon">▲</span>
+          <span>SPRUNG</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="prompt-banner" id="promptBanner">Drücke [A / D] oder Wische zum Laufen</div>
+
+    <!-- Cinematic Start / Chapter Screen -->
+    <div class="cinematic-overlay" id="cinematicOverlay">
+      <div class="title-box">
+        <div class="title-logo">LIMBO</div>
+        <div class="subtitle">Schattenwelt der Stille</div>
+        <p class="story-desc">
+          Ein Junge erwacht im kalten Gras eines finsteren Waldes, unwissend über das Schicksal seiner Schwester. Nur zwei leuchtende Augen durchdringen das dichte Grau …
+        </p>
+        <button class="start-btn" id="startBtn">In die Finsternis</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/goetschi-ai-pilot.js"></script>
+  <script>
+    /* ==========================================================================
+       LIMBO: SCHATTENWELT — GAME ENGINE & CINEMATIC RENDERER
+       ========================================================================== */
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const promptBanner = document.getElementById('promptBanner');
+      const cinematicOverlay = document.getElementById('cinematicOverlay');
+      const startBtn = document.getElementById('startBtn');
+      const audioToggle = document.getElementById('audioToggle');
+      const restartBtn = document.getElementById('restartBtn');
+      const chapterTag = document.getElementById('chapterTag');
+
+      // Virtual Stick Elements
+      const stickArea = document.getElementById('stickArea');
+      const virtualStick = document.getElementById('virtualStick');
+      const virtualKnob = document.getElementById('virtualKnob');
+      const jumpBtn = document.getElementById('jumpBtn');
+      const grabBtn = document.getElementById('grabBtn');
+
+      // Internal Virtual Resolution (16:9 cinematic frame)
+      const VW = 1280;
+      const VH = 720;
+      let scale = 1;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      function resize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        canvas.width = w * window.devicePixelRatio;
+        canvas.height = h * window.devicePixelRatio;
+        scale = Math.min(canvas.width / VW, canvas.height / VH);
+        offsetX = (canvas.width - VW * scale) / 2;
+        offsetY = (canvas.height - VH * scale) / 2;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      /* ==========================================================================
+         WEB AUDIO PROCEDURAL SYNTHESIZER (DARK AMBIENT & FOLEY)
+         ========================================================================== */
+      let audioCtx = null;
+      let soundEnabled = true;
+      let ambientGain = null;
+
+      function initAudio() {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        if (audioCtx && !ambientGain) {
+          startAmbientDrone();
+        }
+      }
+
+      function startAmbientDrone() {
+        if (!audioCtx) return;
+        ambientGain = audioCtx.createGain();
+        ambientGain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+        ambientGain.connect(audioCtx.destination);
+
+        // Sub-bass drone 1 (55Hz)
+        const osc1 = audioCtx.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(55, audioCtx.currentTime);
+        const osc1Gain = audioCtx.createGain();
+        osc1Gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        osc1.connect(osc1Gain);
+        osc1Gain.connect(ambientGain);
+        osc1.start();
+
+        // Dark hollow wind (White noise + bandpass)
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        const whiteNoise = audioCtx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(140, audioCtx.currentTime);
+        filter.Q.setValueAtTime(2.2, audioCtx.currentTime);
+
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+
+        whiteNoise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(ambientGain);
+        whiteNoise.start();
+      }
+
+      const sfx = {
+        step() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(70 + Math.random() * 25, now);
+            osc.frequency.exponentialRampToValueAtTime(30, now + 0.08);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.08);
+          } catch(e){}
+        },
+        jump() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(120, now);
+            osc.frequency.exponentialRampToValueAtTime(240, now + 0.14);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.14);
+          } catch(e){}
+        },
+        land() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(95, now);
+            osc.frequency.exponentialRampToValueAtTime(32, now + 0.18);
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.18);
+          } catch(e){}
+        },
+        dragCrate() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(45 + Math.random() * 15, now);
+            gain.gain.setValueAtTime(0.06, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.1);
+          } catch(e){}
+        },
+        trapSnap() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            // Metallic CLANG
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc1.type = 'sawtooth';
+            osc2.type = 'square';
+            osc1.frequency.setValueAtTime(840, now);
+            osc1.frequency.exponentialRampToValueAtTime(60, now + 0.25);
+            osc2.frequency.setValueAtTime(360, now);
+            osc2.frequency.exponentialRampToValueAtTime(40, now + 0.28);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc1.start(now); osc2.start(now);
+            osc1.stop(now + 0.28); osc2.stop(now + 0.28);
+          } catch(e){}
+        },
+        spiderStomp() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(75, now);
+            osc.frequency.exponentialRampToValueAtTime(25, now + 0.35);
+            gain.gain.setValueAtTime(0.45, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.35);
+          } catch(e){}
+        },
+        death() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(110, now);
+            osc.frequency.exponentialRampToValueAtTime(18, now + 0.6);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.6);
+          } catch(e){}
+        }
+      };
+
+      audioToggle.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        audioToggle.textContent = soundEnabled ? '🔊' : '🔇';
+        if (ambientGain) ambientGain.gain.setValueAtTime(soundEnabled ? 0.22 : 0, audioCtx.currentTime);
+      });
+
+      /* ==========================================================================
+         INPUT CONTROLLER (DUAL WEB & MOBILE WITH FLOATING JOYSTICK)
+         ========================================================================== */
+      const input = {
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+        jump: false,
+        grab: false,
+        analogX: 0
+      };
+
+      // Keyboard
+      window.addEventListener('keydown', (e) => {
+        initAudio();
+        if (e.repeat) return;
+        if (['ArrowLeft', 'KeyA'].includes(e.code)) input.left = true;
+        if (['ArrowRight', 'KeyD'].includes(e.code)) input.right = true;
+        if (['ArrowUp', 'KeyW', 'Space'].includes(e.code)) { input.up = true; input.jump = true; }
+        if (['ArrowDown', 'KeyS'].includes(e.code)) input.down = true;
+        if (['ShiftLeft', 'ShiftRight', 'KeyE', 'ControlLeft', 'KeyF'].includes(e.code)) input.grab = true;
+      });
+
+      window.addEventListener('keyup', (e) => {
+        if (['ArrowLeft', 'KeyA'].includes(e.code)) input.left = false;
+        if (['ArrowRight', 'KeyD'].includes(e.code)) input.right = false;
+        if (['ArrowUp', 'KeyW', 'Space'].includes(e.code)) { input.up = false; input.jump = false; }
+        if (['ArrowDown', 'KeyS'].includes(e.code)) input.down = false;
+        if (['ShiftLeft', 'ShiftRight', 'KeyE', 'ControlLeft', 'KeyF'].includes(e.code)) input.grab = false;
+      });
+
+      // Mobile Touch Floating Joystick
+      let stickPointerId = null;
+      let stickStartX = 0;
+      let stickStartY = 0;
+
+      stickArea.addEventListener('pointerdown', (e) => {
+        initAudio();
+        if (stickPointerId !== null) return;
+        stickPointerId = e.pointerId;
+        try { stickArea.setPointerCapture(e.pointerId); } catch(err){}
+
+        stickStartX = e.clientX;
+        stickStartY = e.clientY;
+        virtualStick.style.display = 'block';
+        virtualStick.style.left = `${stickStartX}px`;
+        virtualStick.style.top = `${stickStartY}px`;
+        updateStick(e.clientX, e.clientY);
+      });
+
+      stickArea.addEventListener('pointermove', (e) => {
+        if (e.pointerId === stickPointerId) {
+          updateStick(e.clientX, e.clientY);
+        }
+      });
+
+      const endStick = (e) => {
+        if (e.pointerId === stickPointerId) {
+          stickPointerId = null;
+          input.analogX = 0;
+          input.left = false;
+          input.right = false;
+          virtualStick.style.display = 'none';
+          virtualKnob.style.transform = 'translate(-50%, -50%)';
+        }
+      };
+      stickArea.addEventListener('pointerup', endStick);
+      stickArea.addEventListener('pointercancel', endStick);
+
+      function updateStick(cx, cy) {
+        const maxR = 48;
+        let dx = cx - stickStartX;
+        let dy = cy - stickStartY;
+        const dist = Math.hypot(dx, dy);
+        if (dist > maxR) {
+          dx = (dx / dist) * maxR;
+          dy = (dy / dist) * maxR;
+        }
+        virtualKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+
+        const normX = dx / maxR;
+        input.analogX = normX;
+        input.left = normX < -0.25;
+        input.right = normX > 0.25;
+      }
+
+      // Mobile Touch Action Buttons
+      jumpBtn.addEventListener('pointerdown', (e) => {
+        initAudio();
+        e.preventDefault();
+        input.jump = true;
+        jumpBtn.classList.add('active');
+      });
+      jumpBtn.addEventListener('pointerup', (e) => {
+        e.preventDefault();
+        input.jump = false;
+        jumpBtn.classList.remove('active');
+      });
+      jumpBtn.addEventListener('pointercancel', (e) => {
+        input.jump = false;
+        jumpBtn.classList.remove('active');
+      });
+
+      grabBtn.addEventListener('pointerdown', (e) => {
+        initAudio();
+        e.preventDefault();
+        input.grab = true;
+        grabBtn.classList.add('active');
+      });
+      grabBtn.addEventListener('pointerup', (e) => {
+        e.preventDefault();
+        input.grab = false;
+        grabBtn.classList.remove('active');
+      });
+      grabBtn.addEventListener('pointercancel', (e) => {
+        input.grab = false;
+        grabBtn.classList.remove('active');
+      });
+
+      /* ==========================================================================
+         WORLD GEOMETRY & PUZZLE ENTITIES
+         ========================================================================== */
+      class BoxProp {
+        constructor(x, y, w, h, mass = 1.0) {
+          this.x = x;
+          this.y = y;
+          this.w = w;
+          this.h = h;
+          this.vx = 0;
+          this.vy = 0;
+          this.mass = mass;
+          this.isGrounded = false;
+          this.grabbed = false;
+        }
+
+        update(dt, solids) {
+          // Gravity
+          this.vy += 1800 * dt;
+          this.x += this.vx * dt;
+          this.y += this.vy * dt;
+
+          // Friction
+          this.vx *= Math.pow(0.001, dt);
+
+          // Solid floor & wall collisions
+          this.isGrounded = false;
+          for (const s of solids) {
+            if (this.x + this.w > s.x && this.x < s.x + s.w) {
+              // Floor
+              if (this.y + this.h >= s.y && this.y + this.h - this.vy * dt <= s.y + 12) {
+                this.y = s.y - this.h;
+                this.vy = 0;
+                this.isGrounded = true;
+              }
+              // Ceiling
+              else if (this.y <= s.y + s.h && this.y - this.vy * dt >= s.y + s.h - 12) {
+                this.y = s.y + s.h;
+                this.vy = 0;
+              }
+            }
+          }
+        }
+
+        draw(ctx, camX) {
+          const rx = this.x - camX;
+          const ry = this.y;
+
+          // Pitch-black silhouette of wooden crate with iron corner brackets
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(rx, ry, this.w, this.h);
+
+          // Subtle internal plank cuts
+          ctx.strokeStyle = '#18191c';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(rx + 2, ry + 2, this.w - 4, this.h - 4);
+          ctx.beginPath();
+          ctx.moveTo(rx + 4, ry + 4); ctx.lineTo(rx + this.w - 4, ry + this.h - 4);
+          ctx.moveTo(rx + this.w - 4, ry + 4); ctx.lineTo(rx + 4, ry + this.h - 4);
+          ctx.stroke();
+        }
+      }
+
+      class RopeProp {
+        constructor(anchorX, anchorY, length = 180) {
+          this.anchorX = anchorX;
+          this.anchorY = anchorY;
+          this.length = length;
+          this.angle = 0;
+          this.angularVelocity = 0;
+        }
+
+        update(dt) {
+          // Pendulum physics
+          const gravity = 9.81 * 80;
+          const angularAcc = (-gravity / this.length) * Math.sin(this.angle);
+          this.angularVelocity += angularAcc * dt;
+          this.angularVelocity *= Math.pow(0.985, dt * 60); // Damping
+          this.angle += this.angularVelocity * dt;
+        }
+
+        getTip() {
+          return {
+            x: this.anchorX + Math.sin(this.angle) * this.length,
+            y: this.anchorY + Math.cos(this.angle) * this.length
+          };
+        }
+
+        draw(ctx, camX) {
+          const tip = this.getTip();
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.moveTo(this.anchorX - camX, this.anchorY);
+          ctx.lineTo(tip.x - camX, tip.y);
+          ctx.stroke();
+
+          // Knot at bottom
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(tip.x - camX, tip.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      class BearTrapProp {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.w = 54;
+          this.h = 24;
+          this.sprung = false;
+        }
+
+        trigger() {
+          if (!this.sprung) {
+            this.sprung = true;
+            sfx.trapSnap();
+          }
+        }
+
+        draw(ctx, camX) {
+          const rx = this.x - camX;
+          const ry = this.y;
+
+          ctx.fillStyle = '#000000';
+          if (!this.sprung) {
+            // Open trap with jagged steel teeth lying flat
+            ctx.fillRect(rx, ry + 16, this.w, 6);
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+              ctx.lineTo(rx + i * 9, ry + 16);
+              ctx.lineTo(rx + i * 9 + 4.5, ry + 5);
+            }
+            ctx.lineTo(rx + this.w, ry + 16);
+            ctx.fill();
+          } else {
+            // Snapped shut vertical jaws
+            ctx.fillRect(rx + 16, ry - 6, 22, 28);
+            ctx.beginPath();
+            ctx.moveTo(rx + 12, ry + 22);
+            ctx.lineTo(rx + 27, ry - 14);
+            ctx.lineTo(rx + 42, ry + 22);
+            ctx.fill();
+          }
+        }
+      }
+
+      class GiantSpiderBoss {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.legPhases = [0, 1.2, 2.5, 3.8];
+          this.defeated = false;
+        }
+
+        update(dt, playerX) {
+          if (this.defeated) return;
+          // Stalk player when near
+          if (playerX > this.x - 500 && playerX < this.x + 400) {
+            const dx = playerX - this.x;
+            this.x += Math.sign(dx) * 45 * dt;
+          }
+          for (let i = 0; i < this.legPhases.length; i++) {
+            this.legPhases[i] += dt * 3.5;
+          }
+        }
+
+        draw(ctx, camX) {
+          const rx = this.x - camX;
+          const ry = this.y;
+
+          // Huge lurking spider body in upper mist
+          ctx.save();
+          ctx.fillStyle = '#040405';
+          ctx.beginPath();
+          ctx.ellipse(rx, ry, 75, 52, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.ellipse(rx - 55, ry + 18, 42, 34, -0.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Glowing Eyes
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = '#ffffff';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(rx - 78, ry + 14, 4.5, 0, Math.PI * 2);
+          ctx.arc(rx - 65, ry + 22, 3.5, 0, Math.PI * 2);
+          ctx.arc(rx - 70, ry + 8, 3.0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // 4 Jointed Stilt Legs reaching down
+          ctx.strokeStyle = '#020202';
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          for (let i = 0; i < 4; i++) {
+            const phase = this.legPhases[i];
+            const legLift = Math.max(0, Math.sin(phase)) * 65;
+            const footX = rx - 180 + i * 110 + Math.cos(phase) * 35;
+            const footY = ry + 440 - legLift;
+            const kneeX = (rx + footX) / 2 + (i < 2 ? -85 : 85);
+            const kneeY = ry - 40;
+
+            ctx.lineWidth = 14 - i * 1.5;
+            ctx.beginPath();
+            ctx.moveTo(rx - 20 + i * 15, ry);
+            ctx.lineTo(kneeX, kneeY);
+            ctx.lineTo(footX, footY);
+            ctx.stroke();
+
+            // Foot impact sound when slamming down
+            if (legLift < 4 && Math.cos(phase) > 0.8 && !this.defeated) {
+              sfx.spiderStomp();
+            }
+          }
+          ctx.restore();
+        }
+      }
+
+      /* ==========================================================================
+         THE BOY (PROTAGONIST STATE MACHINE & SKELETAL RENDERING)
+         ========================================================================== */
+      const player = {
+        x: 80,
+        y: 440,
+        w: 24,
+        h: 56,
+        vx: 0,
+        vy: 0,
+        facing: 1, // 1 = right, -1 = left
+        state: 'WAKEUP', // WAKEUP, IDLE, RUN, JUMP, FALL, LAND, PUSH, ROPE, DEAD
+        stateTimer: 0,
+        animFrame: 0,
+        isGrounded: false,
+        grabbedProp: null,
+        rope: null,
+        ropeT: 0,
+        eyeBlinkTimer: 3.5,
+        checkpointX: 80,
+        checkpointY: 440,
+        deaths: 0
+      };
+
+      /* ==========================================================================
+         WORLD GEOMETRY DEFINITION (CHAPTER 1: DIE SCHATTENWELT)
+         ========================================================================== */
+      const solids = [
+        // Zone 1: Forest Floor
+        { x: -200, y: 560, w: 750, h: 400 },
+        // Zone 2: The Cliff (requires pushing the wooden cart)
+        { x: 550, y: 420, w: 650, h: 540 },
+        // Zone 3: Flat Clearing with Bear Trap
+        { x: 1200, y: 420, w: 700, h: 540 },
+        // Zone 4: Pit with Hanging Rope
+        { x: 1900, y: 680, w: 420, h: 300 }, // deep water pit
+        { x: 2320, y: 420, w: 800, h: 540 }, // far ledge
+        // Zone 5: Spider Clearing
+        { x: 3120, y: 440, w: 1200, h: 520 },
+      ];
+
+      const crates = [
+        new BoxProp(410, 480, 52, 52, 1.2), // Cart to climb cliff
+        new BoxProp(1320, 340, 48, 48, 1.0), // Crate to disarm trap
+      ];
+
+      const traps = [
+        new BearTrapProp(1550, 412),
+      ];
+
+      const rope = new RopeProp(2120, 160, 260);
+      const spider = new GiantSpiderBoss(3380, 160);
+
+      // Ambient Drifting Spores
+      const spores = [];
+      for (let i = 0; i < 45; i++) {
+        spores.push({
+          x: Math.random() * 4000,
+          y: Math.random() * 650,
+          r: 1.2 + Math.random() * 2.0,
+          vx: 8 + Math.random() * 14,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+
+      // Camera
+      let camX = 0;
+      let camY = 0;
+
+      /* ==========================================================================
+         PHYSICS & PLAYER CONTROLLER
+         ========================================================================== */
+      let lastTime = performance.now();
+      let stepTimer = 0;
+
+      function update(dt) {
+        if (player.state === 'DEAD') {
+          player.stateTimer += dt;
+          if (player.stateTimer > 1.8) {
+            respawnPlayer();
+          }
+          return;
+        }
+
+        // 1. Wakeup Intro Animation
+        if (player.state === 'WAKEUP') {
+          player.stateTimer += dt;
+          if (player.stateTimer > 2.2 || input.left || input.right || input.jump) {
+            player.state = 'IDLE';
+            promptBanner.textContent = 'Renne vorwärts [A/D] · Springe [W/Leertaste]';
+          }
+          return;
+        }
+
+        // 2. Rope Interaction
+        if (player.state === 'ROPE') {
+          rope.update(dt);
+          const tip = rope.getTip();
+          player.x = tip.x - player.w / 2;
+          player.y = tip.y - player.h * 0.8;
+          player.vx = 0;
+          player.vy = 0;
+
+          // Swing momentum input
+          if (input.left) rope.angularVelocity -= 1.8 * dt;
+          if (input.right) rope.angularVelocity += 1.8 * dt;
+
+          // Jump off rope
+          if (input.jump && !player.jumpPrev) {
+            player.state = 'JUMP';
+            player.rope = null;
+            player.vy = -540;
+            player.vx = (rope.angularVelocity > 0 ? 1 : -1) * Math.min(480, Math.abs(rope.angularVelocity * rope.length * 1.5));
+            sfx.jump();
+          }
+          player.jumpPrev = input.jump;
+          return;
+        }
+
+        // Check if player reaches rope
+        if (input.grab || input.jump) {
+          const tip = rope.getTip();
+          const distToRope = Math.hypot((player.x + player.w / 2) - tip.x, (player.y + player.h / 2) - tip.y);
+          if (distToRope < 48 && player.y > rope.anchorY + 60) {
+            player.state = 'ROPE';
+            player.rope = rope;
+            sfx.land();
+            return;
+          }
+        }
+
+        // 3. Movement & Acceleration
+        const moveAxis = input.analogX !== 0 ? input.analogX : (input.right ? 1 : 0) - (input.left ? 1 : 0);
+        const targetSpeed = moveAxis * 280;
+        const accel = player.isGrounded ? 18 : 6;
+        player.vx += (targetSpeed - player.vx) * Math.min(1, accel * dt);
+
+        if (Math.abs(moveAxis) > 0.1) {
+          player.facing = moveAxis > 0 ? 1 : -1;
+        }
+
+        // Gravity
+        player.vy += 1750 * dt;
+        player.x += player.vx * dt;
+        player.y += player.vy * dt;
+
+        // Footsteps Foley
+        if (player.isGrounded && Math.abs(player.vx) > 30) {
+          stepTimer += dt * (Math.abs(player.vx) / 140);
+          if (stepTimer >= 1.0) {
+            stepTimer = 0;
+            sfx.step();
+          }
+        }
+
+        // 4. Solid Collisions (World Floor & Walls)
+        player.isGrounded = false;
+        for (const s of solids) {
+          if (player.x + player.w > s.x && player.x < s.x + s.w) {
+            // Landing on ground
+            if (player.y + player.h >= s.y && player.y + player.h - player.vy * dt <= s.y + 16) {
+              player.y = s.y - player.h;
+              if (player.vy > 400) sfx.land();
+              player.vy = 0;
+              player.isGrounded = true;
+            }
+          }
+          // Horizontal Wall block
+          if (player.y + player.h > s.y + 10 && player.y < s.y + s.h) {
+            if (player.vx > 0 && player.x + player.w >= s.x && player.x < s.x) {
+              player.x = s.x - player.w;
+              player.vx = 0;
+            } else if (player.vx < 0 && player.x <= s.x + s.w && player.x + player.w > s.x + s.w) {
+              player.x = s.x + s.w;
+              player.vx = 0;
+            }
+          }
+        }
+
+        // 5. Box Grabbing & Pushing
+        let pushing = false;
+        for (const box of crates) {
+          box.update(dt, solids);
+
+          // Near box check
+          const nearX = Math.abs((player.x + player.w / 2) - (box.x + box.w / 2)) < (player.w / 2 + box.w / 2 + 14);
+          const sameY = Math.abs((player.y + player.h / 2) - (box.y + box.h / 2)) < 30;
+
+          if (nearX && sameY) {
+            if (input.grab) {
+              pushing = true;
+              box.vx = player.vx * 0.75;
+              player.vx *= 0.75;
+              sfx.dragCrate();
+            } else {
+              // Body pushing
+              if (player.vx > 0 && player.x + player.w >= box.x && player.x < box.x) {
+                player.x = box.x - player.w;
+                box.vx = Math.max(box.vx, player.vx * 0.85);
+                sfx.dragCrate();
+              } else if (player.vx < 0 && player.x <= box.x + box.w && player.x > box.x) {
+                player.x = box.x + box.w;
+                box.vx = Math.min(box.vx, player.vx * 0.85);
+                sfx.dragCrate();
+              }
+            }
+          }
+
+          // Standing on top of box
+          if (player.x + player.w > box.x && player.x < box.x + box.w) {
+            if (player.y + player.h >= box.y && player.y + player.h - player.vy * dt <= box.y + 14) {
+              player.y = box.y - player.h;
+              player.vy = 0;
+              player.isGrounded = true;
+            }
+          }
+
+          // Box disarms bear traps
+          for (const trap of traps) {
+            if (!trap.sprung && box.x + box.w > trap.x && box.x < trap.x + trap.w) {
+              trap.trigger();
+              promptBanner.textContent = 'Bärenfalle entschärft! Weg ist frei!';
+            }
+          }
+        }
+
+        // 6. Bear Trap Hazard
+        for (const trap of traps) {
+          if (!trap.sprung) {
+            if (player.x + player.w > trap.x + 8 && player.x < trap.x + trap.w - 8) {
+              if (player.y + player.h >= trap.y) {
+                trap.trigger();
+                killPlayer('In die Bärenfalle getreten …');
+              }
+            }
+          }
+        }
+
+        // 7. Water Drowning Hazard in Pit
+        if (player.y > 660) {
+          killPlayer('In den dunklen Abgrund gestürzt …');
+        }
+
+        // 8. Spider Encounter
+        spider.update(dt, player.x);
+        if (player.x > spider.x - 60 && player.x < spider.x + 80 && !spider.defeated) {
+          killPlayer('Von der Riesenspinne ergriffen …');
+        }
+
+        // 9. Jumping
+        if (input.jump && player.isGrounded && !player.jumpPrev) {
+          player.vy = -560;
+          player.isGrounded = false;
+          sfx.jump();
+        }
+        player.jumpPrev = input.jump;
+
+        // 10. Update Animation States
+        if (pushing) {
+          player.state = 'PUSH';
+        } else if (!player.isGrounded) {
+          player.state = player.vy < 0 ? 'JUMP' : 'FALL';
+        } else if (Math.abs(player.vx) > 35) {
+          player.state = 'RUN';
+        } else {
+          player.state = 'IDLE';
+        }
+
+        player.animFrame += dt * (player.state === 'RUN' ? 14 : 4);
+
+        // Blinking
+        player.eyeBlinkTimer -= dt;
+        if (player.eyeBlinkTimer <= 0) {
+          player.eyeBlinkTimer = 2.5 + Math.random() * 3.5;
+        }
+
+        // Dynamic Camera Tracking with smooth deadzone
+        const targetCamX = player.x - VW * 0.38;
+        camX += (targetCamX - camX) * Math.min(1, 4.5 * dt);
+
+        // Checkpoints
+        if (player.x > 620 && player.checkpointX < 620) {
+          player.checkpointX = 640;
+          player.checkpointY = 360;
+          promptBanner.textContent = 'Klippe erklommen · Kontrollpunkt';
+        }
+        if (player.x > 1750 && player.checkpointX < 1750) {
+          player.checkpointX = 1760;
+          player.checkpointY = 360;
+          promptBanner.textContent = 'Schlucht erreicht · Schwinge über das Seil!';
+        }
+        if (player.x > 2500 && player.checkpointX < 2500) {
+          player.checkpointX = 2520;
+          player.checkpointY = 360;
+          chapterTag.textContent = 'KAPITEL II · DER SCHATTEN DER SPINNE';
+          promptBanner.textContent = 'Vorsicht vor den Spinnenbeinen! Renne darunter durch!';
+        }
+        if (player.x > 3800) {
+          promptBanner.textContent = 'KAPITEL I GESCHAFFT! In die tiefen Schatten …';
+        }
+      }
+
+      function killPlayer(reason) {
+        if (player.state === 'DEAD') return;
+        player.state = 'DEAD';
+        player.stateTimer = 0;
+        player.deaths++;
+        sfx.death();
+        promptBanner.textContent = reason;
+      }
+
+      function respawnPlayer() {
+        player.x = player.checkpointX;
+        player.y = player.checkpointY;
+        player.vx = 0;
+        player.vy = 0;
+        player.state = 'IDLE';
+        player.stateTimer = 0;
+      }
+
+      /* ==========================================================================
+         CINEMATIC RENDER PIPELINE (PARALLAX, GOD RAYS, SILHOUETTES)
+         ========================================================================== */
+      function render() {
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.translate(offsetX, offsetY);
+        ctx.scale(scale, scale);
+
+        // 1. SKY & DISTANT AMBIENT GLOW
+        const skyGrad = ctx.createRadialGradient(VW * 0.45, VH * 0.25, 60, VW * 0.5, VH * 0.5, VW * 0.8);
+        skyGrad.addColorStop(0, '#4d5158');
+        skyGrad.addColorStop(0.45, '#26282d');
+        skyGrad.addColorStop(0.85, '#101114');
+        skyGrad.addColorStop(1, '#050608');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, VW, VH);
+
+        // 2. LAYER 1: DISTANT MISTY MOUNTAINS & TALL PINES (0.08x Speed)
+        const l1X = camX * 0.08;
+        ctx.fillStyle = '#181a1d';
+        ctx.beginPath();
+        ctx.moveTo(-100, VH);
+        for (let x = -200; x < VW + 400; x += 180) {
+          const mx = x - (l1X % 180);
+          ctx.lineTo(mx, 320 + Math.sin(x * 0.005) * 45);
+          ctx.lineTo(mx + 90, 240 + Math.cos(x * 0.004) * 35);
+        }
+        ctx.lineTo(VW + 200, VH);
+        ctx.fill();
+
+        // 3. VOLUMETRIC GOD RAYS (LIGHT SHAFTS STREAMING FROM CANOPY)
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const rayGrad = ctx.createLinearGradient(0, 0, 400, VH);
+        rayGrad.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
+        rayGrad.addColorStop(0.6, 'rgba(255, 255, 255, 0.03)');
+        rayGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = rayGrad;
+
+        const rayShift = Math.sin(performance.now() * 0.0008) * 20;
+        ctx.beginPath();
+        ctx.moveTo(220 + rayShift, 0); ctx.lineTo(380 + rayShift, 0);
+        ctx.lineTo(580 + rayShift, VH); ctx.lineTo(360 + rayShift, VH);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(680 + rayShift * 0.7, 0); ctx.lineTo(820 + rayShift * 0.7, 0);
+        ctx.lineTo(1100 + rayShift * 0.7, VH); ctx.lineTo(920 + rayShift * 0.7, VH);
+        ctx.fill();
+        ctx.restore();
+
+        // 4. LAYER 2: MID-GROUND DEAD GNARLED TREES & WIRES (0.28x Speed)
+        const l2X = camX * 0.28;
+        ctx.fillStyle = '#0f1013';
+        for (let x = -300; x < VW + 400; x += 320) {
+          const tx = x - (l2X % 320);
+          // Gnarled Tree Trunk
+          ctx.beginPath();
+          ctx.moveTo(tx, VH);
+          ctx.quadraticCurveTo(tx + 25, 380, tx + 15, 120);
+          ctx.lineTo(tx + 45, 120);
+          ctx.quadraticCurveTo(tx + 55, 380, tx + 75, VH);
+          ctx.fill();
+
+          // Branches
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = '#0f1013';
+          ctx.beginPath();
+          ctx.moveTo(tx + 22, 280); ctx.quadraticCurveTo(tx - 60, 220, tx - 95, 240);
+          ctx.moveTo(tx + 40, 210); ctx.quadraticCurveTo(tx + 110, 160, tx + 140, 180);
+          ctx.stroke();
+        }
+
+        // 5. DRIFTING MIST CLOUDS
+        ctx.fillStyle = 'rgba(45, 48, 54, 0.25)';
+        for (let i = 0; i < 4; i++) {
+          const mx = ((i * 380 - camX * 0.4 + performance.now() * 0.015) % 1800) - 200;
+          ctx.beginPath();
+          ctx.ellipse(mx, 420 + Math.sin(i * 1.5) * 20, 260, 65, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 6. BOSS: GIANT SPIDER
+        spider.draw(ctx, camX);
+
+        // 7. LAYER 3: FOREGROUND GAMEPLAY SILHOUETTES (SOLIDS, ROPE, BOXES)
+        ctx.fillStyle = '#000000';
+        for (const s of solids) {
+          ctx.fillRect(s.x - camX, s.y, s.w, s.h);
+        }
+
+        // Grass blades on ledges
+        ctx.fillStyle = '#000000';
+        for (let x = -200; x < 4000; x += 22) {
+          const gx = x - camX;
+          if (gx > -40 && gx < VW + 40) {
+            // Find ground Y
+            const solid = solids.find(s => x >= s.x && x <= s.x + s.w);
+            if (solid && solid.y < 600) {
+              const h = 8 + (Math.sin(x) * 6);
+              ctx.beginPath();
+              ctx.moveTo(gx, solid.y);
+              ctx.quadraticCurveTo(gx + 3, solid.y - h, gx + 6, solid.y);
+              ctx.fill();
+            }
+          }
+        }
+
+        // Props: Traps, Crate, Rope
+        for (const trap of traps) trap.draw(ctx, camX);
+        rope.draw(ctx, camX);
+        for (const box of crates) box.draw(ctx, camX);
+
+        // 8. RENDER THE BOY (PROTAGONIST SILHOUETTE)
+        drawTheBoy(ctx, player, camX);
+
+        // 9. DRIFTING FOREST SPORES / FIREFLIES
+        ctx.fillStyle = '#ffffff';
+        for (const p of spores) {
+          const px = ((p.x - camX * 0.9 + performance.now() * 0.02) % 4000);
+          const py = p.y + Math.sin(p.phase + performance.now() * 0.002) * 16;
+          if (px > -20 && px < VW + 20) {
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(px, py, p.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+        }
+
+        // 10. LAYER 4: NEAR FOREGROUND BLURRED SILHOUETTES (1.35x Speed)
+        const l4X = camX * 1.35;
+        ctx.fillStyle = '#000000';
+        for (let x = -400; x < VW + 500; x += 650) {
+          const fx = x - (l4X % 650);
+          // Hanging root / foreground branch passing close to lens
+          ctx.beginPath();
+          ctx.moveTo(fx, 0);
+          ctx.quadraticCurveTo(fx + 25, 140, fx + 15, 240);
+          ctx.lineTo(fx + 35, 235);
+          ctx.quadraticCurveTo(fx + 45, 140, fx + 60, 0);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      /* ==========================================================================
+         THE BOY: SILHOUETTE ANATOMY & EYE GLOW
+         ========================================================================== */
+      function drawTheBoy(ctx, p, camX) {
+        const px = p.x - camX;
+        const py = p.y;
+        const f = p.facing;
+
+        ctx.save();
+        ctx.translate(px + p.w / 2, py + p.h);
+
+        // WAKEUP State
+        if (p.state === 'WAKEUP') {
+          const t = Math.min(1, p.stateTimer / 2.0);
+          ctx.fillStyle = '#000000';
+          // Lying in grass -> sitting up
+          ctx.beginPath();
+          ctx.ellipse(0, -12 * t, 22, 10, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Head
+          ctx.beginPath();
+          ctx.arc(f * 10 * t, -22 * t - 6, 11, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Eyes glowing softly through grass
+          if (p.stateTimer > 0.6) {
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(f * 13 * t, -22 * t - 6, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+          ctx.restore();
+          return;
+        }
+
+        // RUNNING / WALKING CYCLE
+        const cycle = p.state === 'RUN' ? Math.sin(p.animFrame) : 0;
+        const legLean = p.state === 'RUN' ? cycle * 16 : 0;
+        const bodyLean = p.state === 'RUN' ? f * 6 : p.state === 'PUSH' ? f * 12 : 0;
+
+        ctx.fillStyle = '#000000';
+
+        // 1. LEGS
+        if (p.state === 'JUMP' || p.state === 'FALL') {
+          // Tucked legs
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = '#000000';
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(-4, -26); ctx.lineTo(-8, -14); ctx.lineTo(-4, -4);
+          ctx.moveTo(4, -26); ctx.lineTo(8, -12); ctx.lineTo(6, -2);
+          ctx.stroke();
+        } else {
+          // Running / Idle stance legs
+          ctx.lineWidth = 5.5;
+          ctx.strokeStyle = '#000000';
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          // Back leg
+          ctx.moveTo(-3, -26);
+          ctx.lineTo(-3 - legLean, -13);
+          ctx.lineTo(-3 - legLean * 1.3, 0);
+          // Front leg
+          ctx.moveTo(3, -26);
+          ctx.lineTo(3 + legLean, -13);
+          ctx.lineTo(3 + legLean * 1.3, 0);
+          ctx.stroke();
+        }
+
+        // 2. TORSO (Inquisitive boy silhouette)
+        ctx.beginPath();
+        ctx.ellipse(bodyLean * 0.5, -34, 7.5, 13, bodyLean * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. ARMS
+        ctx.lineWidth = 4.5;
+        ctx.strokeStyle = '#000000';
+        ctx.beginPath();
+        if (p.state === 'PUSH') {
+          // Reaching forward straining against crate
+          ctx.moveTo(0, -40); ctx.lineTo(f * 18, -34); ctx.lineTo(f * 24, -30);
+        } else if (p.state === 'ROPE') {
+          // Reaching overhead holding rope
+          ctx.moveTo(0, -40); ctx.lineTo(f * 4, -58);
+        } else if (p.state === 'RUN') {
+          // Athletic arm swing in opposition
+          ctx.moveTo(0, -40); ctx.lineTo(-f * cycle * 12, -28);
+        } else {
+          // Idle hanging arm
+          ctx.moveTo(0, -40); ctx.lineTo(f * 3, -24);
+        }
+        ctx.stroke();
+
+        // 4. HEAD WITH CHARACTERISTIC MESSY TUFTS OF HAIR
+        const headY = -48 + (p.state === 'RUN' ? Math.abs(cycle) * 2 : 0);
+        ctx.beginPath();
+        ctx.arc(bodyLean * 0.8, headY, 11, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Messy hair silhouette tufts
+        ctx.beginPath();
+        ctx.moveTo(bodyLean * 0.8 - 9, headY - 4);
+        ctx.quadraticCurveTo(bodyLean * 0.8 - 14, headY - 14, bodyLean * 0.8 - 3, headY - 13);
+        ctx.quadraticCurveTo(bodyLean * 0.8 + 6, headY - 17, bodyLean * 0.8 + 11, headY - 10);
+        ctx.quadraticCurveTo(bodyLean * 0.8 + 14, headY - 4, bodyLean * 0.8 + 9, headY + 3);
+        ctx.fill();
+
+        // 5. THE ICONIC GLOWING WHITE PIN-EYES
+        const eyeBlink = p.eyeBlinkTimer < 0.15;
+        if (!eyeBlink && p.state !== 'DEAD') {
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = '#ffffff';
+          ctx.shadowBlur = 10;
+
+          // Two round glowing dots looking in movement direction
+          const eyeX = bodyLean * 0.8 + f * 5.5;
+          ctx.beginPath();
+          ctx.arc(eyeX, headY - 1, 2.6, 0, Math.PI * 2);
+          ctx.arc(eyeX + f * 4.5, headY - 1, 2.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.restore();
+      }
+
+      /* ==========================================================================
+         GAME LOOP
+         ========================================================================== */
+      function loop(time) {
+        const dt = Math.min(0.05, (time - lastTime) / 1000);
+        lastTime = time;
+
+        update(dt);
+        render();
+
+        requestAnimationFrame(loop);
+      }
+
+      startBtn.addEventListener('click', () => {
+        initAudio();
+        cinematicOverlay.style.opacity = '0';
+        setTimeout(() => {
+          cinematicOverlay.style.display = 'none';
+        }, 600);
+      });
+
+      restartBtn.addEventListener('click', () => {
+        respawnPlayer();
+      });
+
+      requestAnimationFrame(loop);
+
+      /* ==========================================================================
+         GOETSCHI AI PILOT INTEGRATION (AUTOPILOT & TRAINING HOOKS)
+         ========================================================================== */
+      if (typeof GoetschiAiPilot !== 'undefined') {
+        GoetschiAiPilot.register({
+          gameId: 'limbo',
+          getObservation: () => {
+            return [
+              player.x / 4000,
+              player.y / VH,
+              player.vx / 300,
+              player.vy / 600,
+              player.isGrounded ? 1 : 0,
+              player.state === 'ROPE' ? 1 : 0,
+              (crates[0].x - player.x) / 1000,
+              (spider.x - player.x) / 1000
+            ];
+          },
+          applyAction: (actionIndex) => {
+            // Actions: 0=Left, 1=Right, 2=Jump, 3=Grab
+            input.left = (actionIndex === 0);
+            input.right = (actionIndex === 1);
+            input.jump = (actionIndex === 2);
+            input.grab = (actionIndex === 3);
+          },
+          getScore: () => player.x,
+          isGameOver: () => player.state === 'DEAD',
+          restart: () => respawnPlayer()
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

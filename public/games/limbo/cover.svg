@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient: Deep Hazy Grayscale -->
+    <radialGradient id="skyGlow" cx="50%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#4a4d52"/>
+      <stop offset="45%" stop-color="#242629"/>
+      <stop offset="85%" stop-color="#0e0f11"/>
+      <stop offset="100%" stop-color="#050506"/>
+    </radialGradient>
+
+    <!-- Volumetric God Rays Gradient -->
+    <linearGradient id="godRay" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Mist Gradient -->
+    <linearGradient id="mistGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3a3d42" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#4a4e54" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#121315" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <!-- Eye Glow -->
+    <filter id="eyeGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Film Grain / Noise Simulation -->
+    <filter id="vignette">
+      <feRadialGradient id="vignetteGrad" cx="50%" cy="50%" r="70%">
+        <stop offset="40%" stop-color="#000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#000" stop-opacity="0.85"/>
+      </feRadialGradient>
+    </filter>
+  </defs>
+
+  <!-- Sky & Ambient Backing -->
+  <rect width="800" height="500" fill="url(#skyGlow)"/>
+
+  <!-- Distant Mountains & Pine Canopy (Layer 1 - Faint) -->
+  <path d="M-50,340 Q120,270 280,310 T620,290 T850,330 L850,500 L-50,500 Z" fill="#1b1d20" opacity="0.6"/>
+  <g fill="#16181b" opacity="0.5">
+    <!-- Distant Pines -->
+    <polygon points="60,340 75,230 90,340"/>
+    <polygon points="110,330 122,250 134,330"/>
+    <polygon points="210,320 225,210 240,320"/>
+    <polygon points="250,330 262,240 274,330"/>
+    <polygon points="480,310 495,200 510,310"/>
+    <polygon points="530,320 542,230 554,320"/>
+    <polygon points="680,330 695,220 710,330"/>
+  </g>
+
+  <!-- Volumetric God Rays Breaking Through Canopy -->
+  <polygon points="180,0 260,0 420,500 240,500" fill="url(#godRay)"/>
+  <polygon points="340,0 440,0 680,500 480,500" fill="url(#godRay)" opacity="0.8"/>
+  <polygon points="80,0 150,0 290,500 160,500" fill="url(#godRay)" opacity="0.5"/>
+
+  <!-- Midground Gnarled Trees & Hanging Ropes (Layer 2) -->
+  <g fill="#0e0f11">
+    <!-- Twisted Tree Left -->
+    <path d="M-20,500 Q40,320 30,120 Q20,60 10,0 L70,0 Q60,80 80,180 Q110,290 140,500 Z"/>
+    <path d="M45,210 Q120,170 180,190 Q120,200 55,230 Z"/>
+    <path d="M60,140 Q130,90 160,110 Q110,120 55,160 Z"/>
+
+    <!-- Twisted Tree Right -->
+    <path d="M820,500 Q740,300 750,100 L690,0 Q710,120 680,240 Q650,360 620,500 Z"/>
+    <path d="M720,200 Q620,150 560,170 Q640,180 705,220 Z"/>
+
+    <!-- Hanging Noose / Rope Silhouette -->
+    <line x1="175" y1="190" x2="178" y2="340" stroke="#0e0f11" stroke-width="2"/>
+    <ellipse cx="178" cy="345" rx="5" ry="8" fill="none" stroke="#0e0f11" stroke-width="2"/>
+  </g>
+
+  <!-- Giant Spider Silhouette Overhead in the Fog -->
+  <g fill="#0a0a0c" stroke="#0a0a0c" stroke-linecap="round">
+    <!-- Spider Body lurking in top mist -->
+    <ellipse cx="620" cy="90" rx="36" ry="24" opacity="0.85"/>
+    <ellipse cx="585" cy="100" rx="20" ry="16" opacity="0.85"/>
+    <!-- Glowing Spider Eyes -->
+    <circle cx="576" cy="98" r="2.5" fill="#ffffff" opacity="0.75" filter="url(#eyeGlow)"/>
+    <circle cx="582" cy="102" r="2" fill="#ffffff" opacity="0.75" filter="url(#eyeGlow)"/>
+
+    <!-- Long Spindly Jointed Legs reaching down -->
+    <polyline points="610,80 520,70 480,240 440,380" stroke-width="7" fill="none" opacity="0.9"/>
+    <polyline points="630,85 570,50 530,190 490,390" stroke-width="6" fill="none" opacity="0.85"/>
+    <polyline points="640,95 720,60 760,180 730,360" stroke-width="6" fill="none" opacity="0.9"/>
+  </g>
+
+  <!-- Foreground Forest Floor (Layer 3 - Solid Black) -->
+  <path d="M-20,380 Q140,410 320,375 Q520,340 820,400 L820,520 L-20,520 Z" fill="#000000"/>
+  
+  <!-- Grass Blades & Reeds Silhouette -->
+  <g fill="#000000">
+    <path d="M120,395 Q115,360 110,345 Q122,365 128,395 Z"/>
+    <path d="M130,395 Q135,355 142,338 Q140,365 138,395 Z"/>
+    <path d="M210,385 Q205,350 200,335 Q212,355 218,385 Z"/>
+    <path d="M290,380 Q285,340 280,320 Q292,345 298,380 Z"/>
+    <path d="M305,380 Q312,335 320,315 Q318,345 315,380 Z"/>
+    <path d="M420,365 Q415,330 410,310 Q422,335 428,365 Z"/>
+    <path d="M560,370 Q565,330 572,310 Q570,340 568,370 Z"/>
+    <!-- Bear Trap Silhouette -->
+    <path d="M240,384 L244,374 L248,384 L252,374 L256,384 L260,374 L264,384 Z"/>
+  </g>
+
+  <!-- THE BOY (Limbo Protagonist Silhouette) -->
+  <g transform="translate(360, 275)">
+    <!-- Shadow beneath feet -->
+    <ellipse cx="14" cy="98" rx="20" ry="4" fill="#000" opacity="0.6"/>
+
+    <!-- Legs with walking stance -->
+    <path d="M9,64 L5,98 L1,98 L6,64 Z" fill="#000000"/>
+    <path d="M17,64 L25,97 L29,97 L21,64 Z" fill="#000000"/>
+
+    <!-- Torso with slight inquisitive forward lean -->
+    <path d="M7,34 Q14,32 21,34 L20,68 Q13,70 7,68 Z" fill="#000000"/>
+
+    <!-- Arms hanging naturally -->
+    <path d="M6,36 Q0,54 3,68 Q5,68 8,40 Z" fill="#000000"/>
+    <path d="M21,36 Q26,52 24,66 Q22,66 19,40 Z" fill="#000000"/>
+
+    <!-- Head with messy tufts of hair -->
+    <ellipse cx="14" cy="20" rx="14" ry="15" fill="#000000"/>
+    <!-- Hair tufts -->
+    <path d="M4,12 Q1,5 6,4 Q12,1 18,3 Q26,3 27,9 Q29,14 26,18 Z" fill="#000000"/>
+
+    <!-- THE ICONIC GLOWING WHITE PIN-EYES -->
+    <circle cx="17" cy="18" r="3.2" fill="#ffffff" filter="url(#eyeGlow)"/>
+    <circle cx="23" cy="18" r="3.0" fill="#ffffff" filter="url(#eyeGlow)"/>
+    <!-- Inner pure white core -->
+    <circle cx="17" cy="18" r="1.8" fill="#ffffff"/>
+    <circle cx="23" cy="18" r="1.7" fill="#ffffff"/>
+  </g>
+
+  <!-- Drifting Spores / Fireflies -->
+  <g fill="#ffffff" opacity="0.75">
+    <circle cx="220" cy="310" r="1.8" filter="url(#eyeGlow)"/>
+    <circle cx="280" cy="260" r="2.2" filter="url(#eyeGlow)"/>
+    <circle cx="340" cy="340" r="1.5" filter="url(#eyeGlow)"/>
+    <circle cx="460" cy="280" r="2.0" filter="url(#eyeGlow)"/>
+    <circle cx="510" cy="230" r="1.6" filter="url(#eyeGlow)"/>
+    <circle cx="600" cy="310" r="2.4" filter="url(#eyeGlow)"/>
+  </g>
+
+  <!-- Foreground Out-of-Focus Hanging Tendril / Branch (Layer 4) -->
+  <g fill="#000000" opacity="0.95">
+    <path d="M0,0 Q90,40 140,0 L0,0 Z"/>
+    <path d="M90,20 Q105,70 95,110 Q92,70 85,25 Z"/>
+    <path d="M120,15 Q135,90 125,140 Q122,90 115,20 Z"/>
+  </g>
+
+  <!-- Cinematic Mist Band across Lower Third -->
+  <rect y="310" width="800" height="190" fill="url(#mistGrad)"/>
+
+  <!-- Subtle Vignette & Frame Darkness -->
+  <rect width="800" height="500" fill="none" stroke="#000000" stroke-width="40" opacity="0.45"/>
+
+  <!-- Typographic Title Banner (Limbo Minimalist Aesthetic) -->
+  <text x="400" y="462" text-anchor="middle" font-family="'Georgia', 'Times New Roman', serif" font-size="44" font-weight="bold" letter-spacing="16" fill="#f0f0f0" opacity="0.92">LIMBO</text>
+  <text x="400" y="482" text-anchor="middle" font-family="'Courier New', monospace" font-size="11" font-weight="bold" letter-spacing="6" fill="#9e9e9e" opacity="0.75">SCHATTENWELT</text>
+</svg>
