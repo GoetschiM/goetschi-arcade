@@ -1129,23 +1129,41 @@
          SISTER VISION (ETHEREAL GLOWING GHOST ENTITY)
          ========================================================================== */
       class SisterGhost {
-        constructor(x, y, storyHint) {
+        constructor(x, y, storyHint, memoryTitle = '') {
           this.x = x;
           this.y = y;
           this.storyHint = storyHint;
+          this.memoryTitle = memoryTitle;
           this.alpha = 1.0;
           this.dissolved = false;
+          this.butterflies = [];
+          for (let i = 0; i < 6; i++) {
+            this.butterflies.push({
+              angle: (i / 6) * Math.PI * 2,
+              dist: 16 + Math.random() * 20,
+              speed: 1.1 + Math.random() * 1.4,
+              phase: Math.random() * Math.PI * 2
+            });
+          }
         }
 
         update(dt, playerX) {
-          if (!this.dissolved && playerX > this.x - 170) {
+          for (const b of this.butterflies) {
+            b.angle += b.speed * dt;
+            b.phase += dt * 7;
+          }
+
+          if (!this.dissolved && playerX > this.x - 175) {
             this.dissolved = true;
             sfx.sisterChime();
-            spawnSpiritMoths(this.x, this.y - 24, 22);
+            spawnSpiritMoths(this.x, this.y - 28, 26);
             promptBanner.textContent = this.storyHint;
+            if (this.memoryTitle) {
+              chapterTag.textContent = this.memoryTitle;
+            }
           }
           if (this.dissolved && this.alpha > 0) {
-            this.alpha = Math.max(0, this.alpha - 2.5 * dt);
+            this.alpha = Math.max(0, this.alpha - 1.8 * dt);
           }
         }
 
@@ -1153,42 +1171,76 @@
           if (this.alpha <= 0) return;
           const rx = this.x - camX;
           const ry = this.y;
+          const time = performance.now() * 0.003;
 
           ctx.save();
-          ctx.globalAlpha = this.alpha * (0.8 + Math.sin(performance.now() * 0.004) * 0.2);
+          ctx.globalAlpha = this.alpha * (0.85 + Math.sin(time * 2) * 0.15);
 
-          // Ethereal white aura
+          // Ethereal luminous glow
           ctx.shadowColor = '#ffffff';
-          ctx.shadowBlur = 24;
+          ctx.shadowBlur = 28;
+
+          // Glowing spirit motes/butterflies circling her
+          for (const b of this.butterflies) {
+            const bx = rx + Math.cos(b.angle) * b.dist;
+            const by = (ry - 32) + Math.sin(b.angle) * (b.dist * 0.55) + Math.sin(b.phase) * 3.5;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(bx, by, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
           ctx.fillStyle = '#ffffff';
 
-          // Dress silhouette
+          // Floating pleated dress silhouette
+          const dressWave = Math.sin(time * 3) * 3;
           ctx.beginPath();
-          ctx.moveTo(rx, ry - 32);
-          ctx.lineTo(rx - 9, ry);
-          ctx.lineTo(rx + 9, ry);
+          ctx.moveTo(rx, ry - 36);
+          ctx.quadraticCurveTo(rx - 8, ry - 18, rx - 13 + dressWave, ry);
+          ctx.quadraticCurveTo(rx, ry - 3, rx + 13 + dressWave * 0.5, ry);
+          ctx.quadraticCurveTo(rx + 8, ry - 18, rx + 2, ry - 36);
           ctx.closePath();
           ctx.fill();
 
-          // Small head with pigtail hair
+          // Dainty feet resting on ground
           ctx.beginPath();
-          ctx.arc(rx, ry - 38, 7.5, 0, Math.PI * 2);
+          ctx.ellipse(rx - 4, ry + 1, 3.5, 1.8, 0, 0, Math.PI * 2);
+          ctx.ellipse(rx + 4, ry + 1, 3.5, 1.8, 0, 0, Math.PI * 2);
           ctx.fill();
 
-          // Reaching hand
-          ctx.lineWidth = 2.5;
+          // Head with soft bob haircut & hair ribbon
+          ctx.beginPath();
+          ctx.arc(rx, ry - 44, 8.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Flowing hair ribbon floating behind head
+          ctx.lineWidth = 2;
           ctx.strokeStyle = '#ffffff';
           ctx.beginPath();
-          ctx.moveTo(rx + 2, ry - 30);
-          ctx.lineTo(rx + 14, ry - 28);
+          ctx.moveTo(rx - 4, ry - 49);
+          ctx.quadraticCurveTo(rx - 16, ry - 47 + dressWave, rx - 24, ry - 42 + dressWave);
+          ctx.moveTo(rx - 4, ry - 49);
+          ctx.quadraticCurveTo(rx - 14, ry - 42 + dressWave, rx - 20, ry - 35 + dressWave);
           ctx.stroke();
+
+          // Reaching hand outstretched towards the boy
+          ctx.lineWidth = 2.8;
+          ctx.beginPath();
+          ctx.moveTo(rx + 3, ry - 34);
+          ctx.quadraticCurveTo(rx + 12, ry - 35, rx + 22, ry - 30);
+          ctx.stroke();
+
+          // Open palm
+          ctx.beginPath();
+          ctx.arc(rx + 22, ry - 30, 2.5, 0, Math.PI * 2);
+          ctx.fill();
 
           ctx.restore();
         }
       }
 
       /* ==========================================================================
-         WORLD PROPS & PUZZLE ENTITIES
+         WORLD PROPS & PUZZLE ENTITIES (WITH ROBUST 2D COLLISION RESOLUTION)
          ========================================================================== */
       class BoxProp {
         constructor(x, y, w, h, mass = 1.0) {
@@ -1202,6 +1254,7 @@
           this.vy = 0;
           this.mass = mass;
           this.isGrounded = false;
+          this.wheelAngle = 0;
         }
 
         reset() {
@@ -1209,24 +1262,61 @@
           this.y = this.initialY;
           this.vx = 0;
           this.vy = 0;
+          this.wheelAngle = 0;
         }
 
         update(dt, solids) {
-          this.vy += 1750 * dt;
-          this.x += this.vx * dt;
-          this.y += this.vy * dt;
+          // 1. HORIZONTAL PHYSICS & COLLISION RESOLUTION
+          const moveX = this.vx * dt;
+          if (moveX !== 0) {
+            const oldX = this.x;
+            this.x += moveX;
+            this.wheelAngle += (moveX / 8);
+
+            // Check collision with solid geometry
+            for (const s of solids) {
+              const vertOverlap = (this.y + this.h > s.y + 4) && (this.y < s.y + s.h - 4);
+              if (vertOverlap) {
+                if (moveX > 0) {
+                  // Moving right: cannot penetrate left edge of solid!
+                  if (oldX + this.w <= s.x + 6 && this.x + this.w >= s.x) {
+                    this.x = s.x - this.w;
+                    this.vx = 0;
+                  }
+                } else if (moveX < 0) {
+                  // Moving left: cannot penetrate right edge of solid!
+                  if (oldX >= s.x + s.w - 6 && this.x <= s.x + s.w) {
+                    this.x = s.x + s.w;
+                    this.vx = 0;
+                  }
+                }
+              }
+            }
+          }
           this.vx *= Math.pow(0.001, dt);
 
+          // 2. VERTICAL PHYSICS & COLLISION RESOLUTION
+          this.vy += 1750 * dt;
+          const oldY = this.y;
+          this.y += this.vy * dt;
           this.isGrounded = false;
+
           for (const s of solids) {
-            if (this.x + this.w > s.x && this.x < s.x + s.w) {
-              if (this.y + this.h >= s.y && this.y + this.h - this.vy * dt <= s.y + 14) {
-                this.y = s.y - this.h;
-                this.vy = 0;
-                this.isGrounded = true;
-              } else if (this.y <= s.y + s.h && this.y - this.vy * dt >= s.y + s.h - 14) {
-                this.y = s.y + s.h;
-                this.vy = 0;
+            const horizOverlap = (this.x + this.w > s.x + 2) && (this.x < s.x + s.w - 2);
+            if (horizOverlap) {
+              if (this.vy >= 0) {
+                // Landing on floor
+                if (oldY + this.h <= s.y + 16 && this.y + this.h >= s.y) {
+                  this.y = s.y - this.h;
+                  this.vy = 0;
+                  this.isGrounded = true;
+                }
+              } else if (this.vy < 0) {
+                // Hitting ceiling
+                if (oldY >= s.y + s.h - 16 && this.y <= s.y + s.h) {
+                  this.y = s.y + s.h;
+                  this.vy = 0;
+                }
               }
             }
           }
@@ -1236,22 +1326,84 @@
           const rx = this.x - camX;
           const ry = this.y;
 
-          ctx.fillStyle = '#000000';
+          ctx.save();
+          // Cart wooden chassis
+          ctx.fillStyle = '#060709';
           ctx.fillRect(rx, ry, this.w, this.h);
 
-          ctx.strokeStyle = '#181a1d';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(rx + 2, ry + 2, this.w - 4, this.h - 4);
+          // Weathered wood plank horizontal slats
+          ctx.strokeStyle = '#1a1d22';
+          ctx.lineWidth = 1.8;
+          const plankH = this.h / 3;
+          ctx.beginPath();
+          ctx.moveTo(rx, ry + plankH); ctx.lineTo(rx + this.w, ry + plankH);
+          ctx.moveTo(rx, ry + plankH * 2); ctx.lineTo(rx + this.w, ry + plankH * 2);
+          ctx.stroke();
+
+          // Diagonal iron reinforcement braces
+          ctx.strokeStyle = '#22262d';
+          ctx.lineWidth = 2.4;
           ctx.beginPath();
           ctx.moveTo(rx + 3, ry + 3); ctx.lineTo(rx + this.w - 3, ry + this.h - 3);
           ctx.moveTo(rx + this.w - 3, ry + 3); ctx.lineTo(rx + 3, ry + this.h - 3);
           ctx.stroke();
 
-          ctx.fillStyle = '#0a0a0c';
-          ctx.beginPath();
-          ctx.arc(rx + 10, ry + this.h, 6, 0, Math.PI * 2);
-          ctx.arc(rx + this.w - 10, ry + this.h, 6, 0, Math.PI * 2);
-          ctx.fill();
+          // Heavy iron rim border
+          ctx.strokeStyle = '#2a2f38';
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(rx + 1, ry + 1, this.w - 2, this.h - 2);
+
+          // Iron rivets on corners
+          ctx.fillStyle = '#525a66';
+          const rivetR = 1.8;
+          const rivets = [
+            [rx + 6, ry + 6], [rx + this.w - 6, ry + 6],
+            [rx + 6, ry + this.h - 6], [rx + this.w - 6, ry + this.h - 6],
+            [rx + this.w / 2, ry + 6], [rx + this.w / 2, ry + this.h - 6]
+          ];
+          for (const [rivX, rivY] of rivets) {
+            ctx.beginPath();
+            ctx.arc(rivX, rivY, rivetR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Spoked Iron Minecart Wheels
+          const drawWheel = (wx, wy) => {
+            ctx.save();
+            ctx.translate(wx, wy);
+            ctx.rotate(this.wheelAngle);
+
+            // Wheel outer tyre
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#363d47';
+            ctx.lineWidth = 2.2;
+            ctx.stroke();
+
+            // Spokes
+            ctx.strokeStyle = '#1e2229';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-7, 0); ctx.lineTo(7, 0);
+            ctx.moveTo(0, -7); ctx.lineTo(0, 7);
+            ctx.stroke();
+
+            // Central axle hub
+            ctx.fillStyle = '#7a8596';
+            ctx.beginPath();
+            ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+          };
+
+          drawWheel(rx + 13, ry + this.h);
+          drawWheel(rx + this.w - 13, ry + this.h);
+
+          ctx.restore();
         }
       }
 
@@ -1320,19 +1472,38 @@
           if (!this.sprung) {
             this.sprung = true;
             sfx.trapSnap();
-            addTrauma(0.45);
+            addTrauma(0.55);
           }
         }
 
         update(dt, solids) {
-          this.vy += 1750 * dt;
-          this.x += this.vx * dt;
-          this.y += this.vy * dt;
+          // Horizontal movement & collision
+          const moveX = this.vx * dt;
+          if (moveX !== 0) {
+            const oldX = this.x;
+            this.x += moveX;
+            for (const s of solids) {
+              if (this.y + this.h > s.y + 4 && this.y < s.y + s.h - 4) {
+                if (moveX > 0 && oldX + this.w <= s.x + 6 && this.x + this.w >= s.x) {
+                  this.x = s.x - this.w;
+                  this.vx = 0;
+                } else if (moveX < 0 && oldX >= s.x + s.w - 6 && this.x <= s.x + s.w) {
+                  this.x = s.x + s.w;
+                  this.vx = 0;
+                }
+              }
+            }
+          }
           this.vx *= Math.pow(0.001, dt);
 
+          // Vertical movement & collision
+          this.vy += 1750 * dt;
+          const oldY = this.y;
+          this.y += this.vy * dt;
+
           for (const s of solids) {
-            if (this.x + this.w > s.x && this.x < s.x + s.w) {
-              if (this.y + this.h >= s.y && this.y + this.h - this.vy * dt <= s.y + 14) {
+            if (this.x + this.w > s.x + 2 && this.x < s.x + s.w - 2) {
+              if (this.vy >= 0 && oldY + this.h <= s.y + 14 && this.y + this.h >= s.y) {
                 this.y = s.y - this.h;
                 this.vy = 0;
               }
@@ -1346,6 +1517,7 @@
 
           ctx.fillStyle = '#000000';
           if (!this.sprung) {
+            // Open heavy serrated iron jaws
             ctx.fillRect(rx, ry + 16, this.w, 8);
             ctx.beginPath();
             for (let i = 0; i < 7; i++) {
@@ -1354,12 +1526,19 @@
             }
             ctx.lineTo(rx + this.w, ry + 16);
             ctx.fill();
+
+            // Trigger plate in center
+            ctx.fillStyle = '#22262e';
+            ctx.beginPath();
+            ctx.arc(rx + this.w / 2, ry + 17, 6, 0, Math.PI * 2);
+            ctx.fill();
           } else {
+            // Sprung closed interlocking jaws
             ctx.fillRect(rx + 18, ry - 8, 22, 32);
             ctx.beginPath();
-            ctx.moveTo(rx + 12, ry + 22);
-            ctx.lineTo(rx + 29, ry - 16);
-            ctx.lineTo(rx + 46, ry + 22);
+            ctx.moveTo(rx + 10, ry + 22);
+            ctx.lineTo(rx + 29, ry - 18);
+            ctx.lineTo(rx + 48, ry + 22);
             ctx.fill();
           }
         }
@@ -1465,7 +1644,7 @@
           ctx.closePath();
           ctx.fill();
 
-          ctx.strokeStyle = '#121417';
+          ctx.strokeStyle = '#1a1d24';
           ctx.lineWidth = 2.5;
           ctx.beginPath();
           ctx.moveTo(-16, -10); ctx.lineTo(6, 12); ctx.lineTo(24, -8);
@@ -1546,76 +1725,107 @@
         }
       }
 
+      /* ==========================================================================
+         GIANT SPIDER BOSS (CINEMATIC MULTI-PHASE ENCOUNTER)
+         ========================================================================== */
       class GiantSpiderBoss {
         constructor(x, y) {
           this.initialX = x;
           this.initialY = y;
           this.x = x;
           this.y = y;
-          this.legPhases = [0, 1.2, 2.5, 3.8];
+          this.legPhases = [0, 1.2, 2.5, 3.8, 5.0, 6.2];
           this.defeated = false;
-          this.retreatX = 0;
-          this.strikeLeg = { x: x - 120, y: y + 360, vy: 0, state: 'IDLE', timer: 0 };
+          this.defeatTimer = 0;
+          this.eyeGlow = 0; // 0 = white, 1 = red
+          this.strikeLeg = { x: x - 130, y: y + 360, vy: 0, state: 'IDLE', timer: 0 };
+          this.brokenLeg = null;
+          this.treeFallen = false;
+          this.treeAngle = 0;
         }
 
         reset() {
           this.x = this.initialX;
           this.y = this.initialY;
           this.defeated = false;
-          this.retreatX = 0;
+          this.defeatTimer = 0;
+          this.eyeGlow = 0;
           this.strikeLeg.state = 'IDLE';
           this.strikeLeg.timer = 0;
+          this.brokenLeg = null;
+          this.treeFallen = false;
+          this.treeAngle = 0;
         }
 
         update(dt, player, bearTrap) {
           if (this.defeated) {
-            this.x += 180 * dt;
-            this.y -= 140 * dt;
+            this.defeatTimer += dt;
+            // Spider retreats high up into the deep dark shadows
+            this.x += 140 * dt;
+            this.y -= 130 * dt;
             for (let i = 0; i < this.legPhases.length; i++) {
-              this.legPhases[i] += dt * 8;
+              this.legPhases[i] += dt * 6;
+            }
+
+            // The dead ancient tree topples across the ravine
+            if (!this.treeFallen) {
+              this.treeAngle = Math.min(1.0, this.treeAngle + dt * 1.8);
+              if (this.treeAngle >= 1.0) {
+                this.treeFallen = true;
+                sfx.boulderCrash();
+                addTrauma(0.65);
+                spawnDust(3650, 420, 20, 90);
+              }
             }
             return;
           }
 
+          // Spider breathing & leg idle animation
           for (let i = 0; i < this.legPhases.length; i++) {
-            this.legPhases[i] += dt * 3.5;
+            this.legPhases[i] += dt * 3.2;
           }
 
-          const trapInZone = bearTrap.x > this.x - 180 && bearTrap.x < this.x - 60 && !bearTrap.sprung;
+          const trapInZone = bearTrap.x > this.x - 195 && bearTrap.x < this.x - 70 && !bearTrap.sprung;
 
           if (this.strikeLeg.state === 'IDLE') {
-            if (player.x > this.x - 340 && player.x < this.x + 200) {
+            this.eyeGlow = Math.max(0, this.eyeGlow - dt * 2);
+            if (player.x > this.x - 360 && player.x < this.x + 220) {
               this.strikeLeg.state = 'WINDUP';
               this.strikeLeg.timer = 0;
             }
           } else if (this.strikeLeg.state === 'WINDUP') {
             this.strikeLeg.timer += dt;
-            this.strikeLeg.y = (this.y + 360) - Math.min(180, this.strikeLeg.timer * 340);
+            this.eyeGlow = Math.min(1.0, this.eyeGlow + dt * 3);
+            this.strikeLeg.y = (this.y + 360) - Math.min(220, this.strikeLeg.timer * 380);
 
-            if (this.strikeLeg.timer > 0.65) {
+            if (this.strikeLeg.timer > 0.68) {
               this.strikeLeg.state = 'STRIKE';
               this.strikeLeg.timer = 0;
+              sfx.boulderRumble();
             }
           } else if (this.strikeLeg.state === 'STRIKE') {
-            this.strikeLeg.y += 950 * dt;
+            this.strikeLeg.y += 1050 * dt;
 
             if (this.strikeLeg.y >= 430) {
               this.strikeLeg.y = 430;
               sfx.spiderStomp();
-              addTrauma(0.4);
-              spawnDust(this.x - 120, 430, 8, 35);
+              addTrauma(0.48);
+              spawnDust(this.x - 130, 430, 12, 45);
 
+              // Check if struck the open bear trap!
               if (trapInZone) {
                 bearTrap.trigger();
                 this.defeated = true;
                 sfx.spiderScreech();
-                addTrauma(0.85);
-                promptBanner.textContent = 'Die Falle schnappt zu! Die Spinne flieht kreischend in die Schatten!';
+                addTrauma(0.95);
+                this.brokenLeg = { x: this.x - 130, y: 418, twitchTimer: 4.0 };
+                promptBanner.textContent = '„Die Falle bricht ihr Bein! Die Spinne flieht winselnd in die Kronen.“';
+                chapterTag.textContent = 'KAPITEL II · DIE BEFREIUNG';
                 return;
               }
 
-              if (player.state !== 'DEAD' && Math.abs(player.x - (this.x - 120)) < 45) {
-                killPlayer('Vom Spinnenstachel durchbohrt …');
+              if (player.state !== 'DEAD' && Math.abs(player.x - (this.x - 130)) < 48) {
+                killPlayer('Vom dornigen Spinnenstachel durchbohrt …');
               }
 
               this.strikeLeg.state = 'RECOVER';
@@ -1623,7 +1833,8 @@
             }
           } else if (this.strikeLeg.state === 'RECOVER') {
             this.strikeLeg.timer += dt;
-            if (this.strikeLeg.timer > 0.6) {
+            this.eyeGlow = Math.max(0, this.eyeGlow - dt * 2.5);
+            if (this.strikeLeg.timer > 0.65) {
               this.strikeLeg.state = 'IDLE';
             }
           }
@@ -1634,62 +1845,107 @@
           const ry = this.y;
 
           ctx.save();
-          ctx.fillStyle = '#020202';
+
+          // Hanging silken web strands from high canopy
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+          ctx.lineWidth = 1.6;
           ctx.beginPath();
-          ctx.ellipse(rx, ry, 85, 60, 0, 0, Math.PI * 2);
+          ctx.moveTo(rx - 40, -100); ctx.lineTo(rx - 25, ry - 30);
+          ctx.moveTo(rx + 30, -100); ctx.lineTo(rx + 15, ry - 30);
+          ctx.stroke();
+
+          // Spider Abdomen
+          ctx.fillStyle = '#020203';
+          ctx.beginPath();
+          ctx.ellipse(rx, ry, 90, 64, 0, 0, Math.PI * 2);
           ctx.fill();
 
+          // Cephalothorax
           ctx.beginPath();
-          ctx.ellipse(rx - 65, ry + 22, 48, 38, -0.2, 0, Math.PI * 2);
+          ctx.ellipse(rx - 70, ry + 22, 52, 40, -0.2, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowColor = '#ffffff';
-          ctx.shadowBlur = 12;
+          // Twitching pedipalp fangs
+          const fangTwitch = Math.sin(performance.now() * 0.008) * 4;
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = '#0a0b0e';
           ctx.beginPath();
-          ctx.arc(rx - 90, ry + 16, 5, 0, Math.PI * 2);
-          ctx.arc(rx - 76, ry + 26, 4, 0, Math.PI * 2);
-          ctx.arc(rx - 82, ry + 10, 3.5, 0, Math.PI * 2);
-          ctx.arc(rx - 95, ry + 28, 3, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.moveTo(rx - 98, ry + 36);
+          ctx.quadraticCurveTo(rx - 110, ry + 44 + fangTwitch, rx - 105, ry + 54);
+          ctx.moveTo(rx - 88, ry + 38);
+          ctx.quadraticCurveTo(rx - 98, ry + 46 - fangTwitch, rx - 94, ry + 56);
+          ctx.stroke();
+
+          // Glowing Arachnid Eyes (Clustered 8 eyes)
+          // Transition from ethereal white to piercing danger crimson
+          const eyeColor = this.eyeGlow > 0.3 ? '#ef4444' : '#ffffff';
+          ctx.fillStyle = eyeColor;
+          ctx.shadowColor = eyeColor;
+          ctx.shadowBlur = 14;
+
+          const eyePositions = [
+            [-94, 16, 5],
+            [-80, 26, 4.2],
+            [-86, 10, 3.8],
+            [-100, 28, 3.2],
+            [-74, 18, 3],
+            [-90, 34, 2.8]
+          ];
+          for (const [ex, ey, er] of eyePositions) {
+            ctx.beginPath();
+            ctx.arc(rx + ex, ry + ey, er, 0, Math.PI * 2);
+            ctx.fill();
+          }
           ctx.shadowBlur = 0;
 
-          ctx.strokeStyle = '#020202';
+          // Articulated legs with sharp spurs & joints
+          ctx.strokeStyle = '#020203';
           ctx.lineCap = 'round';
           ctx.lineJoin = 'round';
 
-          for (let i = 1; i < 4; i++) {
+          for (let i = 1; i < 5; i++) {
             const phase = this.legPhases[i];
             const legLift = Math.max(0, Math.sin(phase)) * 55;
-            const footX = rx - 80 + i * 110 + Math.cos(phase) * 35;
+            const footX = rx - 90 + i * 95 + Math.cos(phase) * 35;
             const footY = ry + 440 - legLift;
-            const kneeX = (rx + footX) / 2 + (i < 2 ? -70 : 80);
-            const kneeY = ry - 50;
+            const kneeX = (rx + footX) / 2 + (i < 2 ? -75 : 85);
+            const kneeY = ry - 55;
 
             ctx.lineWidth = 14 - i * 1.5;
             ctx.beginPath();
-            ctx.moveTo(rx - 20 + i * 18, ry);
+            ctx.moveTo(rx - 25 + i * 16, ry);
             ctx.lineTo(kneeX, kneeY);
             ctx.lineTo(footX, footY);
             ctx.stroke();
+
+            // Sharp claw tip
+            ctx.fillStyle = '#020203';
+            ctx.beginPath();
+            ctx.moveTo(footX - 4, footY - 14);
+            ctx.lineTo(footX, footY + 4);
+            ctx.lineTo(footX + 4, footY - 14);
+            ctx.fill();
           }
 
-          const strikeX = rx - 120;
-          const strikeY = this.defeated ? ry + 200 : this.strikeLeg.y;
-          const kneeX = (rx + strikeX) / 2 - 90;
-          const kneeY = ry - 80;
+          // Spear Strike Leg
+          const strikeX = rx - 130;
+          const strikeY = this.defeated ? ry + 220 : this.strikeLeg.y;
+          const kneeX = (rx + strikeX) / 2 - 95;
+          const kneeY = ry - 85;
 
-          ctx.lineWidth = 15;
+          ctx.lineWidth = 16;
           ctx.beginPath();
-          ctx.moveTo(rx - 45, ry + 10);
+          ctx.moveTo(rx - 50, ry + 10);
           ctx.lineTo(kneeX, kneeY);
           ctx.lineTo(strikeX, strikeY);
           ctx.stroke();
 
+          // Barbed Spear Claw
+          ctx.fillStyle = '#000000';
           ctx.beginPath();
-          ctx.moveTo(strikeX - 6, strikeY - 20);
-          ctx.lineTo(strikeX, strikeY + 12);
-          ctx.lineTo(strikeX + 6, strikeY - 20);
+          ctx.moveTo(strikeX - 7, strikeY - 24);
+          ctx.lineTo(strikeX, strikeY + 14);
+          ctx.lineTo(strikeX + 7, strikeY - 24);
           ctx.fill();
 
           ctx.restore();
@@ -1741,18 +1997,19 @@
         { x: 2060, y: 550, w: 90, h: 30 },
         { x: 2340, y: 420, w: 760, h: 540 },
 
-        // Zone 5: Spider Clearing
-        { x: 3100, y: 420, w: 700, h: 540 },
+        // Zone 5: Spider Clearing (before tree chasm)
+        { x: 3100, y: 420, w: 420, h: 540 },
 
-        // Zone 6: Fallen Tree Bridge & Beyond to Chapter 2
-        { x: 3800, y: 420, w: 1200, h: 540 }
+        // Zone 6: Beyond Fallen Tree to Chapter 2
+        { x: 3740, y: 420, w: 1260, h: 540 }
       ];
 
       // Deadly Wooden Spikes in pits (Prevents getting stuck!)
       const spikePits = [
         { x1: 1680, x2: 1820, y: 460 }, // Trench before ravine
         { x1: 1960, x2: 2060, y: 590 }, // Water pit entrance
-        { x1: 2150, x2: 2340, y: 590 }  // Deep pit below rope
+        { x1: 2150, x2: 2340, y: 590 }, // Deep pit below rope
+        { x1: 3520, x2: 3740, y: 590 }  // Chasm beneath ancient dead tree
       ];
 
       const cart = new BoxProp(460, 500, 58, 56, 1.2);
@@ -1764,10 +2021,14 @@
 
       // Sister Visions across the journey
       const sisterVisions = [
-        new SisterGhost(820, 445, '„Ein vertrautes Licht … War sie das?“'),
-        new SisterGhost(2430, 420, '„Warte! Ich hole dich da raus!“'),
-        new SisterGhost(3960, 420, '„Das Licht ihrer Seele weist dir den Weg in Kapitel II.“')
+        new SisterGhost(820, 445, '„Emily! Sie blickt zurück … und löst sich wie Morgennebel auf.“', 'ERINNERUNG I · DAS WEISSE KLEID'),
+        new SisterGhost(2430, 420, '„Warte auf mich! Ich lasse deine Hand nicht noch einmal los!“', 'ERINNERUNG II · DER SCHWARZE FLUSS'),
+        new SisterGhost(3960, 420, '„Ihre weiße Schleife glimmt im Moos … Sie lebt. Kapitel I vollendet.“', 'KAPITEL I VOLLENDET')
       ];
+
+      // Dynamic Camera Variables
+      let camZoom = 1.0;
+      let targetCamZoom = 1.0;
 
       // Ambient Drifting Mist Spores
       const spores = [];
@@ -2013,34 +2274,77 @@
           return;
         }
 
-        // 7. Interactive Pushable Props (Cart & Bear Trap)
+        // 7. Interactive Pushable Props (Cart & Bear Trap with Solid Blocking)
         let isPushing = false;
 
         cart.update(dt, solids);
+
+        // Check if cart is obstructed by any solid wall
+        const cartAtRightWall = solids.some(s =>
+          (cart.y + cart.h > s.y + 4) && (cart.y < s.y + s.h - 4) &&
+          (cart.x + cart.w >= s.x - 3) && (cart.x + cart.w <= s.x + 6)
+        );
+        const cartAtLeftWall = solids.some(s =>
+          (cart.y + cart.h > s.y + 4) && (cart.y < s.y + s.h - 4) &&
+          (cart.x <= s.x + s.w + 3) && (cart.x >= s.x + s.w - 6)
+        );
+
         if (Math.abs((player.x + player.w / 2) - (cart.x + cart.w / 2)) < (player.w / 2 + cart.w / 2 + 14)) {
-          if (Math.abs((player.y + player.h / 2) - (cart.y + cart.h / 2)) < 32) {
+          if (Math.abs((player.y + player.h / 2) - (cart.y + cart.h / 2)) < 36) {
             isPushing = true;
             if (input.grab) {
-              cart.vx = player.vx * 0.75;
-              player.vx *= 0.75;
-              sfx.dragCrate();
+              // Grabbing: can pull left or push right
+              if (input.left) {
+                if (!cartAtLeftWall) {
+                  cart.vx = -190;
+                  player.vx = -190;
+                  sfx.dragCrate();
+                } else {
+                  cart.vx = 0;
+                  player.vx = 0;
+                  player.x = cart.x + cart.w;
+                }
+              } else if (input.right) {
+                if (!cartAtRightWall) {
+                  cart.vx = 190;
+                  player.vx = 190;
+                  sfx.dragCrate();
+                } else {
+                  cart.vx = 0;
+                  player.vx = 0;
+                  player.x = cart.x - player.w;
+                }
+              }
             } else {
-              if (player.vx > 0 && player.x + player.w >= cart.x && player.x < cart.x) {
-                player.x = cart.x - player.w;
-                cart.vx = Math.max(cart.vx, player.vx * 0.85);
-                sfx.dragCrate();
-              } else if (player.vx < 0 && player.x <= cart.x + cart.w && player.x > cart.x) {
-                player.x = cart.x + cart.w;
-                cart.vx = Math.min(cart.vx, player.vx * 0.85);
-                sfx.dragCrate();
+              // Pushing by walking into cart
+              if (player.vx > 0 && player.x + player.w >= cart.x && player.x < cart.x + 8) {
+                if (!cartAtRightWall) {
+                  cart.vx = player.vx * 0.85;
+                  player.x = cart.x - player.w;
+                  sfx.dragCrate();
+                } else {
+                  cart.vx = 0;
+                  player.vx = 0;
+                  player.x = cart.x - player.w;
+                }
+              } else if (player.vx < 0 && player.x <= cart.x + cart.w && player.x + player.w > cart.x + cart.w - 8) {
+                if (!cartAtLeftWall) {
+                  cart.vx = player.vx * 0.85;
+                  player.x = cart.x + cart.w;
+                  sfx.dragCrate();
+                } else {
+                  cart.vx = 0;
+                  player.vx = 0;
+                  player.x = cart.x + cart.w;
+                }
               }
             }
           }
         }
 
-        // Standing on Cart
-        if (player.x + player.w > cart.x && player.x < cart.x + cart.w) {
-          if (player.y + player.h >= cart.y && player.y + player.h - player.vy * dt <= cart.y + 16) {
+        // Standing on Cart Top (Essential for jumping onto cliff!)
+        if (player.x + player.w > cart.x + 2 && player.x < cart.x + cart.w - 2) {
+          if (player.y + player.h >= cart.y && player.y + player.h - player.vy * dt <= cart.y + 18) {
             player.y = cart.y - player.h;
             player.vy = 0;
             player.isGrounded = true;
@@ -2054,8 +2358,8 @@
             if (Math.abs((player.y + player.h) - (bearTrap.y + bearTrap.h)) < 18) {
               if (input.grab) {
                 isPushing = true;
-                bearTrap.vx = player.vx * 0.7;
-                player.vx *= 0.7;
+                bearTrap.vx = player.vx * 0.72;
+                player.vx *= 0.72;
                 sfx.dragCrate();
               } else {
                 bearTrap.trigger();
@@ -2078,8 +2382,19 @@
           vision.update(dt, player.x);
         }
 
-        // 10. Spider Update
+        // 10. Spider Boss Update
         spider.update(dt, player, bearTrap);
+
+        // Standing on Fallen Tree Bridge (after spider defeated)
+        if (spider.treeFallen) {
+          if (player.x + player.w > 3510 && player.x < 3755) {
+            if (player.y + player.h >= 420 && player.y + player.h - player.vy * dt <= 438) {
+              player.y = 420 - player.h;
+              player.vy = 0;
+              player.isGrounded = true;
+            }
+          }
+        }
 
         // 11. Jumping
         if (input.jump && player.isGrounded && !player.jumpPrev) {
@@ -2115,9 +2430,44 @@
           player.eyeBlinkTimer = 2.4 + Math.random() * 3.2;
         }
 
-        // Camera Tracking
-        const targetCamX = player.x - VW * 0.35;
-        camX += (targetCamX - camX) * Math.min(1, 4.5 * dt);
+        // 13. DYNAMIC CINEMATIC CAMERA SYSTEM (ZOOM & FRAMING)
+        let targetZoom = 1.0;
+        let targetY = player.y;
+
+        if (player.x < 380) {
+          // Intimate, vulnerable awakening
+          targetZoom = 1.25;
+          targetY = 460;
+        } else if (player.x >= 380 && player.x < 920) {
+          // The High Cliff & Sister Apparition Vista
+          targetZoom = 0.85;
+          targetY = 470;
+        } else if (player.x >= 920 && player.x < 1900) {
+          // Boulder Slope & Incline
+          targetZoom = 0.90;
+          targetY = 440;
+        } else if (player.x >= 1900 && player.x < 2650) {
+          // Deep Chasm, Lake & Hanging Rope (Panoramic Depth)
+          targetZoom = 0.78;
+          targetY = 490;
+        } else if (player.x >= 2650 && player.x < 3700) {
+          // Giant Spider Boss Arena (Ultra-wide shot showing the towering spider)
+          targetZoom = 0.72;
+          targetY = 390;
+        } else {
+          // Chapter II Bridge & Sister Ribbon (Hopeful intimateness)
+          targetZoom = 1.15;
+          targetY = 430;
+        }
+
+        camZoom += (targetZoom - camZoom) * Math.min(1, 2.4 * dt);
+
+        const lookAheadX = player.facing * 75;
+        const targetCamX = (player.x + lookAheadX) - (VW * 0.42);
+        camX += (targetCamX - camX) * Math.min(1, 4.0 * dt);
+
+        const targetCamYOffset = (targetY - 440) * 0.4;
+        camY += (targetCamYOffset - camY) * Math.min(1, 3.2 * dt);
 
         // Checkpoints & Story Chapters
         if (player.x > 640 && player.checkpointX < 640) {
@@ -2137,7 +2487,7 @@
           promptBanner.textContent = '„Die Hüterin des Schattens lauert im Geäst. Nutze ihre eigene Falle gegen sie!“';
         }
         if (player.x > 4000) {
-          promptBanner.textContent = '„KAPITEL I VOLLENDET · Die Reise zu deiner Schwester beginnt …“';
+          promptBanner.textContent = '„KAPITEL I VOLLENDET · Emily wartet in den Tiefen … Drücke [R] für Neustart.“';
         }
       }
 
@@ -2168,7 +2518,7 @@
       }
 
       /* ==========================================================================
-         CINEMATIC RENDER PIPELINE (PARALLAX, WATER REFLECTION, SILHOUETTES)
+         CINEMATIC RENDER PIPELINE (DYNAMIC CAMERA ZOOM, PARALLAX, HAND-DRAWN ART)
          ========================================================================== */
       function render() {
         ctx.save();
@@ -2181,75 +2531,142 @@
         ctx.translate(shakeX, offsetY + shakeY);
         ctx.scale(scale, scale);
 
-        // 1. SKY GRADIENT (DARK COLD MIST)
-        const skyGrad = ctx.createRadialGradient(VW * 0.45, VH * 0.25, 60, VW * 0.5, VH * 0.5, VW * 0.85);
-        skyGrad.addColorStop(0, '#4a4f58');
-        skyGrad.addColorStop(0.38, '#24272e');
-        skyGrad.addColorStop(0.8, '#0f1115');
-        skyGrad.addColorStop(1, '#040507');
+        // Dynamic Camera Zoom & Centering Transform
+        ctx.save();
+        ctx.translate(VW / 2, VH / 2);
+        ctx.scale(camZoom, camZoom);
+        ctx.translate(-VW / 2, -VH / 2 - camY);
+
+        // 1. SKY GRADIENT (DARK COLD GOTHIC MIST)
+        const skyGrad = ctx.createRadialGradient(VW * 0.45, VH * 0.25, 60, VW * 0.5, VH * 0.5, VW * 1.1);
+        skyGrad.addColorStop(0, '#4a4f5a');
+        skyGrad.addColorStop(0.38, '#242730');
+        skyGrad.addColorStop(0.8, '#0e1014');
+        skyGrad.addColorStop(1, '#030406');
         ctx.fillStyle = skyGrad;
-        ctx.fillRect(-200, 0, VW + 400, VH);
+        ctx.fillRect(-600, -200, VW + 1200, VH + 400);
+
+        // 1.1 PALE GHOSTLY MOON IN COLD MIST
+        const moonX = VW * 0.72 - (camX * 0.02);
+        const moonY = 155 - camY * 0.02;
+        const moonRad = 54;
+
+        // Moon outer ethereal atmospheric halo
+        const moonHalo = ctx.createRadialGradient(moonX, moonY, moonRad * 0.4, moonX, moonY, moonRad * 3.8);
+        moonHalo.addColorStop(0, 'rgba(230, 238, 255, 0.22)');
+        moonHalo.addColorStop(0.45, 'rgba(190, 205, 230, 0.07)');
+        moonHalo.addColorStop(1, 'transparent');
+        ctx.fillStyle = moonHalo;
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, moonRad * 3.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Moon celestial body
+        const moonBody = ctx.createRadialGradient(moonX - 12, moonY - 12, 6, moonX, moonY, moonRad);
+        moonBody.addColorStop(0, '#f0f4fa');
+        moonBody.addColorStop(0.78, '#9aa3b2');
+        moonBody.addColorStop(1, '#4e5460');
+        ctx.fillStyle = moonBody;
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, moonRad, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Atmospheric cloud wisps drifting across Moon
+        ctx.fillStyle = 'rgba(14, 16, 20, 0.55)';
+        ctx.beginPath();
+        ctx.ellipse(moonX - 25 + Math.sin(performance.now() * 0.0003) * 25, moonY - 10, 90, 14, -0.06, 0, Math.PI * 2);
+        ctx.ellipse(moonX + 18 + Math.cos(performance.now() * 0.0004) * 20, moonY + 24, 115, 18, 0.04, 0, Math.PI * 2);
+        ctx.fill();
 
         // 2. LAYER 1: DISTANT MISTY MOUNTAIN RIDGES (0.07x Parallax)
         const l1X = camX * 0.07;
-        ctx.fillStyle = '#16181c';
+        ctx.fillStyle = '#16181d';
         ctx.beginPath();
-        ctx.moveTo(-200, VH);
-        for (let x = -200; x < VW + 400; x += 180) {
+        ctx.moveTo(-600, VH);
+        for (let x = -600; x < VW + 600; x += 180) {
           const mx = x - (l1X % 180);
-          ctx.lineTo(mx, 320 + Math.sin(x * 0.005) * 45);
-          ctx.lineTo(mx + 90, 240 + Math.cos(x * 0.004) * 35);
+          ctx.lineTo(mx, 310 + Math.sin(x * 0.005) * 45);
+          ctx.lineTo(mx + 90, 230 + Math.cos(x * 0.004) * 35);
         }
-        ctx.lineTo(VW + 400, VH);
+        ctx.lineTo(VW + 600, VH);
         ctx.fill();
 
-        // 3. VOLUMETRIC GOD RAYS
+        // 3. VOLUMETRIC GOD RAYS (SLANTED PIERCING COLD LIGHT)
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        const rayGrad = ctx.createLinearGradient(0, 0, 450, VH);
+        const rayGrad = ctx.createLinearGradient(0, 0, 480, VH);
         rayGrad.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
         rayGrad.addColorStop(0.55, 'rgba(255, 255, 255, 0.035)');
         rayGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = rayGrad;
 
-        const rayShift = Math.sin(performance.now() * 0.0007) * 25;
+        const rayShift = Math.sin(performance.now() * 0.0007) * 28;
         ctx.beginPath();
-        ctx.moveTo(200 + rayShift, 0); ctx.lineTo(380 + rayShift, 0);
-        ctx.lineTo(580 + rayShift, VH); ctx.lineTo(360 + rayShift, VH);
+        ctx.moveTo(180 + rayShift, 0); ctx.lineTo(360 + rayShift, 0);
+        ctx.lineTo(580 + rayShift, VH); ctx.lineTo(340 + rayShift, VH);
         ctx.fill();
 
         ctx.beginPath();
-        ctx.moveTo(700 + rayShift * 0.6, 0); ctx.lineTo(840 + rayShift * 0.6, 0);
-        ctx.lineTo(1120 + rayShift * 0.6, VH); ctx.lineTo(940 + rayShift * 0.6, VH);
+        ctx.moveTo(680 + rayShift * 0.6, 0); ctx.lineTo(820 + rayShift * 0.6, 0);
+        ctx.lineTo(1120 + rayShift * 0.6, VH); ctx.lineTo(920 + rayShift * 0.6, VH);
         ctx.fill();
         ctx.restore();
 
-        // 4. LAYER 2: MIDGROUND DEAD TREES & HANGING VINES (0.28x Parallax)
+        // 4. LAYER 2: MIDGROUND DEAD GNARLED TREES & TELEGRAPH POLES (0.28x Parallax)
         const l2X = camX * 0.28;
-        ctx.fillStyle = '#0e0f12';
-        for (let x = -400; x < VW + 400; x += 320) {
-          const tx = x - (l2X % 320);
+        ctx.fillStyle = '#0e0f13';
+        for (let x = -600; x < VW + 600; x += 340) {
+          const tx = x - (l2X % 340);
           ctx.beginPath();
           ctx.moveTo(tx, VH);
-          ctx.quadraticCurveTo(tx + 25, 380, tx + 15, 120);
-          ctx.lineTo(tx + 45, 120);
-          ctx.quadraticCurveTo(tx + 55, 380, tx + 75, VH);
+          ctx.quadraticCurveTo(tx + 25, 380, tx + 16, 110);
+          ctx.lineTo(tx + 46, 110);
+          ctx.quadraticCurveTo(tx + 56, 380, tx + 78, VH);
           ctx.fill();
 
+          // Twisted branches with dripping Spanish moss
           ctx.lineWidth = 5.5;
-          ctx.strokeStyle = '#0e0f12';
+          ctx.strokeStyle = '#0e0f13';
           ctx.beginPath();
-          ctx.moveTo(tx + 22, 280); ctx.quadraticCurveTo(tx - 60, 220, tx - 95, 240);
-          ctx.moveTo(tx + 40, 210); ctx.quadraticCurveTo(tx + 110, 160, tx + 140, 180);
+          ctx.moveTo(tx + 22, 270); ctx.quadraticCurveTo(tx - 65, 210, tx - 105, 230);
+          ctx.moveTo(tx + 42, 200); ctx.quadraticCurveTo(tx + 115, 150, tx + 150, 175);
+          ctx.stroke();
+
+          // Sagging moss strands
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(tx - 55, 220); ctx.lineTo(tx - 52, 265);
+          ctx.moveTo(tx + 85, 170); ctx.lineTo(tx + 88, 215);
           ctx.stroke();
         }
 
-        // 5. DRIFTING MIST SHEETS
-        ctx.fillStyle = 'rgba(38, 42, 48, 0.2)';
-        for (let i = 0; i < 5; i++) {
-          const mx = ((i * 400 - camX * 0.4 + performance.now() * 0.015) % 2200) - 300;
+        // Derelict wooden utility poles with sagging cables (Iconic Limbo detail)
+        ctx.strokeStyle = '#0a0c0f';
+        ctx.lineWidth = 4;
+        for (let px = -500; px < VW + 700; px += 720) {
+          const pxx = px - (l2X % 720);
           ctx.beginPath();
-          ctx.ellipse(mx, 430 + Math.sin(i * 1.5) * 22, 280, 70, 0, 0, Math.PI * 2);
+          ctx.moveTo(pxx, VH);
+          ctx.lineTo(pxx, 220);
+          ctx.moveTo(pxx - 24, 250);
+          ctx.lineTo(pxx + 24, 250);
+          ctx.stroke();
+
+          // Sagging electric wire
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(pxx + 24, 250);
+          ctx.quadraticCurveTo(pxx + 360, 310, pxx + 720 - 24, 250);
+          ctx.stroke();
+          ctx.lineWidth = 4;
+        }
+
+        // 5. DRIFTING MIST SHEETS
+        ctx.fillStyle = 'rgba(38, 42, 50, 0.22)';
+        for (let i = 0; i < 6; i++) {
+          const mx = ((i * 380 - camX * 0.4 + performance.now() * 0.016) % 2600) - 500;
+          ctx.beginPath();
+          ctx.ellipse(mx, 430 + Math.sin(i * 1.5) * 22, 300, 75, 0, 0, Math.PI * 2);
           ctx.fill();
         }
 
@@ -2262,29 +2679,65 @@
         // 6. GIANT SPIDER BOSS
         spider.draw(ctx, camX);
 
-        // 7. LAYER 3: FOREGROUND GAMEPLAY SILHOUETTES
+        // 7. LAYER 3: FOREGROUND GAMEPLAY SILHOUETTES & HAND-DRAWN TERRAIN
         ctx.fillStyle = '#000000';
         for (const s of solids) {
-          ctx.fillRect(s.x - camX, s.y, s.w, s.h);
-        }
+          const rx = s.x - camX;
+          // Main solid block
+          ctx.fillRect(rx, s.y, s.w, s.h);
 
-        // Grass blades on tops of solids
-        ctx.fillStyle = '#000000';
-        for (let x = -200; x < 4400; x += 18) {
-          const gx = x - camX;
-          if (gx > -40 && gx < VW + 40) {
-            const solid = solids.find(s => x >= s.x && x <= s.x + s.w);
-            if (solid && solid.y < 600) {
-              const h = 7 + (Math.sin(x) * 5.5);
-              ctx.beginPath();
-              ctx.moveTo(gx, solid.y);
-              ctx.quadraticCurveTo(gx + 3, solid.y - h, gx + 6, solid.y);
-              ctx.fill();
+          // Top edge: undulating hand-drawn earthen crust
+          ctx.beginPath();
+          ctx.moveTo(rx, s.y);
+          for (let stepX = 0; stepX <= s.w; stepX += 16) {
+            const jagY = Math.sin((s.x + stepX) * 0.18) * 2.2 + Math.cos((s.x + stepX) * 0.06) * 1.6;
+            ctx.lineTo(rx + stepX, s.y - 1 + jagY);
+          }
+          ctx.lineTo(rx + s.w, s.y + 8);
+          ctx.lineTo(rx, s.y + 8);
+          ctx.closePath();
+          ctx.fill();
+
+          // Hand-drawn wild grass blades & swaying reeds
+          if (s.y < 600) {
+            ctx.fillStyle = '#000000';
+            const grassStep = 7;
+            for (let gx = s.x + 2; gx < s.x + s.w - 2; gx += grassStep) {
+              const grx = gx - camX;
+              if (grx > -30 && grx < VW + 30) {
+                const bladeH = 6 + Math.sin(gx * 1.2) * 4 + Math.cos(gx * 0.35) * 3;
+                const windSway = Math.sin(performance.now() * 0.003 + gx * 0.02) * (bladeH * 0.35);
+                ctx.beginPath();
+                ctx.moveTo(grx, s.y);
+                ctx.quadraticCurveTo(grx + windSway * 0.5, s.y - bladeH * 0.6, grx + windSway, s.y - bladeH);
+                ctx.quadraticCurveTo(grx + 2 + windSway * 0.5, s.y - bladeH * 0.6, grx + 2.5, s.y);
+                ctx.fill();
+              }
             }
+          }
+
+          // Hanging twisted roots dripping from vertical cliff edges
+          const drawRoots = (edgeX, startY, dir) => {
+            ctx.strokeStyle = '#050608';
+            ctx.lineWidth = 2.4;
+            for (let r = 0; r < 4; r++) {
+              const rootY = startY + 16 + r * 22;
+              const rootLen = 22 + Math.sin(edgeX + r * 14) * 16;
+              const rrx = edgeX - camX;
+              ctx.beginPath();
+              ctx.moveTo(rrx, rootY);
+              ctx.quadraticCurveTo(rrx + dir * 9, rootY + rootLen * 0.5, rrx + dir * 4, rootY + rootLen);
+              ctx.stroke();
+            }
+          };
+
+          if (s.w > 80 && s.y < 560) {
+            drawRoots(s.x, s.y, -1);
+            drawRoots(s.x + s.w, s.y, 1);
           }
         }
 
-        // Wooden Stakes / Spikes in pits
+        // Wooden Stakes / Sharp Spikes in deadly pits
         ctx.fillStyle = '#08080a';
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 2;
@@ -2304,8 +2757,7 @@
         // Dark Chasm Water & Shimmering Reflection
         const waterX1 = 1940 - camX;
         const waterW = 400;
-        if (waterX1 < VW && waterX1 + waterW > 0) {
-          // Water surface dark gradient
+        if (waterX1 < VW + 200 && waterX1 + waterW > -200) {
           const waterGrad = ctx.createLinearGradient(0, 560, 0, 720);
           waterGrad.addColorStop(0, '#06080c');
           waterGrad.addColorStop(1, '#020304');
@@ -2313,7 +2765,7 @@
           ctx.fillRect(waterX1, 560, waterW, 160);
 
           // Water ripple highlights
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
           ctx.lineWidth = 1.5;
           const wTime = performance.now() * 0.002;
           for (let r = 0; r < 4; r++) {
@@ -2326,14 +2778,33 @@
           }
         }
 
-        // Fallen Tree Trunk Ramp
+        // Fallen Ancient Dead Tree Bridge across Ravine
         if (spider.defeated) {
-          const logX = 3520 - camX;
+          const logX = 3510 - camX;
           ctx.save();
+          ctx.fillStyle = '#020304';
+          ctx.translate(logX, 420);
+          const fallAngle = -0.06 * spider.treeAngle;
+          ctx.rotate(fallAngle);
+
+          // Tree trunk
+          ctx.fillRect(0, -6, 265, 32);
+
+          // Weathered bark texture & snapped splinters
+          ctx.strokeStyle = '#181b22';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(10, 4); ctx.lineTo(250, 4);
+          ctx.moveTo(25, 14); ctx.lineTo(240, 14);
+          ctx.stroke();
+
+          // Broken branches poking out
           ctx.fillStyle = '#000000';
-          ctx.translate(logX, 415);
-          ctx.rotate(-0.08);
-          ctx.fillRect(0, 0, 320, 26);
+          ctx.beginPath();
+          ctx.moveTo(80, -6); ctx.lineTo(95, -28); ctx.lineTo(105, -6);
+          ctx.moveTo(170, -6); ctx.lineTo(185, -22); ctx.lineTo(195, -6);
+          ctx.fill();
+
           ctx.restore();
         }
 
@@ -2354,7 +2825,7 @@
         for (const p of spores) {
           const px = ((p.x - camX * 0.9 + performance.now() * 0.02) % 4500);
           const py = p.y + Math.sin(p.phase + performance.now() * 0.002) * 16;
-          if (px > -20 && px < VW + 20) {
+          if (px > -40 && px < VW + 40) {
             ctx.shadowColor = '#ffffff';
             ctx.shadowBlur = 8;
             ctx.beginPath();
@@ -2367,7 +2838,7 @@
         // 11. LAYER 4: NEAR FOREGROUND BLURRED SILHOUETTES (1.4x Parallax)
         const l4X = camX * 1.4;
         ctx.fillStyle = '#000000';
-        for (let x = -400; x < VW + 600; x += 650) {
+        for (let x = -600; x < VW + 700; x += 650) {
           const fx = x - (l4X % 650);
           ctx.beginPath();
           ctx.moveTo(fx, 0);
@@ -2377,6 +2848,10 @@
           ctx.fill();
         }
 
+        // Restore dynamic camera zoom transform
+        ctx.restore();
+
+        // Restore outer canvas transform
         ctx.restore();
       }
 
