@@ -19,7 +19,7 @@
       height: 100%;
       height: -webkit-fill-available;
       overflow: hidden;
-      background-color: #050507;
+      background-color: #040507;
       color: #e0e0e0;
       font-family: 'Georgia', serif;
       touch-action: none;
@@ -52,7 +52,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      opacity: 0.09;
+      opacity: 0.085;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
       z-index: 5;
     }
@@ -62,7 +62,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      box-shadow: inset 0 0 100px 30px rgba(0, 0, 0, 0.85), inset 0 0 240px 100px rgba(0, 0, 0, 0.6);
+      box-shadow: inset 0 0 100px 30px rgba(0, 0, 0, 0.88), inset 0 0 240px 100px rgba(0, 0, 0, 0.65);
       z-index: 6;
     }
 
@@ -80,11 +80,11 @@
     }
 
     .chapter-tag {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 400;
-      letter-spacing: 0.25em;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.6);
+      color: rgba(255, 255, 255, 0.55);
       font-family: 'Courier New', monospace;
       text-shadow: 0 0 8px rgba(0, 0, 0, 0.95);
     }
@@ -124,7 +124,7 @@
       top: max(56px, calc(env(safe-area-inset-top) + 44px));
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(18, 20, 26, 0.9);
+      background: rgba(18, 20, 26, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.3);
       border-radius: 20px;
       padding: 6px 16px;
@@ -275,44 +275,44 @@
       font-size: 23px;
     }
 
-    /* In-Game Cinematic Story Subtitles / Prompts */
+    /* Poetic Story & Game Prompts */
     .prompt-banner {
       position: fixed;
       bottom: max(112px, calc(env(safe-area-inset-bottom) + 96px));
       left: 50%;
       transform: translateX(-50%);
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      letter-spacing: 0.18em;
-      color: rgba(255, 255, 255, 0.85);
-      text-transform: uppercase;
-      text-shadow: 0 0 10px rgba(0, 0, 0, 0.95);
+      font-family: 'Georgia', serif;
+      font-style: italic;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      color: rgba(240, 240, 245, 0.85);
+      text-shadow: 0 0 12px rgba(0, 0, 0, 0.98);
       pointer-events: none;
       z-index: 40;
       text-align: center;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.6s ease;
       max-width: 85%;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 7px 18px;
+      background: rgba(8, 10, 14, 0.72);
+      padding: 8px 22px;
       border-radius: 20px;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
     }
 
     /* Start / Death / Chapter Modal Overlay */
     .cinematic-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.92);
+      background: rgba(2, 3, 5, 0.94);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 80;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: opacity 0.6s ease;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: opacity 0.7s ease;
     }
 
     .title-box {
@@ -327,31 +327,31 @@
       letter-spacing: 0.35em;
       color: #f2f2f2;
       margin-bottom: 6px;
-      text-shadow: 0 0 30px rgba(255, 255, 255, 0.35);
+      text-shadow: 0 0 32px rgba(255, 255, 255, 0.38);
     }
 
     .subtitle {
       font-size: 13px;
       letter-spacing: 0.3em;
-      color: #7d828a;
+      color: #838891;
       text-transform: uppercase;
-      margin-bottom: 30px;
+      margin-bottom: 26px;
       font-family: 'Courier New', monospace;
     }
 
     .story-desc {
       font-size: 15px;
-      line-height: 1.7;
-      color: #9ea3ab;
+      line-height: 1.75;
+      color: #a4a9b2;
       margin-bottom: 36px;
       font-style: italic;
     }
 
     .start-btn {
       background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.5);
       color: #ffffff;
-      padding: 14px 42px;
+      padding: 14px 44px;
       font-family: 'Courier New', monospace;
       font-size: 13px;
       letter-spacing: 0.3em;
@@ -362,9 +362,9 @@
     }
 
     .start-btn:hover, .start-btn:active {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.16);
       border-color: #ffffff;
-      box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.45);
       transform: translateY(-2px);
     }
   </style>
@@ -376,10 +376,10 @@
     <div class="vignette"></div>
 
     <div class="hud">
-      <div class="chapter-tag" id="chapterTag">KAPITEL I · IM SCHATTENWALD</div>
+      <div class="chapter-tag" id="chapterTag">PROLOG · DAS SCHICKSAL DER SCHWESTER</div>
       <div class="hud-actions">
         <button class="icon-btn" id="fsToggle" title="Vollbild">⛶</button>
-        <button class="icon-btn" id="audioToggle" title="Audio ein/aus">🔊</button>
+        <button class="icon-btn" id="audioToggle" title="Melancholische Musik ein/aus">🔊</button>
         <button class="icon-btn" id="restartBtn" title="Kapitel neu starten">↺</button>
       </div>
     </div>
@@ -391,17 +391,14 @@
 
     <!-- Mobile Virtual Touch Controls -->
     <div class="touch-zone" id="touchControls">
-      <!-- Left Joystick Touch Area -->
       <div class="stick-area" id="stickArea">
         <div class="virtual-stick" id="virtualStick">
           <div class="virtual-knob" id="virtualKnob"></div>
         </div>
       </div>
 
-      <!-- Right Tap-to-Jump Area -->
       <div class="action-area" id="actionArea"></div>
 
-      <!-- Action Buttons -->
       <div class="action-buttons">
         <button class="touch-btn touch-btn--grab" id="grabBtn">
           <span class="btn-icon">✊</span>
@@ -414,7 +411,7 @@
       </div>
     </div>
 
-    <div class="prompt-banner" id="promptBanner">Drücke [A / D] oder Wische zum Laufen</div>
+    <div class="prompt-banner" id="promptBanner">„Ungewiss über das Schicksal seiner Schwester, betritt ein Junge die Schattenwelt …“</div>
 
     <!-- Cinematic Start / Chapter Screen -->
     <div class="cinematic-overlay" id="cinematicOverlay">
@@ -422,7 +419,7 @@
         <div class="title-logo">LIMBO</div>
         <div class="subtitle">Schattenwelt der Stille</div>
         <p class="story-desc">
-          Ein Junge erwacht im kalten Moos eines düsteren Waldes. Versteckte Fallen lauern in den Baumkronen, gigantische Schatten spionieren aus der Finsternis …
+          Ein Junge erwacht im kalten Moos eines düsteren Waldes. Seine kleine Schwester ist verschwunden. Nur ihr zartes, weißes Licht weist ihm den Weg durch tödliche Abgründe und uralte Schatten …
         </p>
         <button class="start-btn" id="startBtn">In die Finsternis ⛶</button>
       </div>
@@ -472,12 +469,10 @@
 
         const isPortrait = h > w;
         if (isPortrait) {
-          // In portrait mode: keep broad horizontal FOV so the game doesn't overzoom
           VW = 1040;
           scale = canvas.width / VW;
           offsetY = (canvas.height - VH * scale) / 2;
         } else {
-          // Landscape mode: pure widescreen edge-to-edge
           scale = canvas.height / VH;
           VW = canvas.width / scale;
           offsetY = 0;
@@ -502,11 +497,24 @@
       fsToggle.addEventListener('click', toggleFullscreen);
 
       /* ==========================================================================
-         WEB AUDIO PROCEDURAL SYNTHESIZER (DARK AMBIENT & FOLEY)
+         WEB AUDIO PROCEDURAL SYNTHESIZER (MELANCHOLIC SOUNDTRACK & FOLEY)
          ========================================================================== */
       let audioCtx = null;
       let soundEnabled = true;
-      let ambientGain = null;
+      let masterMusicGain = null;
+      let musicTimer = 0;
+      let chordIndex = 0;
+
+      // Haunting minor chords progression (D minor, Bb major, F major, C major / A minor)
+      const melancholicChords = [
+        [146.83, 174.61, 220.00, 293.66], // Dm (D3, F3, A3, D4)
+        [116.54, 146.83, 174.61, 233.08], // Bb (Bb2, D3, F3, Bb3)
+        [130.81, 174.61, 220.00, 261.63], // F (F2, F3, A3, C4)
+        [110.00, 164.81, 220.00, 261.63]  // Am (A2, E3, A3, C4)
+      ];
+
+      // Contemplative fragile music-box / piano melody notes (D minor pentatonic)
+      const melodyNotes = [293.66, 349.23, 392.00, 440.00, 523.25, 587.33, 698.46];
 
       function initAudio() {
         if (!audioCtx) {
@@ -516,51 +524,117 @@
         if (audioCtx && audioCtx.state === 'suspended') {
           audioCtx.resume();
         }
-        if (audioCtx && !ambientGain) {
-          startAmbientDrone();
+        if (audioCtx && !masterMusicGain) {
+          startSoundtrack();
         }
       }
 
-      function startAmbientDrone() {
+      function startSoundtrack() {
         if (!audioCtx) return;
-        ambientGain = audioCtx.createGain();
-        ambientGain.gain.setValueAtTime(0.24, audioCtx.currentTime);
-        ambientGain.connect(audioCtx.destination);
 
-        // Sub-bass drone (55Hz low sine)
-        const osc1 = audioCtx.createOscillator();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(55, audioCtx.currentTime);
-        const osc1Gain = audioCtx.createGain();
-        osc1Gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        osc1.connect(osc1Gain);
-        osc1Gain.connect(ambientGain);
-        osc1.start();
+        masterMusicGain = audioCtx.createGain();
+        masterMusicGain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+        masterMusicGain.connect(audioCtx.destination);
 
-        // Hollow howling wind (White noise + bandpass)
+        // 1. Deep Sub-bass heartbeat drone (D1 / 36.7Hz + 73.4Hz)
+        const subOsc = audioCtx.createOscillator();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(73.41, audioCtx.currentTime);
+        const subGain = audioCtx.createGain();
+        subGain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+        subOsc.connect(subGain);
+        subGain.connect(masterMusicGain);
+        subOsc.start();
+
+        // 2. Cold Hollow Wind (Filtered white noise)
         const bufferSize = audioCtx.sampleRate * 2;
         const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          output[i] = Math.random() * 2 - 1;
-        }
+        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
 
         const whiteNoise = audioCtx.createBufferSource();
         whiteNoise.buffer = noiseBuffer;
         whiteNoise.loop = true;
 
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(140, audioCtx.currentTime);
-        filter.Q.setValueAtTime(2.2, audioCtx.currentTime);
+        const windFilter = audioCtx.createBiquadFilter();
+        windFilter.type = 'bandpass';
+        windFilter.frequency.setValueAtTime(155, audioCtx.currentTime);
+        windFilter.Q.setValueAtTime(2.4, audioCtx.currentTime);
 
-        const noiseGain = audioCtx.createGain();
-        noiseGain.gain.setValueAtTime(0.065, audioCtx.currentTime);
+        const windGain = audioCtx.createGain();
+        windGain.gain.setValueAtTime(0.065, audioCtx.currentTime);
 
-        whiteNoise.connect(filter);
-        filter.connect(noiseGain);
-        noiseGain.connect(ambientGain);
+        whiteNoise.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterMusicGain);
         whiteNoise.start();
+
+        // Play initial chord
+        playNextMelancholicChord();
+      }
+
+      function playNextMelancholicChord() {
+        if (!soundEnabled || !audioCtx || !masterMusicGain) return;
+
+        const now = audioCtx.currentTime;
+        const chord = melancholicChords[chordIndex % melancholicChords.length];
+        chordIndex++;
+
+        // Warm, slow-evolving ambient cello/string pad
+        chord.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const filter = audioCtx.createBiquadFilter();
+
+          osc.type = idx === 0 ? 'sine' : (idx % 2 === 0 ? 'triangle' : 'sawtooth');
+          osc.frequency.setValueAtTime(freq, now);
+
+          // Warm low-pass filter
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(320 + Math.random() * 60, now);
+          filter.frequency.linearRampToValueAtTime(450, now + 4);
+          filter.frequency.exponentialRampToValueAtTime(280, now + 8);
+
+          // Slow swelling attack & long emotional decay
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(0.045 / (idx + 1), now + 3.0);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 9.5);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(masterMusicGain);
+
+          osc.start(now);
+          osc.stop(now + 9.6);
+        });
+
+        // Schedule sparse, solitary music box notes during chord
+        for (let i = 0; i < 3; i++) {
+          const noteTime = now + 1.8 + i * (1.6 + Math.random() * 1.2);
+          playMusicBoxNote(noteTime);
+        }
+      }
+
+      function playMusicBoxNote(time) {
+        if (!soundEnabled || !audioCtx || !masterMusicGain) return;
+        try {
+          const noteOsc = audioCtx.createOscillator();
+          const noteGain = audioCtx.createGain();
+          const noteFreq = melodyNotes[Math.floor(Math.random() * melodyNotes.length)];
+
+          noteOsc.type = 'sine';
+          noteOsc.frequency.setValueAtTime(noteFreq, time);
+
+          noteGain.gain.setValueAtTime(0.0001, time);
+          noteGain.gain.linearRampToValueAtTime(0.04, time + 0.04);
+          noteGain.gain.exponentialRampToValueAtTime(0.0001, time + 2.2);
+
+          noteOsc.connect(noteGain);
+          noteGain.connect(masterMusicGain);
+
+          noteOsc.start(time);
+          noteOsc.stop(time + 2.3);
+        } catch(e){}
       }
 
       const sfx = {
@@ -571,14 +645,14 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(65 + Math.random() * 20, now);
-            osc.frequency.exponentialRampToValueAtTime(30, now + 0.08);
-            gain.gain.setValueAtTime(0.12, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+            osc.frequency.setValueAtTime(70 + Math.random() * 25, now);
+            osc.frequency.exponentialRampToValueAtTime(28, now + 0.07);
+            gain.gain.setValueAtTime(0.13, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start(now);
-            osc.stop(now + 0.08);
+            osc.stop(now + 0.07);
           } catch(e){}
         },
         jump() {
@@ -588,8 +662,8 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(110, now);
-            osc.frequency.exponentialRampToValueAtTime(240, now + 0.12);
+            osc.frequency.setValueAtTime(115, now);
+            osc.frequency.exponentialRampToValueAtTime(250, now + 0.12);
             gain.gain.setValueAtTime(0.18, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
             osc.connect(gain);
@@ -605,14 +679,36 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(90, now);
-            osc.frequency.exponentialRampToValueAtTime(20, now + 0.16);
-            gain.gain.setValueAtTime(0.3, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+            osc.frequency.setValueAtTime(95, now);
+            osc.frequency.exponentialRampToValueAtTime(22, now + 0.15);
+            gain.gain.setValueAtTime(0.28, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start(now);
-            osc.stop(now + 0.16);
+            osc.stop(now + 0.15);
+          } catch(e){}
+        },
+        fallBoneCrack() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            // Brutal crunch & heavy impact
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc1.type = 'sawtooth';
+            osc2.type = 'square';
+            osc1.frequency.setValueAtTime(320, now);
+            osc1.frequency.exponentialRampToValueAtTime(20, now + 0.35);
+            osc2.frequency.setValueAtTime(180, now);
+            osc2.frequency.exponentialRampToValueAtTime(15, now + 0.4);
+            gain.gain.setValueAtTime(0.65, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+            osc1.connect(gain); osc2.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc1.start(now); osc2.start(now);
+            osc1.stop(now + 0.45); osc2.stop(now + 0.45);
           } catch(e){}
         },
         grab() {
@@ -623,7 +719,7 @@
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(140, now);
-            osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+            osc.frequency.exponentialRampToValueAtTime(75, now + 0.1);
             gain.gain.setValueAtTime(0.15, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
             osc.connect(gain);
@@ -657,14 +753,13 @@
             const gain = audioCtx.createGain();
             osc1.type = 'sawtooth';
             osc2.type = 'square';
-            osc1.frequency.setValueAtTime(860, now);
+            osc1.frequency.setValueAtTime(880, now);
             osc1.frequency.exponentialRampToValueAtTime(60, now + 0.28);
-            osc2.frequency.setValueAtTime(420, now);
+            osc2.frequency.setValueAtTime(430, now);
             osc2.frequency.exponentialRampToValueAtTime(40, now + 0.3);
-            gain.gain.setValueAtTime(0.48, now);
+            gain.gain.setValueAtTime(0.5, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-            osc1.connect(gain);
-            osc2.connect(gain);
+            osc1.connect(gain); osc2.connect(gain);
             gain.connect(audioCtx.destination);
             osc1.start(now); osc2.start(now);
             osc1.stop(now + 0.3); osc2.stop(now + 0.3);
@@ -755,6 +850,26 @@
             osc.stop(now + 0.18);
           } catch(e){}
         },
+        sisterChime() {
+          if (!soundEnabled || !audioCtx) return;
+          try {
+            const now = audioCtx.currentTime;
+            // Ethereal chiming bell as sister fades
+            [659.25, 783.99, 987.77, 1318.51].forEach((f, i) => {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(f, now + i * 0.08);
+              gain.gain.setValueAtTime(0.001, now + i * 0.08);
+              gain.gain.linearRampToValueAtTime(0.08, now + i * 0.08 + 0.04);
+              gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 1.4);
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.start(now + i * 0.08);
+              osc.stop(now + i * 0.08 + 1.5);
+            });
+          } catch(e){}
+        },
         death() {
           if (!soundEnabled || !audioCtx) return;
           try {
@@ -777,11 +892,11 @@
       audioToggle.addEventListener('click', () => {
         soundEnabled = !soundEnabled;
         audioToggle.textContent = soundEnabled ? '🔊' : '🔇';
-        if (ambientGain) ambientGain.gain.setValueAtTime(soundEnabled ? 0.24 : 0, audioCtx.currentTime);
+        if (masterMusicGain) masterMusicGain.gain.setValueAtTime(soundEnabled ? 0.28 : 0, audioCtx.currentTime);
       });
 
       /* ==========================================================================
-         INPUT CONTROLLER (DUAL KEYBOARD & FLOATING TOUCH JOYSTICK)
+         INPUT CONTROLLER
          ========================================================================== */
       const input = {
         left: false,
@@ -793,7 +908,6 @@
         analogX: 0
       };
 
-      // Keyboard
       window.addEventListener('keydown', (e) => {
         initAudio();
         if (e.repeat) return;
@@ -875,7 +989,6 @@
       // Right Screen Tap-To-Jump Area
       let actionPointerId = null;
       actionArea.addEventListener('pointerdown', (e) => {
-        // Only trigger jump if user didn't tap directly on the action buttons
         const target = e.target;
         if (target.closest('.touch-btn')) return;
         initAudio();
@@ -935,6 +1048,73 @@
       });
 
       /* ==========================================================================
+         PARTICLE SYSTEM (DUST PUFFS, LEAVES & SPIRIT MOTHS)
+         ========================================================================== */
+      const particles = [];
+      function spawnDust(x, y, count = 4, vxSpread = 30) {
+        for (let i = 0; i < count; i++) {
+          particles.push({
+            x: x + (Math.random() - 0.5) * 8,
+            y: y + (Math.random() - 0.5) * 4,
+            vx: (Math.random() - 0.5) * vxSpread,
+            vy: -15 - Math.random() * 25,
+            r: 1.5 + Math.random() * 2.2,
+            alpha: 0.5 + Math.random() * 0.4,
+            decay: 1.8 + Math.random() * 1.5,
+            color: '#1a1c22'
+          });
+        }
+      }
+
+      function spawnSpiritMoths(x, y, count = 18) {
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+          const speed = 40 + Math.random() * 90;
+          particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 20,
+            r: 2.0 + Math.random() * 2.5,
+            alpha: 1.0,
+            decay: 0.6 + Math.random() * 0.5,
+            color: '#ffffff',
+            glow: true,
+            phase: Math.random() * Math.PI * 2
+          });
+        }
+      }
+
+      function updateParticles(dt) {
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.alpha -= p.decay * dt;
+          if (p.phase !== undefined) p.phase += dt * 15;
+          if (p.alpha <= 0) {
+            particles.splice(i, 1);
+          }
+        }
+      }
+
+      function drawParticles(ctx, camX) {
+        for (const p of particles) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.alpha);
+          ctx.fillStyle = p.color;
+          if (p.glow) {
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 8;
+          }
+          ctx.beginPath();
+          ctx.arc(p.x - camX, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      /* ==========================================================================
          CAMERA SHAKE & CINEMATICS
          ========================================================================== */
       let camX = 0;
@@ -943,6 +1123,68 @@
 
       function addTrauma(amount) {
         shakeTrauma = Math.min(1.0, shakeTrauma + amount);
+      }
+
+      /* ==========================================================================
+         SISTER VISION (ETHEREAL GLOWING GHOST ENTITY)
+         ========================================================================== */
+      class SisterGhost {
+        constructor(x, y, storyHint) {
+          this.x = x;
+          this.y = y;
+          this.storyHint = storyHint;
+          this.alpha = 1.0;
+          this.dissolved = false;
+        }
+
+        update(dt, playerX) {
+          if (!this.dissolved && playerX > this.x - 170) {
+            this.dissolved = true;
+            sfx.sisterChime();
+            spawnSpiritMoths(this.x, this.y - 24, 22);
+            promptBanner.textContent = this.storyHint;
+          }
+          if (this.dissolved && this.alpha > 0) {
+            this.alpha = Math.max(0, this.alpha - 2.5 * dt);
+          }
+        }
+
+        draw(ctx, camX) {
+          if (this.alpha <= 0) return;
+          const rx = this.x - camX;
+          const ry = this.y;
+
+          ctx.save();
+          ctx.globalAlpha = this.alpha * (0.8 + Math.sin(performance.now() * 0.004) * 0.2);
+
+          // Ethereal white aura
+          ctx.shadowColor = '#ffffff';
+          ctx.shadowBlur = 24;
+          ctx.fillStyle = '#ffffff';
+
+          // Dress silhouette
+          ctx.beginPath();
+          ctx.moveTo(rx, ry - 32);
+          ctx.lineTo(rx - 9, ry);
+          ctx.lineTo(rx + 9, ry);
+          ctx.closePath();
+          ctx.fill();
+
+          // Small head with pigtail hair
+          ctx.beginPath();
+          ctx.arc(rx, ry - 38, 7.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Reaching hand
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.moveTo(rx + 2, ry - 30);
+          ctx.lineTo(rx + 14, ry - 28);
+          ctx.stroke();
+
+          ctx.restore();
+        }
       }
 
       /* ==========================================================================
@@ -978,14 +1220,11 @@
           this.isGrounded = false;
           for (const s of solids) {
             if (this.x + this.w > s.x && this.x < s.x + s.w) {
-              // Floor
               if (this.y + this.h >= s.y && this.y + this.h - this.vy * dt <= s.y + 14) {
                 this.y = s.y - this.h;
                 this.vy = 0;
                 this.isGrounded = true;
-              }
-              // Ceiling
-              else if (this.y <= s.y + s.h && this.y - this.vy * dt >= s.y + s.h - 14) {
+              } else if (this.y <= s.y + s.h && this.y - this.vy * dt >= s.y + s.h - 14) {
                 this.y = s.y + s.h;
                 this.vy = 0;
               }
@@ -1000,7 +1239,6 @@
           ctx.fillStyle = '#000000';
           ctx.fillRect(rx, ry, this.w, this.h);
 
-          // Subtle wood plank detailing
           ctx.strokeStyle = '#181a1d';
           ctx.lineWidth = 2;
           ctx.strokeRect(rx + 2, ry + 2, this.w - 4, this.h - 4);
@@ -1009,7 +1247,6 @@
           ctx.moveTo(rx + this.w - 3, ry + 3); ctx.lineTo(rx + 3, ry + this.h - 3);
           ctx.stroke();
 
-          // Iron wheels
           ctx.fillStyle = '#0a0a0c';
           ctx.beginPath();
           ctx.arc(rx + 10, ry + this.h, 6, 0, Math.PI * 2);
@@ -1083,7 +1320,7 @@
           if (!this.sprung) {
             this.sprung = true;
             sfx.trapSnap();
-            addTrauma(0.4);
+            addTrauma(0.45);
           }
         }
 
@@ -1177,6 +1414,7 @@
             this.soundTimer = 0;
             sfx.boulderRumble();
             addTrauma(0.04);
+            spawnDust(this.x, this.y + this.r - 4, 2, 20);
           }
 
           for (const s of solids) {
@@ -1193,6 +1431,7 @@
             this.active = false;
             addTrauma(0.75);
             sfx.boulderCrash();
+            spawnDust(this.x, this.y, 25, 120);
           }
 
           if (player.state !== 'DEAD') {
@@ -1342,7 +1581,6 @@
             this.legPhases[i] += dt * 3.5;
           }
 
-          const distToPlayer = player.x - (this.x - 120);
           const trapInZone = bearTrap.x > this.x - 180 && bearTrap.x < this.x - 60 && !bearTrap.sprung;
 
           if (this.strikeLeg.state === 'IDLE') {
@@ -1365,13 +1603,14 @@
               this.strikeLeg.y = 430;
               sfx.spiderStomp();
               addTrauma(0.4);
+              spawnDust(this.x - 120, 430, 8, 35);
 
               if (trapInZone) {
                 bearTrap.trigger();
                 this.defeated = true;
                 sfx.spiderScreech();
-                addTrauma(0.8);
-                promptBanner.textContent = 'Die Falle schnappt zu! Die Spinne flieht!';
+                addTrauma(0.85);
+                promptBanner.textContent = 'Die Falle schnappt zu! Die Spinne flieht kreischend in die Schatten!';
                 return;
               }
 
@@ -1404,7 +1643,6 @@
           ctx.ellipse(rx - 65, ry + 22, 48, 38, -0.2, 0, Math.PI * 2);
           ctx.fill();
 
-          // Menacing Glowing Eyes
           ctx.fillStyle = '#ffffff';
           ctx.shadowColor = '#ffffff';
           ctx.shadowBlur = 12;
@@ -1416,12 +1654,10 @@
           ctx.fill();
           ctx.shadowBlur = 0;
 
-          // Chitin stilt legs
           ctx.strokeStyle = '#020202';
           ctx.lineCap = 'round';
           ctx.lineJoin = 'round';
 
-          // 3 Back Legs
           for (let i = 1; i < 4; i++) {
             const phase = this.legPhases[i];
             const legLift = Math.max(0, Math.sin(phase)) * 55;
@@ -1438,7 +1674,6 @@
             ctx.stroke();
           }
 
-          // 1 Front Combat Strike Leg
           const strikeX = rx - 120;
           const strikeY = this.defeated ? ry + 200 : this.strikeLeg.y;
           const kneeX = (rx + strikeX) / 2 - 90;
@@ -1462,7 +1697,7 @@
       }
 
       /* ==========================================================================
-         THE BOY (PROTAGONIST STATE MACHINE WITH LEDGE HANG & MANTLE)
+         THE BOY (ORGANIC SKELETAL ANATOMY & PHYSICS)
          ========================================================================== */
       const player = {
         x: 80,
@@ -1472,7 +1707,7 @@
         vx: 0,
         vy: 0,
         facing: 1,
-        state: 'WAKEUP',
+        state: 'WAKEUP', // WAKEUP, IDLE, RUN, SKID, JUMP, FALL, LAND, HANG, MANTLE, PUSH, ROPE, DEAD
         stateTimer: 0,
         animFrame: 0,
         isGrounded: false,
@@ -1482,14 +1717,16 @@
         checkpointX: 80,
         checkpointY: 440,
         deaths: 0,
-        jumpPrev: false
+        jumpPrev: false,
+        highestYInAir: 440,
+        landSquash: 0
       };
 
       /* ==========================================================================
-         WORLD GEOMETRY (BALANCED & REWARDING LEVEL DESIGN)
+         WORLD GEOMETRY & HAZARDS (NO ESCAPELESS TRAPS)
          ========================================================================== */
       const solids = [
-        // Zone 1: Forest Floor (start, awakened boy, crows)
+        // Zone 1: Forest Floor
         { x: -300, y: 560, w: 920, h: 400 },
 
         // Zone 2: The Cliff (y: 445 -> 115px height, easy mantle & cart boost)
@@ -1497,7 +1734,7 @@
 
         // Zone 3: Incline & Boulder Slope
         { x: 1220, y: 420, w: 460, h: 540 },
-        // Ravine Trench for boulder to smash (spikes at bottom)
+        // Ravine Trench for boulder to smash (with deadly wooden spikes at bottom!)
         { x: 1820, y: 420, w: 140, h: 540 },
 
         // Zone 4: Chasm & Water Pit with Floating Log
@@ -1511,6 +1748,13 @@
         { x: 3800, y: 420, w: 1200, h: 540 }
       ];
 
+      // Deadly Wooden Spikes in pits (Prevents getting stuck!)
+      const spikePits = [
+        { x1: 1680, x2: 1820, y: 460 }, // Trench before ravine
+        { x1: 1960, x2: 2060, y: 590 }, // Water pit entrance
+        { x1: 2150, x2: 2340, y: 590 }  // Deep pit below rope
+      ];
+
       const cart = new BoxProp(460, 500, 58, 56, 1.2);
       const bearTrap = new BearTrapProp(2700, 396);
       const boulder = new RollingBoulder(1180, 340, 48);
@@ -1518,9 +1762,16 @@
       const spider = new GiantSpiderBoss(3340, 140);
       const crowCluster = new RavenCluster(340, 480, 5);
 
+      // Sister Visions across the journey
+      const sisterVisions = [
+        new SisterGhost(820, 445, '„Ein vertrautes Licht … War sie das?“'),
+        new SisterGhost(2430, 420, '„Warte! Ich hole dich da raus!“'),
+        new SisterGhost(3960, 420, '„Das Licht ihrer Seele weist dir den Weg in Kapitel II.“')
+      ];
+
       // Ambient Drifting Mist Spores
       const spores = [];
-      for (let i = 0; i < 48; i++) {
+      for (let i = 0; i < 50; i++) {
         spores.push({
           x: Math.random() * 4500,
           y: Math.random() * 660,
@@ -1538,10 +1789,18 @@
 
       function update(dt) {
         shakeTrauma = Math.max(0, shakeTrauma - 1.2 * dt);
+        updateParticles(dt);
+
+        // Music progression timer
+        musicTimer += dt;
+        if (musicTimer > 8.5) {
+          musicTimer = 0;
+          playNextMelancholicChord();
+        }
 
         if (player.state === 'DEAD') {
           player.stateTimer += dt;
-          if (player.stateTimer > 1.8) {
+          if (player.stateTimer > 1.3) {
             respawnPlayer();
           }
           return;
@@ -1620,16 +1879,25 @@
             player.isGrounded = true;
             player.state = 'IDLE';
             sfx.land();
+            spawnDust(player.x + player.w / 2, player.y + player.h, 3, 20);
           }
           player.jumpPrev = input.jump;
           return;
         }
 
-        // 4. Horizontal Movement
+        // 4. Horizontal Movement & Realistic Skid-Braking
         const moveAxis = input.analogX !== 0 ? input.analogX : (input.right ? 1 : 0) - (input.left ? 1 : 0);
-        const targetSpeed = moveAxis * 290;
-        const accel = player.isGrounded ? 18 : 7;
-        player.vx += (targetSpeed - player.vx) * Math.min(1, accel * dt);
+        const targetSpeed = moveAxis * 285;
+        const accel = player.isGrounded ? (Math.sign(moveAxis) !== Math.sign(player.vx) && Math.abs(player.vx) > 60 ? 24 : 16) : 6.5;
+
+        // Skidding detection
+        const isSkidding = player.isGrounded && Math.abs(moveAxis) < 0.1 && Math.abs(player.vx) > 75;
+        if (isSkidding) {
+          player.vx *= Math.pow(0.005, dt);
+          spawnDust(player.x + player.w / 2, player.y + player.h, 1, 10);
+        } else {
+          player.vx += (targetSpeed - player.vx) * Math.min(1, accel * dt);
+        }
 
         if (Math.abs(moveAxis) > 0.08) {
           player.facing = moveAxis > 0 ? 1 : -1;
@@ -1640,28 +1908,48 @@
         player.x += player.vx * dt;
         player.y += player.vy * dt;
 
+        // Track apex of fall for fall damage
+        if (!player.isGrounded && player.vy > 0) {
+          // falling
+        } else if (player.isGrounded) {
+          player.highestYInAir = player.y;
+        }
+
         // Footsteps
         if (player.isGrounded && Math.abs(player.vx) > 30) {
-          stepTimer += dt * (Math.abs(player.vx) / 130);
+          stepTimer += dt * (Math.abs(player.vx) / 125);
           if (stepTimer >= 1.0) {
             stepTimer = 0;
             sfx.step();
+            spawnDust(player.x + player.w / 2, player.y + player.h, 1, 15);
           }
         }
 
-        // 5. Solid Floor & Wall Collisions
+        // 5. Solid Floor & Wall Collisions + Fall Damage
         player.isGrounded = false;
         for (const s of solids) {
           if (player.x + player.w > s.x && player.x < s.x + s.w) {
             // Floor landing
             if (player.y + player.h >= s.y && player.y + player.h - player.vy * dt <= s.y + 18) {
+              const impactVy = player.vy;
               player.y = s.y - player.h;
-              if (player.vy > 380) {
-                sfx.land();
-                addTrauma(0.08);
-              }
               player.vy = 0;
               player.isGrounded = true;
+
+              // CRITICAL: FALL DAMAGE CHECK
+              // If fallen from fatal height (vy > 680), bone-crunching death!
+              if (impactVy > 680) {
+                sfx.fallBoneCrack();
+                addTrauma(0.85);
+                spawnDust(player.x + player.w / 2, player.y + player.h, 16, 80);
+                killPlayer('Aus tödlicher Höhe zerschellt …');
+                return;
+              } else if (impactVy > 360) {
+                sfx.land();
+                addTrauma(0.08);
+                player.landSquash = 1.0;
+                spawnDust(player.x + player.w / 2, player.y + player.h, 6, 40);
+              }
             }
           }
 
@@ -1676,7 +1964,7 @@
             }
           }
 
-          // 6. Ledge Grab Detection (Airborne near top edge)
+          // Ledge Grab Detection
           if (!player.isGrounded && player.vy > -100 && !input.down) {
             if (player.facing === 1 && Math.abs((player.x + player.w) - s.x) < 14) {
               if (player.y + 24 >= s.y && player.y <= s.y + 4) {
@@ -1704,10 +1992,30 @@
           }
         }
 
+        // 6. Spike Pits & Deadly Chasms (Instant fair respawn, no getting stuck!)
+        for (const sp of spikePits) {
+          if (player.x + player.w > sp.x1 && player.x < sp.x2) {
+            if (player.y + player.h >= sp.y) {
+              sfx.fallBoneCrack();
+              addTrauma(0.7);
+              spawnDust(player.x + player.w / 2, player.y + player.h, 12, 60);
+              killPlayer('In die spitzen Pfähle gestürzt …');
+              return;
+            }
+          }
+        }
+
+        // Water Drowning
+        if (player.y > 610) {
+          sfx.death();
+          addTrauma(0.5);
+          killPlayer('In den dunklen Fluten versunken …');
+          return;
+        }
+
         // 7. Interactive Pushable Props (Cart & Bear Trap)
         let isPushing = false;
 
-        // Wooden Cart
         cart.update(dt, solids);
         if (Math.abs((player.x + player.w / 2) - (cart.x + cart.w / 2)) < (player.w / 2 + cart.w / 2 + 14)) {
           if (Math.abs((player.y + player.h / 2) - (cart.y + cart.h / 2)) < 32) {
@@ -1760,34 +2068,39 @@
         // 8. Rolling Boulder Trap
         if (!boulder.active && player.x > 1350) {
           boulder.trigger();
-          promptBanner.textContent = 'ACHTUNG! EIN FELS! LAUF!';
+          promptBanner.textContent = '„Die Finsternis will dich zerschmettern. Lauf!“';
         }
         boulder.update(dt, solids, player);
 
-        // 9. Crows Flying
+        // 9. Crows & Sister Visions
         crowCluster.update(dt, player.x);
-
-        // 10. Water Drowning
-        if (player.y > 640) {
-          killPlayer('In den dunklen Abgrund gestürzt …');
+        for (const vision of sisterVisions) {
+          vision.update(dt, player.x);
         }
 
-        // 11. Spider Update
+        // 10. Spider Update
         spider.update(dt, player, bearTrap);
 
-        // 12. Jumping
+        // 11. Jumping
         if (input.jump && player.isGrounded && !player.jumpPrev) {
           player.vy = -560;
           player.isGrounded = false;
           sfx.jump();
+          spawnDust(player.x + player.w / 2, player.y + player.h, 4, 30);
         }
         player.jumpPrev = input.jump;
 
-        // 13. State & Animation
+        // 12. State & Animation Tuning
+        if (player.landSquash > 0) {
+          player.landSquash = Math.max(0, player.landSquash - dt * 6.5);
+        }
+
         if (isPushing) {
           player.state = 'PUSH';
         } else if (!player.isGrounded) {
           player.state = player.vy < 0 ? 'JUMP' : 'FALL';
+        } else if (isSkidding) {
+          player.state = 'SKID';
         } else if (Math.abs(player.vx) > 35) {
           player.state = 'RUN';
         } else {
@@ -1806,25 +2119,25 @@
         const targetCamX = player.x - VW * 0.35;
         camX += (targetCamX - camX) * Math.min(1, 4.5 * dt);
 
-        // Checkpoints
+        // Checkpoints & Story Chapters
         if (player.x > 640 && player.checkpointX < 640) {
           player.checkpointX = 660;
           player.checkpointY = 380;
-          promptBanner.textContent = 'Klippe erklommen · Kontrollpunkt erreicht';
+          chapterTag.textContent = 'KAPITEL I · IM SCHATTENWALD';
         }
         if (player.x > 1850 && player.checkpointX < 1850) {
           player.checkpointX = 1860;
           player.checkpointY = 360;
-          promptBanner.textContent = 'Schlucht erreicht · Schwinge am Seil!';
+          promptBanner.textContent = '„Ein bodenloser Abgrund trennt die Lebenden von den Vergessenen.“';
         }
         if (player.x > 2600 && player.checkpointX < 2600) {
           player.checkpointX = 2620;
           player.checkpointY = 360;
           chapterTag.textContent = 'KAPITEL II · DER SCHATTEN DER SPINNE';
-          promptBanner.textContent = 'Ziehe die Bärenfalle unter das Spinnenbein!';
+          promptBanner.textContent = '„Die Hüterin des Schattens lauert im Geäst. Nutze ihre eigene Falle gegen sie!“';
         }
         if (player.x > 4000) {
-          promptBanner.textContent = 'KAPITEL I GESCHAFFT! In die tiefen Schatten …';
+          promptBanner.textContent = '„KAPITEL I VOLLENDET · Die Reise zu deiner Schwester beginnt …“';
         }
       }
 
@@ -1834,7 +2147,7 @@
         player.stateTimer = 0;
         player.deaths++;
         sfx.death();
-        addTrauma(0.6);
+        addTrauma(0.65);
         promptBanner.textContent = reason;
       }
 
@@ -1845,6 +2158,7 @@
         player.vy = 0;
         player.state = 'IDLE';
         player.stateTimer = 0;
+        player.highestYInAir = player.checkpointY;
         boulder.reset();
         if (player.checkpointX < 600) cart.reset();
         if (player.checkpointX < 2600) {
@@ -1854,7 +2168,7 @@
       }
 
       /* ==========================================================================
-         CINEMATIC RENDER PIPELINE (PARALLAX, GOD RAYS, SILHOUETTES)
+         CINEMATIC RENDER PIPELINE (PARALLAX, WATER REFLECTION, SILHOUETTES)
          ========================================================================== */
       function render() {
         ctx.save();
@@ -1867,18 +2181,18 @@
         ctx.translate(shakeX, offsetY + shakeY);
         ctx.scale(scale, scale);
 
-        // 1. SKY GRADIENT
+        // 1. SKY GRADIENT (DARK COLD MIST)
         const skyGrad = ctx.createRadialGradient(VW * 0.45, VH * 0.25, 60, VW * 0.5, VH * 0.5, VW * 0.85);
-        skyGrad.addColorStop(0, '#4e535c');
-        skyGrad.addColorStop(0.4, '#27292f');
-        skyGrad.addColorStop(0.8, '#101115');
-        skyGrad.addColorStop(1, '#050508');
+        skyGrad.addColorStop(0, '#4a4f58');
+        skyGrad.addColorStop(0.38, '#24272e');
+        skyGrad.addColorStop(0.8, '#0f1115');
+        skyGrad.addColorStop(1, '#040507');
         ctx.fillStyle = skyGrad;
         ctx.fillRect(-200, 0, VW + 400, VH);
 
         // 2. LAYER 1: DISTANT MISTY MOUNTAIN RIDGES (0.07x Parallax)
         const l1X = camX * 0.07;
-        ctx.fillStyle = '#17191d';
+        ctx.fillStyle = '#16181c';
         ctx.beginPath();
         ctx.moveTo(-200, VH);
         for (let x = -200; x < VW + 400; x += 180) {
@@ -1889,12 +2203,12 @@
         ctx.lineTo(VW + 400, VH);
         ctx.fill();
 
-        // 3. VOLUMETRIC GOD RAYS (CINEMATIC LIGHT BEAMS)
+        // 3. VOLUMETRIC GOD RAYS
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const rayGrad = ctx.createLinearGradient(0, 0, 450, VH);
-        rayGrad.addColorStop(0, 'rgba(255, 255, 255, 0.17)');
-        rayGrad.addColorStop(0.55, 'rgba(255, 255, 255, 0.04)');
+        rayGrad.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
+        rayGrad.addColorStop(0.55, 'rgba(255, 255, 255, 0.035)');
         rayGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = rayGrad;
 
@@ -1910,9 +2224,9 @@
         ctx.fill();
         ctx.restore();
 
-        // 4. LAYER 2: MIDGROUND DEAD GNARLED TREES (0.28x Parallax)
+        // 4. LAYER 2: MIDGROUND DEAD TREES & HANGING VINES (0.28x Parallax)
         const l2X = camX * 0.28;
-        ctx.fillStyle = '#0f1013';
+        ctx.fillStyle = '#0e0f12';
         for (let x = -400; x < VW + 400; x += 320) {
           const tx = x - (l2X % 320);
           ctx.beginPath();
@@ -1922,8 +2236,8 @@
           ctx.quadraticCurveTo(tx + 55, 380, tx + 75, VH);
           ctx.fill();
 
-          ctx.lineWidth = 6;
-          ctx.strokeStyle = '#0f1013';
+          ctx.lineWidth = 5.5;
+          ctx.strokeStyle = '#0e0f12';
           ctx.beginPath();
           ctx.moveTo(tx + 22, 280); ctx.quadraticCurveTo(tx - 60, 220, tx - 95, 240);
           ctx.moveTo(tx + 40, 210); ctx.quadraticCurveTo(tx + 110, 160, tx + 140, 180);
@@ -1931,7 +2245,7 @@
         }
 
         // 5. DRIFTING MIST SHEETS
-        ctx.fillStyle = 'rgba(40, 44, 50, 0.22)';
+        ctx.fillStyle = 'rgba(38, 42, 48, 0.2)';
         for (let i = 0; i < 5; i++) {
           const mx = ((i * 400 - camX * 0.4 + performance.now() * 0.015) % 2200) - 300;
           ctx.beginPath();
@@ -1939,8 +2253,11 @@
           ctx.fill();
         }
 
-        // Crows
+        // Crows & Sister Visions
         crowCluster.draw(ctx, camX);
+        for (const vision of sisterVisions) {
+          vision.draw(ctx, camX);
+        }
 
         // 6. GIANT SPIDER BOSS
         spider.draw(ctx, camX);
@@ -1953,17 +2270,59 @@
 
         // Grass blades on tops of solids
         ctx.fillStyle = '#000000';
-        for (let x = -200; x < 4400; x += 20) {
+        for (let x = -200; x < 4400; x += 18) {
           const gx = x - camX;
           if (gx > -40 && gx < VW + 40) {
             const solid = solids.find(s => x >= s.x && x <= s.x + s.w);
             if (solid && solid.y < 600) {
-              const h = 7 + (Math.sin(x) * 5);
+              const h = 7 + (Math.sin(x) * 5.5);
               ctx.beginPath();
               ctx.moveTo(gx, solid.y);
               ctx.quadraticCurveTo(gx + 3, solid.y - h, gx + 6, solid.y);
               ctx.fill();
             }
+          }
+        }
+
+        // Wooden Stakes / Spikes in pits
+        ctx.fillStyle = '#08080a';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        for (const sp of spikePits) {
+          for (let sx = sp.x1 + 6; sx < sp.x2 - 6; sx += 14) {
+            const rx = sx - camX;
+            ctx.beginPath();
+            ctx.moveTo(rx - 5, sp.y + 40);
+            ctx.lineTo(rx, sp.y - 12);
+            ctx.lineTo(rx + 5, sp.y + 40);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+
+        // Dark Chasm Water & Shimmering Reflection
+        const waterX1 = 1940 - camX;
+        const waterW = 400;
+        if (waterX1 < VW && waterX1 + waterW > 0) {
+          // Water surface dark gradient
+          const waterGrad = ctx.createLinearGradient(0, 560, 0, 720);
+          waterGrad.addColorStop(0, '#06080c');
+          waterGrad.addColorStop(1, '#020304');
+          ctx.fillStyle = waterGrad;
+          ctx.fillRect(waterX1, 560, waterW, 160);
+
+          // Water ripple highlights
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.lineWidth = 1.5;
+          const wTime = performance.now() * 0.002;
+          for (let r = 0; r < 4; r++) {
+            const ry = 566 + r * 14;
+            const waveX = waterX1 + ((r * 80 + wTime * 20) % waterW);
+            ctx.beginPath();
+            ctx.moveTo(waveX, ry);
+            ctx.lineTo(waveX + 35 + Math.sin(r + wTime) * 10, ry);
+            ctx.stroke();
           }
         }
 
@@ -1984,10 +2343,13 @@
         boulder.draw(ctx, camX);
         rope.draw(ctx, camX);
 
-        // 8. RENDER THE BOY
+        // 8. RENDER PARTICLES (DUST & MOTHS)
+        drawParticles(ctx, camX);
+
+        // 9. RENDER THE BOY (ORGANIC SKELETAL RENDERING)
         drawTheBoy(ctx, player, camX);
 
-        // 9. DRIFTING FOREST SPORES / FIREFLIES
+        // 10. DRIFTING FOREST SPORES / FIREFLIES
         ctx.fillStyle = '#ffffff';
         for (const p of spores) {
           const px = ((p.x - camX * 0.9 + performance.now() * 0.02) % 4500);
@@ -2002,7 +2364,7 @@
           }
         }
 
-        // 10. LAYER 4: NEAR FOREGROUND BLURRED SILHOUETTES (1.4x Parallax)
+        // 11. LAYER 4: NEAR FOREGROUND BLURRED SILHOUETTES (1.4x Parallax)
         const l4X = camX * 1.4;
         ctx.fillStyle = '#000000';
         for (let x = -400; x < VW + 600; x += 650) {
@@ -2019,7 +2381,7 @@
       }
 
       /* ==========================================================================
-         THE BOY: SKELETAL SILHOUETTE ANATOMY & EYE GLOW
+         THE BOY: ARTICULATED SKELETON, IK LEGS & INERTIA HAIR
          ========================================================================== */
       function drawTheBoy(ctx, p, camX) {
         const px = p.x - camX;
@@ -2028,6 +2390,11 @@
 
         ctx.save();
         ctx.translate(px + p.w / 2, py + p.h);
+
+        // Squash on heavy landing
+        if (p.landSquash > 0) {
+          ctx.scale(1 + p.landSquash * 0.25, 1 - p.landSquash * 0.2);
+        }
 
         // WAKEUP State
         if (p.state === 'WAKEUP') {
@@ -2123,39 +2490,105 @@
           return;
         }
 
-        // RUNNING / WALKING CYCLE
+        // SKID State (Braking on heels with backward lean)
+        if (p.state === 'SKID') {
+          ctx.fillStyle = '#000000';
+          ctx.lineWidth = 5.5;
+          ctx.strokeStyle = '#000000';
+          ctx.lineCap = 'round';
+
+          // Legs dug in
+          ctx.beginPath();
+          ctx.moveTo(-2, -26); ctx.lineTo(-f * 8, -12); ctx.lineTo(-f * 12, 0);
+          ctx.moveTo(4, -26); ctx.lineTo(f * 4, -12); ctx.lineTo(f * 2, 0);
+          ctx.stroke();
+
+          // Torso leaned back
+          ctx.beginPath();
+          ctx.ellipse(-f * 8, -34, 7.5, 13, -f * 0.25, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Arms flailing slightly for balance
+          ctx.lineWidth = 4.5;
+          ctx.beginPath();
+          ctx.moveTo(-f * 4, -40); ctx.lineTo(-f * 16, -26);
+          ctx.moveTo(f * 2, -40); ctx.lineTo(f * 14, -30);
+          ctx.stroke();
+
+          // Head looking forward
+          const skidHeadY = -48;
+          ctx.beginPath();
+          ctx.arc(-f * 8, skidHeadY, 11, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Glowing eyes
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = '#ffffff';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(-f * 8 + f * 5.5, skidHeadY - 1, 2.6, 0, Math.PI * 2);
+          ctx.arc(-f * 8 + f * 9.5, skidHeadY - 1, 2.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.restore();
+          return;
+        }
+
+        // ARTICULATED SKELETAL RUNNING / WALKING CYCLE
         const cycle = p.state === 'RUN' ? Math.sin(p.animFrame) : 0;
+        const cosCycle = p.state === 'RUN' ? Math.cos(p.animFrame) : 0;
         const legLean = p.state === 'RUN' ? cycle * 16 : 0;
-        const bodyLean = p.state === 'RUN' ? f * 6 : p.state === 'PUSH' ? f * 12 : 0;
+        const bodyLean = p.state === 'RUN' ? f * 7 : p.state === 'PUSH' ? f * 13 : 0;
+        const breath = p.state === 'IDLE' ? Math.sin(performance.now() * 0.003) * 1.5 : 0;
 
         ctx.fillStyle = '#000000';
 
-        // 1. LEGS
-        if (p.state === 'JUMP' || p.state === 'FALL') {
-          ctx.lineWidth = 6;
-          ctx.strokeStyle = '#000000';
-          ctx.lineCap = 'round';
-          ctx.beginPath();
-          ctx.moveTo(-4, -26); ctx.lineTo(-8, -14); ctx.lineTo(-4, -4);
-          ctx.moveTo(4, -26); ctx.lineTo(8, -12); ctx.lineTo(6, -2);
-          ctx.stroke();
-        } else {
+        // 1. LEGS (Multi-Jointed Hip -> Knee -> Ankle IK)
+        if (p.state === 'JUMP') {
+          // Jumping: Legs tucked up toward body
           ctx.lineWidth = 5.5;
           ctx.strokeStyle = '#000000';
           ctx.lineCap = 'round';
           ctx.beginPath();
+          ctx.moveTo(-4, -26); ctx.lineTo(-10, -18); ctx.lineTo(-4, -10);
+          ctx.moveTo(4, -26); ctx.lineTo(8, -16); ctx.lineTo(4, -8);
+          ctx.stroke();
+        } else if (p.state === 'FALL') {
+          // Falling: Legs extended downward anticipating ground
+          ctx.lineWidth = 5.5;
+          ctx.strokeStyle = '#000000';
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(-4, -26); ctx.lineTo(-6, -12); ctx.lineTo(-2, 2);
+          ctx.moveTo(4, -26); ctx.lineTo(6, -10); ctx.lineTo(4, 4);
+          ctx.stroke();
+        } else {
+          // Running / Idle stance legs with jointed knee bend
+          ctx.lineWidth = 5.5;
+          ctx.strokeStyle = '#000000';
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+
+          // Back leg (Knee bends backward during forward drive)
+          const backKneeX = -3 - legLean * 0.8;
+          const backKneeY = -13 + Math.max(0, -cosCycle) * 5;
           ctx.moveTo(-3, -26);
-          ctx.lineTo(-3 - legLean, -13);
+          ctx.lineTo(backKneeX, backKneeY);
           ctx.lineTo(-3 - legLean * 1.3, 0);
+
+          // Front leg (Knee bends forward during plant)
+          const frontKneeX = 3 + legLean * 0.8;
+          const frontKneeY = -13 + Math.max(0, cosCycle) * 5;
           ctx.moveTo(3, -26);
-          ctx.lineTo(3 + legLean, -13);
+          ctx.lineTo(frontKneeX, frontKneeY);
           ctx.lineTo(3 + legLean * 1.3, 0);
           ctx.stroke();
         }
 
-        // 2. TORSO
+        // 2. TORSO with gentle breathing
         ctx.beginPath();
-        ctx.ellipse(bodyLean * 0.5, -34, 7.5, 13, bodyLean * 0.05, 0, Math.PI * 2);
+        ctx.ellipse(bodyLean * 0.5, -34 + breath, 7.5, 13, bodyLean * 0.05, 0, Math.PI * 2);
         ctx.fill();
 
         // 3. ARMS
@@ -2167,26 +2600,28 @@
         } else if (p.state === 'ROPE') {
           ctx.moveTo(0, -40); ctx.lineTo(f * 4, -58);
         } else if (p.state === 'RUN') {
-          ctx.moveTo(0, -40); ctx.lineTo(-f * cycle * 12, -28);
+          ctx.moveTo(0, -40); ctx.lineTo(-f * cycle * 13, -28);
         } else {
-          ctx.moveTo(0, -40); ctx.lineTo(f * 3, -24);
+          ctx.moveTo(0, -40 + breath); ctx.lineTo(f * 3, -24 + breath);
         }
         ctx.stroke();
 
-        // 4. HEAD WITH SILHOUETTE HAIR TUFTS
-        const headY = -48 + (p.state === 'RUN' ? Math.abs(cycle) * 2 : 0);
+        // 4. HEAD WITH DYNAMIC INERTIA HAIR TUFTS
+        const headY = -48 + (p.state === 'RUN' ? Math.abs(cycle) * 2.5 : breath);
         ctx.beginPath();
         ctx.arc(bodyLean * 0.8, headY, 11, 0, Math.PI * 2);
         ctx.fill();
 
+        // Hair reacting to movement velocity
+        const hairTilt = -f * (Math.abs(p.vx) / 300) * 4;
         ctx.beginPath();
         ctx.moveTo(bodyLean * 0.8 - 9, headY - 4);
-        ctx.quadraticCurveTo(bodyLean * 0.8 - 14, headY - 14, bodyLean * 0.8 - 3, headY - 13);
-        ctx.quadraticCurveTo(bodyLean * 0.8 + 6, headY - 17, bodyLean * 0.8 + 11, headY - 10);
+        ctx.quadraticCurveTo(bodyLean * 0.8 - 14 + hairTilt, headY - 14, bodyLean * 0.8 - 3 + hairTilt * 0.5, headY - 13);
+        ctx.quadraticCurveTo(bodyLean * 0.8 + 6 + hairTilt, headY - 18, bodyLean * 0.8 + 11 + hairTilt * 0.8, headY - 10);
         ctx.quadraticCurveTo(bodyLean * 0.8 + 14, headY - 4, bodyLean * 0.8 + 9, headY + 3);
         ctx.fill();
 
-        // 5. GLOWING PIN-EYES
+        // 5. GLOWING PIN-EYES WITH EYE TRACKING
         const eyeBlink = p.eyeBlinkTimer < 0.15;
         if (!eyeBlink && p.state !== 'DEAD') {
           ctx.fillStyle = '#ffffff';
@@ -2223,7 +2658,7 @@
         cinematicOverlay.style.opacity = '0';
         setTimeout(() => {
           cinematicOverlay.style.display = 'none';
-        }, 600);
+        }, 700);
       });
 
       restartBtn.addEventListener('click', () => {
