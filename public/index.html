@@ -178,7 +178,7 @@
 
   <footer>
     <span>Goetschi Arcade</span>
-    <span id="foot"></span>
+    <span><a href="/admin/">Spiele verwalten</a> · <button type="button" id="signout" style="border:0;background:transparent;color:#5ec9ba;cursor:pointer">Logout</button> · <span id="foot"></span></span>
   </footer>
 </div>
 
@@ -195,14 +195,14 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
 
 function card(g){
   const accent = /^#[0-9a-f]{3,8}$/i.test(g.accent || '') ? g.accent : '#5ec9ba';
-  const href   = 'games/' + encodeURIComponent(g.slug) + '/';
+  const href   = g.href || ('games/' + encodeURIComponent(g.slug) + '/');
   const tags   = (g.tags || []).slice(0, 4);
   const thumb  = g.cover
     ? `<img src="${esc(g.cover)}" alt="" loading="lazy" decoding="async"
             onerror="this.remove()">`
     : '';
   return `
-  <a class="card" href="${esc(href)}" style="--ac:${esc(accent)}">
+  <a class="card" href="${esc(href)}" ${g.external ? 'target="_blank" rel="noopener noreferrer"' : ''} style="--ac:${esc(accent)}">
     <div class="thumb">
       <span class="fallback">${esc((g.title || '?').charAt(0))}</span>
       ${thumb}
@@ -241,7 +241,15 @@ function filter(){
     .join(' ').toLowerCase().includes(q)));
 }
 
-fetch('games.json', {cache: 'no-store'})
+fetch('/api/session', {cache: 'no-store'}).then(r => r.ok ? r.json() : null).then(s => {
+  if (!s) return;
+  const admin = document.querySelector('a[href="/admin/"]');
+  if (admin) admin.hidden = !s.admin;
+  document.getElementById('signout').onclick = () => fetch('/auth/logout', {
+    method: 'POST', headers: {'X-CSRF-Token': s.csrf}
+  }).then(() => location.href = '/auth/login');
+}).catch(()=>{});
+fetch('/api/catalog', {cache: 'no-store'})
   .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
   .then(data => {
     games = (data.games || []).filter(g => g && g.slug && g.title);
