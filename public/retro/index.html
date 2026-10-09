@@ -1,0 +1,21 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Goetschi Retro</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#071018;color:#ddf5ef;font:15px/1.5 system-ui}header{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid #29524c}a{color:#63d8bf}main{padding:14px;max-width:1240px;margin:auto}#game{width:100%;height:70dvh;min-height:350px;background:#000;border:1px solid #294b47;border-radius:12px;overflow:hidden}#status{color:#9ac0b6}button{cursor:pointer;background:#205c53;color:white;border:0;padding:9px;border-radius:6px}@media(max-width:700px){main{padding:6px}#game{height:73dvh}}</style>
+<header><a href="/">← Zur Arcade</a><strong id="title">Retro</strong><button id="fullscreen">Vollbild</button></header>
+<main><p id="status" role="status">Lade Spiel …</p><div id="game"></div><p>Touch-Steuerung und Gamepads werden vom Emulator unterstützt. Auf Tesla-Browsern ist Bluetooth-Controller-Unterstützung nicht garantiert; nur im geparkten Fahrzeug ausprobieren.</p></main>
+<script>
+(async()=>{
+ const id=new URLSearchParams(location.search).get('id'),status=document.getElementById('status');
+ if(!/^[0-9a-f-]{36}$/.test(id||'')){status.textContent='Ungültiges Spiel';return}
+ try{
+  const r=await fetch('/api/retro/'+id,{cache:'no-store'});
+  if(!r.ok)throw Error('Spiel nicht verfügbar ('+r.status+')');
+  const g=await r.json();document.title=g.title+' – Goetschi Retro';document.getElementById('title').textContent=g.title;
+  window.EJS_player='#game';window.EJS_core=g.core;window.EJS_gameUrl=g.gameUrl;window.EJS_pathtodata=g.dataUrl;window.EJS_startOnLoaded=false;
+  const script=document.createElement('script');script.src=g.dataUrl+'loader.js';
+  script.onerror=()=>{status.textContent='Emulator nicht erreichbar. CDN/Netzwerk prüfen.'};
+  script.onload=()=>{status.textContent='Emulator geladen. Starte das Spiel über die eingeblendete Oberfläche.'};
+  document.head.append(script);
+ }catch(e){status.textContent=e.message}
+})();
+document.getElementById('fullscreen').onclick=()=>document.getElementById('game').requestFullscreen?.();
+</script></html>
