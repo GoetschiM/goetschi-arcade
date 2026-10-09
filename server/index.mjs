@@ -164,7 +164,7 @@ function romFor(req, res, id) {
   const s = requireSession(req, res);
   if (!s) return null;
   const game = findGame(readDatabase(), 'retro:' + id);
-  if (!game || game.type !== 'retro' || ((!game.hidden && !game.archived) === false && !s.admin)) {
+  if (!game || game.type !== 'retro' || ((game.hidden || game.archived) && !s.admin)) {
     fail(res, 404, 'Spiel nicht gefunden.'); return null;
   }
   return game;
@@ -383,7 +383,7 @@ async function api(req, res, pathname) {
     return;
   }
   if (!pathname.startsWith('/api/admin/')) return fail(res, 404, 'Unbekannter Endpunkt.');
-  if (!requireMutation(req, res, session)) return;
+  if (req.method !== 'GET' && !requireMutation(req, res, session)) return;
   if (req.method === 'POST' && pathname === '/api/admin/roms') {
     const g = await uploadRom(req);
     return reply(res, 201, { game: g });
