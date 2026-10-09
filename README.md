@@ -1,5 +1,8 @@
 # Goetschi Arcade
 
+> **Feature-Branch: Authentik / Retro-Bibliothek (noch nicht ausgerollt).** Die geplante Erweiterung macht die gesamte Arcade zu einer loginpflichtigen Anwendung mit Admin-Panel und persistenten ROM-Uploads. Die folgende Beschreibung der ursprünglichen statischen Arcade gilt für den bisherigen Produktionsstand. Vollständige Voraussetzungen, HTTPS, Coolify-Volumes, Rechteprüfung und Testschritte stehen in [docs/retro-auth-admin-beta.md](docs/retro-auth-admin-beta.md). **Nicht ohne Authentik-Konfiguration und Test auf main deployen.**
+
+
 Ein statischer Spiele-Hub: eine Startseite mit Kacheln, dahinter die einzelnen
 Browserspiele. Läuft als nginx-Container in Coolify (CT118).
 
