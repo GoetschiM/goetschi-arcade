@@ -1,0 +1,58 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Goetschi Arcade – Administration</title>
+<style>:root{font:15px/1.5 system-ui;color-scheme:dark;color:#e4f7f2;background:#071018}*{box-sizing:border-box}body{margin:0 auto;padding:18px;max-width:1100px}a{color:#72d9cb}header{display:flex;justify-content:space-between;gap:10px}h1{font-size:30px}h2{font-size:19px}section{padding:18px;margin:17px 0;background:#102029;border:1px solid #2b4742;border-radius:13px}label{display:block;margin:10px 0}input,textarea,select{display:block;background:#071219;border:1px solid #47746c;border-radius:7px;color:white;padding:10px;font:inherit;width:100%}textarea{min-height:70px}button{cursor:pointer;border:0;border-radius:8px;padding:9px 12px;font-weight:bold;background:#5bc9b4;color:#06201b}button.alt{background:#294940;color:#e6f9ef}button:disabled{opacity:.4}.entry{display:flex;justify-content:space-between;gap:15px;align-items:center;border-bottom:1px solid #26473f;padding:12px 0}.entry:last-child{border:0}.action{display:flex;gap:5px;flex-wrap:wrap}.muted{color:#91aaa6;font-size:13px}#status{padding:10px;background:#19312e;border-radius:8px}@media(max-width:650px){.entry{display:block}.action{margin-top:10px}}</style>
+<header><a href="/">← Goetschi Arcade</a><span><b id="username"></b> <button id="logout" class="alt">Logout</button></span></header>
+<h1>Spielebibliothek</h1>
+<p id="status" role="status">Lade Admin-Daten …</p>
+<section><h2>SNES / Sega-ROM hinzufügen</h2><form id="romForm">
+<label>Spielname<input name="title" maxlength="120" required></label>
+<label>System<select name="system"><option value="snes">Super Nintendo (SNES)</option><option value="segaMD">Sega Mega Drive / Genesis</option></select></label>
+<label>ROM-Datei<input type="file" name="rom" accept=".sfc,.smc,.fig,.swc,.md,.gen,.bin,.smd" required></label>
+<label>Lizenz/Rechtenachweis<textarea name="rightsNote" maxlength="500" required placeholder="z. B. Homebrew, Entwicklerfreigabe, Lizenz und Herkunft"></textarea></label>
+<label>Quelle (optional)<input type="url" name="sourceUrl" placeholder="https://…"></label>
+<label><input type="checkbox" style="width:auto;display:inline" name="rightsConfirmed" required> Ich habe das Recht, dieses Spiel für andere Benutzer bereitzustellen.</label>
+<button>ROM hochladen</button></form></section>
+<section><h2>Externes Spiel verlinken</h2><form id="linkForm">
+<label>Name<input name="title" maxlength="120" required></label><label>HTTPS-Adresse<input name="url" type="url" required placeholder="https://…"></label>
+<label>Beschreibung<input name="description" maxlength="500"></label><button>Link hinzufügen</button>
+</form><p class="muted">Externe Links öffnen die Website des Anbieters. Beachte dessen Einbindungs- und Nutzungsrechte.</p></section>
+<section><h2>Reihenfolge & Sichtbarkeit</h2><p class="muted">Verstecken/Archivieren löscht weder Spieldaten noch hochgeladene ROMs. Über Pfeile kannst du die Reihenfolge ändern.</p><div id="entries"></div></section>
+<script>
+let csrf='',games=[];const status=document.getElementById('status');
+async function api(url,opt={}){
+ const r=await fetch(url,{...opt,cache:'no-store',headers:{...(opt.headers||{}),...(opt.method&&opt.method!=='GET'?{'X-CSRF-Token':csrf}:{})}});
+ const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.error||'Fehler '+r.status);return data;
+}
+function say(s){status.textContent=s}
+function btn(label,fn){const el=document.createElement('button');el.type='button';el.className='alt';el.textContent=label;el.onclick=async()=>{try{await fn()}catch(e){say(e.message)}};return el}
+async function patch(id,body){await api('/api/admin/games/'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});await refresh()}
+async function reorder(index,delta){let next=index+delta;if(next<0||next>=games.length)return;[games[index],games[next]]=[games[next],games[index]];await api('/api/admin/order',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:games.map(g=>g.id)})});await refresh()}
+function render(){
+ const root=document.getElementById('entries');root.replaceChildren();
+ games.forEach((g,index)=>{
+  const row=document.createElement('div');row.className='entry';
+  const summary=document.createElement('div'),strong=document.createElement('strong'),sub=document.createElement('div');
+  strong.textContent=g.title;sub.textContent=[g.type,g.system,g.hidden?'versteckt':'sichtbar',g.archived?'archiviert':'aktiv'].filter(Boolean).join(' · ');sub.className='muted';summary.append(strong,sub);
+  const actions=document.createElement('div');actions.className='action';
+  const up=btn('↑',()=>reorder(index,-1)),down=btn('↓',()=>reorder(index,1));up.disabled=index===0;down.disabled=index===games.length-1;
+  actions.append(up,down,btn('Umbenennen',()=>{const v=prompt('Neuer Name',g.title);return v===null?null:patch(g.id,{title:v})}),
+   btn(g.hidden?'Einblenden':'Verstecken',()=>patch(g.id,{hidden:!g.hidden})),
+   btn(g.archived?'Wiederherstellen':'Archivieren',()=>patch(g.id,{archived:!g.archived})));
+  row.append(summary,actions);root.append(row);
+ });
+}
+async function refresh(){let r=await api('/api/admin/library');games=r.games;render();say(games.length+' Spiele verwaltbar · Uploadlimit '+r.maxRomMb+' MB')}
+function encodeUtf8(str){let raw='';for(const b of new TextEncoder().encode(str))raw+=String.fromCharCode(b);return btoa(raw).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+document.getElementById('romForm').onsubmit=async(e)=>{
+ e.preventDefault();const form=new FormData(e.target),file=form.get('rom');
+ if(!(file instanceof File)||!file.size)return say('ROM auswählen');
+ const metadata={title:form.get('title'),system:form.get('system'),filename:file.name,rightsNote:form.get('rightsNote'),sourceUrl:form.get('sourceUrl'),rightsConfirmed:form.get('rightsConfirmed')==='on'};
+ try{say('Datei wird hochgeladen …');await api('/api/admin/roms',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Arcade-Metadata':encodeUtf8(JSON.stringify(metadata))},body:file});e.target.reset();await refresh()}catch(err){say(err.message)}
+};
+document.getElementById('linkForm').onsubmit=async(e)=>{
+ e.preventDefault();const f=new FormData(e.target);
+ try{await api('/api/admin/links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:f.get('title'),url:f.get('url'),description:f.get('description')})});e.target.reset();await refresh()}catch(err){say(err.message)}
+};
+document.getElementById('logout').onclick=async()=>{try{await api('/auth/logout',{method:'POST'});location.href='/auth/login'}catch(err){say(err.message)}};
+(async()=>{try{const s=await api('/api/session');if(!s.admin){location.href='/';return}csrf=s.csrf;document.getElementById('username').textContent=s.user;await refresh()}catch(e){say(e.message)}})();
+</script></html>
